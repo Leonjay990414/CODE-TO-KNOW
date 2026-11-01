@@ -1,14 +1,8 @@
-\---
-
+﻿---
 name: bug-fixing
-
-description: Systematically diagnose, reproduce, fix, and verify bugs in the CODE TO KNOW platform without introducing unrelated changes or regressions.
-
-\---
-
-
-
-\# Bug Fixing Skill
+description: "Use this skill to reproduce, diagnose, fix, and verify software bugs without introducing regressions."
+---
+# Bug Fixing Skill
 
 \# 碼上學｜CODE TO KNOW
 

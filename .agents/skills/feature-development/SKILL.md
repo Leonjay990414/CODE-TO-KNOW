@@ -1,14 +1,8 @@
-\---
-
+﻿---
 name: feature-development
-
-description: Develop new CODE TO KNOW features through requirement analysis, architecture inspection, implementation, testing, and documentation.
-
-\---
-
-
-
-\# Feature Development Skill
+description: "Use this skill to plan, implement, test, and document new CODE TO KNOW features."
+---
+# Feature Development Skill
 
 \# 碼上學｜CODE TO KNOW
 

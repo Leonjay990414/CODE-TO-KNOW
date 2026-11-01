@@ -1,14 +1,8 @@
-\---
-
+﻿---
 name: release-check
-
-description: Use this skill to assess release readiness, verify quality and security, prepare deployment, and document release or rollback procedures.
-
-\---
-
-
-
-\# Release Check Skill
+description: "Use this skill to assess release readiness, verify quality and security, and prepare deployment and rollback."
+---
+# Release Check Skill
 
 
 
