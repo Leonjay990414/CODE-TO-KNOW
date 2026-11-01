@@ -12,3 +12,6 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+
+# Antigravity Agent local data
+.kagent/
