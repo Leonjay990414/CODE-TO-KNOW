@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title-c">
+  <title id="title-c">CODE TO KNOW Concept C: The Continuous Mind</title>
+  <g id="symbol-c">
+    <!-- Continuous C-Ribbon (Inquiry & Horizon) -->
+    <path fill="#526B7B" d="M 166 48 C 96 48 46 84 46 128 C 46 172 96 208 166 208 C 175 208 182 201 182 192 C 182 183 175 176 166 176 C 114 176 78 155 78 128 C 78 101 114 80 166 80 C 175 80 182 73 182 64 C 182 55 175 48 166 48 Z"/>
+    
+    <!-- Dynamic K-Chevron (Learn Beyond Limits) -->
+    <path fill="#BDA77E" d="M 126 66 C 120 72 120 82 126 88 L 166 128 L 126 168 C 120 174 120 184 126 190 C 132 196 142 196 148 190 L 199 139 C 205 133 205 123 199 117 L 148 66 C 142 60 132 60 126 66 Z"/>
+    
+    <!-- Central Insight Node (Cognitive Connection) -->
+    <circle cx="114" cy="128" r="14" fill="#8FA9B8"/>
+  </g>
+</svg>

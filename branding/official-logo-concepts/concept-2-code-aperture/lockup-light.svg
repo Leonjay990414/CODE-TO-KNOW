@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 200" width="780" height="200" role="img" aria-labelledby="title-c2-light">
+  <title id="title-c2-light">CODE TO KNOW Concept 2: Horizontal Lockup (Light)</title>
+  <!-- Background Warm Ivory Subtle Card -->
+  <rect width="780" height="200" rx="16" fill="#F5F2EA"/>
+  
+  <!-- Symbol Group -->
+  <g id="symbol" transform="translate(25, 25) scale(0.586)">
+    <path fill="#526B7B" d="M 148 48 C 92 48 44 84 44 128 C 44 172 92 208 148 208 C 156 208 162 202 162 194 C 162 186 156 180 148 180 C 108 180 72 156 72 128 C 72 100 108 76 148 76 C 156 76 162 70 162 62 C 162 54 156 48 148 48 Z"/>
+    <path fill="#526B7B" d="M 144 108 L 190 62 C 195 57 203 57 208 62 C 213 67 213 75 208 80 L 162 126 C 157 131 149 131 144 126 C 139 121 139 113 144 108 Z"/>
+    <path fill="#526B7B" d="M 144 130 C 149 125 157 125 162 130 L 208 176 C 213 181 213 189 208 194 C 203 199 195 199 190 194 L 144 148 C 139 143 139 135 144 130 Z"/>
+    <path fill="#BDA77E" d="M 128 98 C 128 114 118 124 102 128 C 118 132 128 142 128 158 C 128 142 138 132 154 128 C 138 124 128 114 128 98 Z"/>
+  </g>
+  
+  <!-- Architectural Divider -->
+  <line x1="195" y1="46" x2="195" y2="154" stroke="#D9D2C4" stroke-width="1.5"/>
+  
+  <!-- Typography Group -->
+  <g id="wordmark" transform="translate(225, 0)">
+    <text x="0" y="92" font-family="'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif" font-size="46" font-weight="700" letter-spacing="4" fill="#26343D">碼上學</text>
+    <text x="2" y="132" font-family="'Inter', -apple-system, sans-serif" font-size="20" font-weight="700" letter-spacing="6" fill="#526B7B">CODE TO KNOW</text>
+    <text x="2" y="162" font-family="'Noto Sans TC', -apple-system, sans-serif" font-size="12" font-weight="400" letter-spacing="3" fill="#8FA9B8">AI 智慧學習與教育科技平台</text>
+  </g>
+</svg>
+

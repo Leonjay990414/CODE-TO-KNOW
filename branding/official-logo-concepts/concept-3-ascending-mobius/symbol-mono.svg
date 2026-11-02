@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title-c3-mono">
+  <title id="title-c3-mono">CODE TO KNOW Concept 3: The Ascending Folio (Monochrome)</title>
+  <g id="symbol" fill="#26343D">
+    <rect x="44" y="44" width="36" height="168" rx="10"/>
+    <path d="M 117 109 L 185 41 A 16 16 0 0 1 207 63 L 139 131 A 16 16 0 0 1 117 109 Z"/>
+    <path d="M 139 125 L 207 193 A 16 16 0 0 1 185 215 L 117 147 A 16 16 0 0 1 139 125 Z"/>
+  </g>
+</svg>
+

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title-c3-symbol">
+  <title id="title-c3-symbol">CODE TO KNOW Concept 3: The Ascending Folio (Symbol)</title>
+  <g id="symbol">
+    <!-- Left Vertical Spine (Structured Code & Foundational Knowledge) -->
+    <rect x="44" y="44" width="36" height="168" rx="10" fill="#526B7B"/>
+    
+    <!-- Upper Ascending Wing (Higher Learning & Champagne Spark) -->
+    <path fill="#BDA77E" d="M 117 109 L 185 41 A 16 16 0 0 1 207 63 L 139 131 A 16 16 0 0 1 117 109 Z"/>
+    
+    <!-- Lower Action Wing (Practice & Practical Mastery) -->
+    <path fill="#8FA9B8" d="M 139 125 L 207 193 A 16 16 0 0 1 185 215 L 117 147 A 16 16 0 0 1 139 125 Z"/>
+  </g>
+</svg>
+

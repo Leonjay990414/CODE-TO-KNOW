@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" width="760" height="200" role="img" aria-labelledby="title-a-lockup">
+  <title id="title-a-lockup">CODE TO KNOW Concept A: Horizontal Lockup</title>
+  <!-- Symbol scaled to 150x150, centered vertically -->
+  <g id="symbol" transform="translate(25, 25) scale(0.586)">
+    <path fill="#526B7B" d="M 148 48 C 92 48 44 84 44 128 C 44 172 92 208 148 208 C 156 208 162 202 162 194 C 162 186 156 180 148 180 C 108 180 72 156 72 128 C 72 100 108 76 148 76 C 156 76 162 70 162 62 C 162 54 156 48 148 48 Z"/>
+    <path fill="#526B7B" d="M 144 108 L 190 62 C 195 57 203 57 208 62 C 213 67 213 75 208 80 L 162 126 C 157 131 149 131 144 126 C 139 121 139 113 144 108 Z"/>
+    <path fill="#526B7B" d="M 144 130 C 149 125 157 125 162 130 L 208 176 C 213 181 213 189 208 194 C 203 199 195 199 190 194 L 144 148 C 139 143 139 135 144 130 Z"/>
+    <path fill="#BDA77E" d="M 128 98 C 128 114 118 124 102 128 C 118 132 128 142 128 158 C 128 142 138 132 154 128 C 138 124 128 114 128 98 Z"/>
+  </g>
+  <!-- Subtle Architectural Divider -->
+  <line x1="200" y1="48" x2="200" y2="152" stroke="#D9E2EA" stroke-width="2"/>
+  <!-- Typography Group -->
+  <g id="wordmark" transform="translate(230, 0)">
+    <text x="0" y="96" font-family="'Inter', -apple-system, sans-serif" font-size="40" font-weight="800" letter-spacing="3" fill="#26343D">CODE TO KNOW</text>
+    <text x="2" y="142" font-family="'Noto Sans TC', sans-serif" font-size="22" font-weight="600" letter-spacing="5" fill="#526B7B">碼上學</text>
+    <text x="100" y="142" font-family="'Noto Sans TC', sans-serif" font-size="15" font-weight="400" letter-spacing="2" fill="#8FA9B8">AI 智慧學習平台</text>
+  </g>
+</svg>
+

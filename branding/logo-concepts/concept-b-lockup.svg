@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" width="760" height="200" role="img" aria-labelledby="title-b-lockup">
+  <title id="title-b-lockup">CODE TO KNOW Concept B: Horizontal Lockup</title>
+  <!-- Symbol scaled to 150x150, centered vertically -->
+  <g id="symbol" transform="translate(25, 25) scale(0.586)">
+    <rect x="44" y="44" width="36" height="168" rx="10" fill="#526B7B"/>
+    <path fill="#BDA77E" d="M 117 109 L 185 41 A 16 16 0 0 1 207 63 L 139 131 A 16 16 0 0 1 117 109 Z"/>
+    <path fill="#8FA9B8" d="M 139 125 L 207 193 A 16 16 0 0 1 185 215 L 117 147 A 16 16 0 0 1 139 125 Z"/>
+  </g>
+  <!-- Subtle Architectural Divider -->
+  <line x1="200" y1="48" x2="200" y2="152" stroke="#D9E2EA" stroke-width="2"/>
+  <!-- Typography Group -->
+  <g id="wordmark" transform="translate(230, 0)">
+    <text x="0" y="96" font-family="'Inter', -apple-system, sans-serif" font-size="40" font-weight="800" letter-spacing="3" fill="#26343D">CODE TO KNOW</text>
+    <text x="2" y="142" font-family="'Noto Sans TC', sans-serif" font-size="22" font-weight="600" letter-spacing="5" fill="#526B7B">碼上學</text>
+    <text x="100" y="142" font-family="'Noto Sans TC', sans-serif" font-size="15" font-weight="400" letter-spacing="2" fill="#8FA9B8">AI 智慧學習平台</text>
+  </g>
+</svg>
+
