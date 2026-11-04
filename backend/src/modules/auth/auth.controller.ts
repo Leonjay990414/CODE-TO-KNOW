@@ -17,7 +17,9 @@ export class AuthController {
         success: true,
         data: {
           user: result.user,
-          message: '註冊成功，請登入開始學習',
+          message: env.NODE_ENV === 'production'
+            ? '帳號已建立；目前電子郵件驗證服務尚未啟用，暫時無法寄送驗證信。'
+            : '帳號已建立；目前使用本機測試模式，未實際寄送驗證信。',
           // In development/test mode, expose verification token for ease of testing
           ...(env.NODE_ENV !== 'production' ? { verificationToken: result.verificationToken } : {}),
         },

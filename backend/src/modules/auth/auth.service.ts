@@ -295,7 +295,7 @@ export class AuthService {
 
     // Always return generic success message to prevent email enumeration
     if (!user || user.deletedAt !== null) {
-      return { success: true, message: '若帳號存在，密碼重設信件已寄出' };
+      return { success: true, message: '若帳號存在，且郵件服務已啟用，系統才會寄送密碼重設郵件。' };
     }
 
     const rawToken = generateSecureToken(32);
@@ -323,8 +323,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: '若帳號存在，密碼重設信件已寄出',
-      resetToken: rawToken, // For development logging / testing
+      message: '若帳號存在，且郵件服務已啟用，系統才會寄送密碼重設郵件。',
     };
   }
 
