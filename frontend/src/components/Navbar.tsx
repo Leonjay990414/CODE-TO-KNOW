@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, User as UserIcon, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Menu, X, ArrowRight, User as UserIcon, LogOut, School } from 'lucide-react';
+import { useAuth, AuthModalMode } from '../context/AuthContext';
+import { useNavigation } from '../context/NavigationContext';
 
 interface NavbarProps {
-  onOpenAuth?: (mode: 'login' | 'register') => void;
+  onOpenAuth?: (mode: AuthModalMode) => void;
+  onOpenTeacherApply?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, openAuth: contextOpenAuth, logout } = useAuth();
+  const { route, navigate } = useNavigation();
 
-  const handleOpenAuth = (mode: 'login' | 'register') => {
+  const handleOpenAuth = (mode: AuthModalMode) => {
     if (onOpenAuth) {
       onOpenAuth(mode);
     } else {
@@ -33,19 +36,65 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
 
   const navLinks = [
     { label: '首頁', href: '#hero' },
-    { label: '認識碼上學', href: '#story' },
-    { label: '學習體驗', href: '#experience' },
-    { label: 'AI 智慧學習', href: '#ai-learning' },
-    { label: '學生與教師', href: '#dual-audience' },
+    { label: '證照中心', href: '#certifications' },
+    { label: '學科題庫', href: '#theory' },
+    { label: '術科實作', href: '#practical' },
+    { label: '全真模考', href: '#mock-exam' },
+    { label: '程式沙盒', href: '#code-editor' },
+    { label: 'AI 教練', href: '#ai-coach' },
+    { label: '學習進度', href: '#progress' },
+    { label: '題庫來源', href: '#sources' },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setMobileMenuOpen(false);
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+
+    if (
+      href.startsWith('#certifications') ||
+      href === '#theory' ||
+      href === '#practical' ||
+      href === '#mock-exam' ||
+      href.startsWith('#code-editor') ||
+      href === '#ai-coach' ||
+      href === '#progress' ||
+      href === '#student' ||
+      href === '#teacher' ||
+      href === '#sources'
+    ) {
+      navigate(href);
+      return;
     }
+
+    if (route.page !== 'home') {
+      navigate(href);
+      setTimeout(() => {
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 120);
+    } else {
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const isLinkActive = (itemHref: string) => {
+    if (itemHref === '#certifications') {
+      return route.page === 'certifications' || route.page === 'certification-detail' || route.page === 'web-design-demo';
+    }
+    if (itemHref === '#theory') return route.page === 'theory-practice';
+    if (itemHref === '#practical') return route.page === 'practical-learning';
+    if (itemHref === '#mock-exam') return route.page === 'mock-exam';
+    if (itemHref === '#code-editor') return route.page === 'code-editor';
+    if (itemHref === '#ai-coach') return route.page === 'ai-coach';
+    if (itemHref === '#progress') return route.page === 'learning-progress';
+    if (itemHref === '#sources') return route.page === 'import-system';
+    if (itemHref === '#hero' && route.page === 'home') return true;
+    return false;
   };
 
   const getRoleBadge = (roles: string[] = []) => {
@@ -81,36 +130,80 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
 
           {/* Desktop Navigation Links */}
           <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }} className="desktop-only-nav">
-            {navLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: 'var(--text-primary)',
-                  position: 'relative',
-                  padding: '6px 0',
-                }}
-                className="nav-link-item"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navLinks.map((item) => {
+              const active = isLinkActive(item.href);
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: active ? 700 : 500,
+                    color: active ? 'var(--color-brand-deep-slate)' : 'var(--text-primary)',
+                    position: 'relative',
+                    padding: '6px 0',
+                    borderBottom: active ? '2px solid var(--color-brand-gold)' : '2px solid transparent',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  className="nav-link-item"
+                >
+                  {item.label}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Action CTAs / User Auth Info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} className="desktop-only-cta">
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-full)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('#student')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 12px',
+                    backgroundColor: route.page === 'student-dashboard' ? '#EFECE3' : 'var(--surface-sunken)',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                  }}
+                  title="進入學生中心"
+                >
                   <UserIcon size={16} color="var(--color-brand-deep-slate)" />
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                     {user.displayName}
                   </span>
                   {getRoleBadge(user.roles)}
-                </div>
+                </button>
+
+                {(user.roles.includes('TEACHER') || user.roles.includes('ADMIN')) && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => navigate('#teacher')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '0 10px', height: '30px' }}
+                  >
+                    <School size={13} />
+                    <span>教師中心</span>
+                  </button>
+                )}
+
+                {!user.roles.includes('TEACHER') && !user.roles.includes('ADMIN') && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={onOpenTeacherApply}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '0 10px', height: '30px' }}
+                  >
+                    <School size={13} />
+                    <span>申請教師資格</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -193,32 +286,71 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {navLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  padding: '12px 8px',
-                  borderBottom: '1px solid var(--border-subtle)',
-                }}
-              >
-                {item.label}
-              </a>
-            ))}
+            {navLinks.map((item) => {
+              const active = isLinkActive(item.href);
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: active ? 700 : 600,
+                    color: active ? 'var(--color-brand-deep-slate)' : 'var(--text-primary)',
+                    padding: '12px 8px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    borderLeft: active ? '4px solid var(--color-brand-gold)' : '4px solid transparent',
+                    paddingLeft: active ? '12px' : '8px',
+                    backgroundColor: active ? 'var(--surface-sunken)' : 'transparent',
+                    borderRadius: 'var(--radius-xs)',
+                  }}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
               {user ? (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)' }}>
+                  <div
+                    onClick={() => { setMobileMenuOpen(false); navigate('#student'); }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                    title="點擊進入學生中心"
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <UserIcon size={18} color="var(--color-brand-deep-slate)" />
                       <span style={{ fontSize: '14px', fontWeight: 600 }}>{user.displayName}</span>
                     </div>
                     {getRoleBadge(user.roles)}
                   </div>
+
+                  {(user.roles.includes('TEACHER') || user.roles.includes('ADMIN')) && (
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => { setMobileMenuOpen(false); navigate('#teacher'); }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
+                    >
+                      <School size={15} />
+                      <span>進入教師管理中心</span>
+                    </button>
+                  )}
+
+                  {!user.roles.includes('TEACHER') && !user.roles.includes('ADMIN') && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-mobile-full"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        if (onOpenTeacherApply) onOpenTeacherApply();
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <School size={16} />
+                      <span>申請成為認證教師</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     className="btn btn-secondary btn-mobile-full"

@@ -1,0 +1,138 @@
+/**
+ * CODE TO KNOW (碼上學) Prototype - Design Tokens
+ * Luxury EdTech & Editorial Minimalism Brand System
+ */
+
+:root {
+  /* ==========================================================================
+     1. 品牌原創核心色彩 (Brand Core Palette)
+     ========================================================================== */
+  --color-brand-ivory: #F5F2EA;       /* 暖象牙白 (主要背景基底、明亮呼吸層) */
+  --color-brand-deep-slate: #526B7B;  /* 深霧藍灰 (品牌結構主色、主按鈕、權威定位) */
+  --color-brand-slate: #8FA9B8;       /* 柔霧藍 (次要元件、引導圖形、資訊輔助) */
+  --color-brand-ice-slate: #D9E2EA;   /* 淺藍灰 (容器邊框、卡片底色、柔和分隔線) */
+  --color-brand-sand: #D9D2C4;        /* 自然米灰 (次級中性層、輔助襯底) */
+  --color-brand-pink: #E8DCD8;        /* 柔霧裸粉 (極少量溫潤點綴、進階成就光影) */
+  --color-brand-gold: #BDA77E;        /* 香檳金 (啟發微光、成就解鎖、焦點點睛色) */
+  --color-brand-gold-hover: #A8936B;  /* 香檳金懸停深色 */
+  --color-brand-gold-text: #7C663D;   /* 高對比香檳金文字色 (符合 WCAG AA 4.5:1) */
+  --color-brand-charcoal: #26343D;    /* 深石墨灰 (主要標題、最高對比正文、深色底色) */
+
+  /* ==========================================================================
+     2. 語意化表面與回饋色 (Semantic Surfaces & Feedback)
+     ========================================================================== */
+  --surface-base: var(--color-brand-ivory);
+  --surface-raised: #FFFFFF;
+  --surface-sunken: #EFECE3;
+  --surface-overlay: rgba(245, 242, 234, 0.88);
+  --surface-glass: rgba(255, 255, 255, 0.78);
+  --surface-glass-border: rgba(255, 255, 255, 0.65);
+
+  /* 文字階層 */
+  --text-primary: var(--color-brand-charcoal);
+  --text-secondary: var(--color-brand-deep-slate);
+  --text-muted: #6C7F8C;
+  --text-disabled: #A5B3BC;
+  --text-inverted: var(--color-brand-ivory);
+  --text-gold: var(--color-brand-gold-text);
+
+  /* 邊框系統 */
+  --border-subtle: rgba(82, 107, 123, 0.12);
+  --border-default: var(--color-brand-ice-slate);
+  --border-strong: var(--color-brand-slate);
+  --border-gold: var(--color-brand-gold);
+
+  /* 系統回饋狀態 */
+  --status-success: #3E7B62;
+  --status-success-bg: #EAF3EF;
+  --status-warning: #B38634;
+  --status-warning-bg: #FAF5EB;
+  --status-error: #A24B46;
+  --status-error-bg: #F8EFEF;
+  --status-info: var(--color-brand-deep-slate);
+  --status-info-bg: #EDF3F7;
+
+  /* ==========================================================================
+     3. 排版與字體系統 (Typography System)
+     ========================================================================== */
+  --font-sans-tc: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", Roboto, sans-serif;
+  --font-sans-en: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace;
+
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-md: 1.125rem;    /* 18px */
+  --font-size-lg: 1.25rem;     /* 20px */
+  --font-size-xl: 1.5rem;      /* 24px */
+  --font-size-2xl: 2rem;       /* 32px */
+  --font-size-3xl: 2.75rem;    /* 44px */
+  --font-size-display: 3.5rem; /* 56px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.8;
+
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-caps: 0.12em;
+
+  /* ==========================================================================
+     4. 間距系統 (Spacing Scale)
+     ========================================================================== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ==========================================================================
+     5. 圓角與陰影 (Radii & Elevation)
+     ========================================================================== */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-subtle: 0 1px 3px rgba(38, 52, 61, 0.04), 0 1px 2px rgba(38, 52, 61, 0.02);
+  --shadow-sm: 0 2px 6px rgba(38, 52, 61, 0.06);
+  --shadow-md: 0 8px 24px rgba(38, 52, 61, 0.08);
+  --shadow-lg: 0 16px 40px rgba(38, 52, 61, 0.1);
+  --shadow-xl: 0 24px 60px rgba(38, 52, 61, 0.14);
+  --shadow-gold-spark: 0 0 20px rgba(189, 167, 126, 0.35);
+
+  /* ==========================================================================
+     6. 動畫與層級 (Transitions & Z-index)
+     ========================================================================== */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-page: 600ms;
+
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-nav: 1100;
+  --z-index-drawer: 1200;
+  --z-index-modal: 1300;
+  --z-index-toast: 1400;
+}
+

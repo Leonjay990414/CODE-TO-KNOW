@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學科全真題庫智慧練習｜碼上學 CODE TO KNOW (Prototype)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/global.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-nav">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <a href="../index.html" style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; flex-shrink: 0;">
+          <svg viewBox="0 0 256 256" width="100%" height="100%">
+            <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
+            <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
+            <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
+            <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--color-brand-charcoal); line-height: 1.1;">碼上學</span>
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--color-brand-deep-slate); text-transform: uppercase;">CODE TO KNOW</span>
+        </div>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px;" class="desktop-nav">
+        <a href="../index.html" class="nav-link-item">首頁</a>
+        <a href="certifications.html" class="nav-link-item">證照中心</a>
+        <a href="theory-learning.html" class="nav-link-item active">學科題庫</a>
+        <a href="practical-learning.html" class="nav-link-item">術科實作</a>
+        <a href="mock-exam.html" class="nav-link-item">全真模擬考</a>
+        <a href="learning-progress.html" class="nav-link-item">學習進度</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;" class="desktop-cta">
+        <a href="mock-exam.html" class="btn btn-outline btn-sm">全真模擬考試</a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-toggle-btn" aria-label="切換導航選單" aria-expanded="false" style="display: none; padding: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu-drawer" style="display: none;">
+    <div style="background-color: var(--surface-base); padding: 24px; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--border-default);">
+      <a href="../index.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">首頁</a>
+      <a href="certifications.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">證照智慧學習中心</a>
+      <a href="theory-learning.html" class="nav-link-item active" style="font-size: 16px; padding: 10px 0;">學科理論與題庫</a>
+      <a href="practical-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">術科實作工作區</a>
+      <a href="mock-exam.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">全真模擬測驗</a>
+      <a href="code-editor.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">線上代碼編輯器</a>
+      <a href="ai-coach.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">AI 學習助教</a>
+      <a href="learning-progress.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">個人學習進度</a>
+    </div>
+  </div>
+
+  <main>
+    <section class="subpage-hero">
+      <div class="container">
+        <nav class="breadcrumb-nav">
+          <a href="../index.html">首頁</a>
+          <span>/</span>
+          <a href="certifications.html">證照智慧學習中心</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;">學科全真題庫練習 (網頁設計丙級 17300)</span>
+        </nav>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+              <span class="badge badge-gold">學科核心題庫</span>
+              <span style="font-size: 12px; color: var(--text-muted);">單選測驗 · 遺忘曲線智慧推播</span>
+            </div>
+            <h1 class="text-h1">學科全真題庫練習</h1>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="showPrototypeToast('錯題本已收錄 3 道待複習題目。')">查看我的錯題筆記</button>
+            <a href="mock-exam.html" class="btn btn-primary btn-sm">開始模擬考試</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-padding" style="background-color: var(--surface-base);">
+      <div class="container">
+
+        <div class="prototype-banner">
+          <span>✦ <strong>題庫互動展示</strong>：下方為全真單選題互動卡，選擇答案後點擊「送出檢驗」即可體驗即時自動批改與考點詳解。</span>
+          <span class="badge badge-slate">單元 2：HTML5 基礎結構</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: var(--space-8);">
+          
+          <!-- Interactive Question Card -->
+          <div class="card" style="padding: 32px;" id="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--color-brand-deep-slate); font-family: var(--font-mono);">
+                QUESTION #024 / 420
+              </span>
+              <span class="badge badge-gold">難度：中等</span>
+            </div>
+
+            <h3 class="text-h3" style="font-size: 18px; line-height: 1.6; margin-bottom: 24px;">
+              在 HTML5 規範中，若網頁中存在一個具有獨立性、可被單獨發布或引用的完整內容區塊（例如一篇部落格文章、論壇貼文或新聞報導），最適當的語意標籤是下列何者？
+            </h3>
+
+            <!-- Options -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;" id="options-group">
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;" class="opt-label" id="opt-label-1">
+                <input type="radio" name="mock_q1" value="A" style="width: 18px; height: 18px;">
+                <span style="font-size: 14px; font-weight: 500;">(A) &lt;section&gt; 標籤</span>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;" class="opt-label" id="opt-label-2">
+                <input type="radio" name="mock_q1" value="B" style="width: 18px; height: 18px;">
+                <span style="font-size: 14px; font-weight: 500;">(B) &lt;article&gt; 標籤</span>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;" class="opt-label" id="opt-label-3">
+                <input type="radio" name="mock_q1" value="C" style="width: 18px; height: 18px;">
+                <span style="font-size: 14px; font-weight: 500;">(C) &lt;div&gt; 標籤</span>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;" class="opt-label" id="opt-label-4">
+                <input type="radio" name="mock_q1" value="D" style="width: 18px; height: 18px;">
+                <span style="font-size: 14px; font-weight: 500;">(D) &lt;aside&gt; 標籤</span>
+              </label>
+            </div>
+
+            <!-- Action Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <button type="button" class="btn btn-outline" onclick="showPrototypeToast('AI 提示：回想文章獨立性原則。')">
+                <span>💡 4 階 AI 提示</span>
+              </button>
+
+              <button type="button" class="btn btn-primary" id="btn-submit-answer" onclick="checkAnswer()">
+                <span>送出檢驗答案</span>
+              </button>
+            </div>
+
+            <!-- Explanation Box (Hidden initially) -->
+            <div id="explanation-box" style="display: none; margin-top: 24px; padding: 18px; background-color: var(--status-success-bg); border: 1px solid rgba(62, 123, 98, 0.3); border-radius: var(--radius-md);">
+              <div style="display: flex; align-items: center; gap: 8px; color: var(--status-success); font-weight: 700; margin-bottom: 8px;">
+                <span>✓ 回答正確！標準解答為 (B)</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-primary); line-height: 1.7;">
+                <strong>考點詳解</strong>：在 W3C HTML5 語意規範中，<code>&lt;article&gt;</code> 標籤專門用於表示文件中具有自主獨立性、可被個別分發的內容單元。而 <code>&lt;section&gt;</code> 是主題性的通用節區，<code>&lt;aside&gt;</code> 則用於側欄或非核心關聯內容。
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Question Grid Sidebar -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            <div class="card" style="padding: 24px;">
+              <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">題目快速導覽 (單元 2)</h4>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px;">
+                <button type="button" class="btn btn-outline btn-sm" style="background-color: var(--color-brand-deep-slate); color: #fff;">1</button>
+                <button type="button" class="btn btn-outline btn-sm" style="border-color: var(--status-success);">2</button>
+                <button type="button" class="btn btn-outline btn-sm" style="border-color: var(--status-success);">3</button>
+                <button type="button" class="btn btn-outline btn-sm">4</button>
+                <button type="button" class="btn btn-outline btn-sm">5</button>
+                <button type="button" class="btn btn-outline btn-sm">6</button>
+                <button type="button" class="btn btn-outline btn-sm">7</button>
+                <button type="button" class="btn btn-outline btn-sm">8</button>
+                <button type="button" class="btn btn-outline btn-sm">9</button>
+                <button type="button" class="btn btn-outline btn-sm">10</button>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                <span>■ 答對 (綠框)</span>
+                <span>■ 目前題目 (深藍)</span>
+                <span>□ 未作答</span>
+              </div>
+            </div>
+
+            <div class="card" style="padding: 20px; background-color: var(--surface-sunken);">
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">準備好了嗎？</h4>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                隨時可進入 60 分鐘 80 題全真計時模擬考，體驗考場情境。
+              </p>
+              <a href="mock-exam.html" class="btn btn-primary btn-sm btn-mobile-full">進入模擬考</a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; font-size: 13px; color: var(--color-brand-slate);">
+      © 2026 CODE TO KNOW 碼上學 AI 智慧學習與教育科技平台. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="../assets/js/prototype-data.js"></script>
+  <script src="../assets/js/navigation.js"></script>
+  <script src="../assets/js/interactions.js"></script>
+  <script>
+    function checkAnswer() {
+      var selected = document.querySelector('input[name="mock_q1"]:checked');
+      if (!selected) {
+        showPrototypeToast('請先選擇一個選項再送出檢驗！');
+        return;
+      }
+      var explanation = document.getElementById('explanation-box');
+      if (explanation) explanation.style.display = 'block';
+
+      var opt2 = document.getElementById('opt-label-2');
+      if (opt2) {
+        opt2.style.borderColor = 'var(--status-success)';
+        opt2.style.backgroundColor = 'var(--status-success-bg)';
+      }
+      showPrototypeToast('答題紀錄已同步至個人進度庫。');
+    }
+  </script>
+</body>
+</html>

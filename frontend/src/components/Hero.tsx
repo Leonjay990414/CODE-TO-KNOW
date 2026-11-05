@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowRight, Sparkles, BookOpen, CheckCircle2, ChevronRight, Terminal } from 'lucide-react';
+import { ArrowRight, Sparkles, BookOpen, CheckCircle2, ChevronRight, Terminal, Award } from 'lucide-react';
+import { useNavigation } from '../context/NavigationContext';
 
 export const Hero: React.FC = () => {
   const [activeHintStep, setActiveHintStep] = useState<number>(1);
+  const { goToCertifications } = useNavigation();
 
   const scaffoldingSteps = [
     {
@@ -95,8 +97,21 @@ export const Hero: React.FC = () => {
               </a>
 
               <a
-                href="#story"
+                href="#certifications"
                 className="btn btn-outline btn-lg btn-mobile-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goToCertifications();
+                }}
+                style={{ borderColor: 'var(--color-brand-gold)', color: 'var(--color-brand-deep-slate)' }}
+              >
+                <Award size={16} color="var(--color-brand-gold)" />
+                <span>證照智慧學習中心</span>
+              </a>
+
+              <a
+                href="#story"
+                className="btn btn-ghost btn-lg btn-mobile-full"
                 onClick={(e) => {
                   e.preventDefault();
                   document.querySelector('#story')?.scrollIntoView({ behavior: 'smooth' });

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4 階 AI 智慧學習助教｜碼上學 CODE TO KNOW (Prototype)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/global.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-nav">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <a href="../index.html" style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; flex-shrink: 0;">
+          <svg viewBox="0 0 256 256" width="100%" height="100%">
+            <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
+            <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
+            <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
+            <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--color-brand-charcoal); line-height: 1.1;">碼上學</span>
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--color-brand-deep-slate); text-transform: uppercase;">CODE TO KNOW</span>
+        </div>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px;" class="desktop-nav">
+        <a href="../index.html" class="nav-link-item">首頁</a>
+        <a href="certifications.html" class="nav-link-item">證照中心</a>
+        <a href="theory-learning.html" class="nav-link-item">學科題庫</a>
+        <a href="practical-learning.html" class="nav-link-item">術科實作</a>
+        <a href="code-editor.html" class="nav-link-item">代碼工作台</a>
+        <a href="learning-progress.html" class="nav-link-item">學習進度</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;" class="desktop-cta">
+        <a href="code-editor.html" class="btn btn-primary btn-sm">前往代碼工作台</a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-toggle-btn" aria-label="切換導航選單" aria-expanded="false" style="display: none; padding: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu-drawer" style="display: none;">
+    <div style="background-color: var(--surface-base); padding: 24px; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--border-default);">
+      <a href="../index.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">首頁</a>
+      <a href="certifications.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">證照智慧學習中心</a>
+      <a href="theory-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">學科理論與題庫</a>
+      <a href="practical-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">術科實作工作區</a>
+      <a href="mock-exam.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">全真模擬測驗</a>
+      <a href="code-editor.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">線上代碼編輯器</a>
+      <a href="ai-coach.html" class="nav-link-item active" style="font-size: 16px; padding: 10px 0;">AI 學習助教</a>
+      <a href="learning-progress.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">個人學習進度</a>
+    </div>
+  </div>
+
+  <main>
+    <section class="subpage-hero">
+      <div class="container">
+        <nav class="breadcrumb-nav">
+          <a href="../index.html">首頁</a>
+          <span>/</span>
+          <a href="certifications.html">證照智慧學習中心</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;">4 階 AI 智慧學習助教</span>
+        </nav>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+              <span class="badge badge-gold">鷹架式啟發助教</span>
+              <span style="font-size: 12px; color: var(--text-muted);">按需點亮思路 · 嚴禁劇透答案</span>
+            </div>
+            <h1 class="text-h1">AI 思考鷹架助教工作區</h1>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-padding" style="background-color: var(--surface-base);">
+      <div class="container">
+
+        <div class="prototype-banner">
+          <span>✦ <strong>互動助教展示</strong>：點擊下方熱門提問標籤，體驗 AI 如何以 4 階思考鷹架逐步導引，而非直接拋出程式碼！</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-8);">
+          
+          <!-- Chat Window -->
+          <div class="card" style="padding: 24px; display: flex; flex-direction: column; height: 560px;">
+            
+            <!-- Quick Chips -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="askQuestion('題組一版面該如何以 CSS 達成 1024px 水平置中？')">
+                ❓ 題組一版面如何置中？
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="askQuestion('HTML5 的 article 與 section 具體區別？')">
+                ❓ article 與 section 區別？
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="askQuestion('APCS 實作題如何避免遞迴堆疊溢位 (Stack Overflow)？')">
+                ❓ APCS 遞迴堆疊優化？
+              </button>
+            </div>
+
+            <!-- Dialogue Stream -->
+            <div id="chat-stream" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 12px; background-color: var(--surface-sunken); border-radius: var(--radius-sm); margin-bottom: 16px;">
+              
+              <!-- Greeting Bubble -->
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--color-brand-deep-slate); color: var(--color-brand-gold); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0;">
+                  AI
+                </div>
+                <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 14px 18px; border-radius: 4px 14px 14px 14px; max-width: 85%; font-size: 14px; line-height: 1.6;">
+                  嗨！我是「碼上學」AI 思考助教。在練習檢定題庫或切版遇到卡點時，你可以隨時向我提問。我的任務是透過「觀念聚焦 → 破題思路 → 邊界提點 → 架構解構」4 階段提示，陪伴你一步步自己想出解答！
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Input Box -->
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="chat-input" placeholder="輸入您的程式問題或卡點..." style="flex: 1; height: 42px; padding: 0 16px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); outline: none;">
+              <button type="button" class="btn btn-primary" onclick="handleSendInput()">發送問題</button>
+            </div>
+
+          </div>
+
+          <!-- Right Philosophy Sidebar -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            <div class="card" style="padding: 24px;">
+              <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">四階鷹架原則</h4>
+              <ol style="font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px; padding-left: 18px; line-height: 1.6;">
+                <li><strong>觀念聚焦</strong>：提問關鍵原理與資料結構。</li>
+                <li><strong>思考破題</strong>：給予演算法步驟的偽代碼指引。</li>
+                <li><strong>邊界提點</strong>：指出最容易失分的極端測試案例。</li>
+                <li><strong>架構解構</strong>：分析時空複雜度與最優解。</li>
+              </ol>
+            </div>
+
+            <div class="card" style="padding: 20px; background-color: var(--surface-sunken);">
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">與代碼工作台聯動</h4>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                在代碼編輯器中實作時，AI 助教會針對當前編寫的代碼提供針對性提示。
+              </p>
+              <a href="code-editor.html" class="btn btn-primary btn-sm btn-mobile-full">前往代碼工作台</a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; font-size: 13px; color: var(--color-brand-slate);">
+      © 2026 CODE TO KNOW 碼上學 AI 智慧學習與教育科技平台. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="../assets/js/prototype-data.js"></script>
+  <script src="../assets/js/navigation.js"></script>
+  <script src="../assets/js/interactions.js"></script>
+  <script>
+    function askQuestion(text) {
+      var stream = document.getElementById('chat-stream');
+      if (!stream) return;
+
+      // Student bubble
+      var userBubble = document.createElement('div');
+      userBubble.style.display = 'flex';
+      userBubble.style.gap = '12px';
+      userBubble.style.alignItems = 'flex-start';
+      userBubble.style.justifyContent = 'flex-end';
+      userBubble.innerHTML = '<div style="background-color: var(--color-brand-deep-slate); color: white; padding: 12px 16px; border-radius: 14px 4px 14px 14px; max-width: 80%; font-size: 14px;">' + text + '</div>';
+      stream.appendChild(userBubble);
+
+      // AI response
+      setTimeout(function() {
+        var aiBubble = document.createElement('div');
+        aiBubble.style.display = 'flex';
+        aiBubble.style.gap = '12px';
+        aiBubble.style.alignItems = 'flex-start';
+        aiBubble.innerHTML = '<div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--color-brand-deep-slate); color: var(--color-brand-gold); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0;">AI</div><div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 14px 18px; border-radius: 4px 14px 14px 14px; max-width: 85%; font-size: 13px; line-height: 1.6;"><div style="font-weight: 700; color: var(--color-brand-gold-text); margin-bottom: 4px;">✦ STEP 1 觀念聚焦</div>先思考：CSS 中讓固定寬度元素在父容器內水平置中，是透過 <code>margin: 0 auto;</code> 還是 <code>text-align: center;</code>？這兩者的作用對象有何差別？</div>';
+        stream.appendChild(aiBubble);
+        stream.scrollTop = stream.scrollHeight;
+      }, 400);
+
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function handleSendInput() {
+      var input = document.getElementById('chat-input');
+      if (!input || !input.value.trim()) return;
+      askQuestion(input.value.trim());
+      input.value = '';
+    }
+  </script>
+</body>
+</html>

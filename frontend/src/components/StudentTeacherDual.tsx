@@ -2,9 +2,23 @@ import React, { useState } from 'react';
 import { GraduationCap, School, Check, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const StudentTeacherDual: React.FC = () => {
+interface StudentTeacherDualProps {
+  onOpenTeacherApply?: () => void;
+}
+
+export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTeacherApply }) => {
   const [activeRole, setActiveRole] = useState<'student' | 'teacher'>('student');
-  const { openAuth } = useAuth();
+  const { user, openAuth } = useAuth();
+
+  const handleTeacherClick = () => {
+    if (user) {
+      if (onOpenTeacherApply) {
+        onOpenTeacherApply();
+      }
+    } else {
+      openAuth('login');
+    }
+  };
 
   return (
     <section id="dual-audience" className="section-padding" style={{ backgroundColor: 'var(--surface-base)' }}>
@@ -174,7 +188,7 @@ export const StudentTeacherDual: React.FC = () => {
                 <button
                   type="button"
                   className="btn btn-primary btn-mobile-full"
-                  onClick={() => openAuth('register')}
+                  onClick={handleTeacherClick}
                 >
                   <span>申請教師專區演示</span>
                   <ArrowRight size={14} />

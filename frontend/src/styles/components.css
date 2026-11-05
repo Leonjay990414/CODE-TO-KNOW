@@ -254,13 +254,29 @@
 
 .badge-gold {
   background-color: rgba(189, 167, 126, 0.16);
-  color: #7C663D;
+  color: var(--color-brand-gold-text);
   border: 1px solid rgba(189, 167, 126, 0.3);
 }
 
 .badge-neutral {
   background-color: var(--color-brand-ice-slate);
   color: var(--color-brand-deep-slate);
+}
+
+.badge-slate {
+  background-color: var(--color-brand-ice-slate);
+  color: var(--color-brand-deep-slate);
+  border: 1px solid rgba(74, 96, 112, 0.15);
+}
+
+.badge-coming-soon {
+  background-color: rgba(143, 169, 184, 0.16);
+  color: var(--color-brand-deep-slate);
+  border: 1px solid rgba(143, 169, 184, 0.35);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .badge-success {
@@ -292,4 +308,227 @@
     height: 48px;
     font-size: var(--font-size-base);
   }
+}
+
+/* ==========================================================================
+   Filter Pills & Search Inputs
+   ========================================================================== */
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  background-color: #FFFFFF;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.filter-pill:hover {
+  border-color: var(--color-brand-slate);
+  background-color: var(--color-brand-ice-slate);
+}
+
+.filter-pill.active {
+  background-color: var(--color-brand-deep-slate);
+  color: var(--color-brand-ivory);
+  border-color: var(--color-brand-deep-slate);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrap input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.search-input-wrap input:focus {
+  border-color: var(--color-brand-deep-slate);
+  box-shadow: 0 0 0 3px rgba(82, 107, 123, 0.12);
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Progress Bar & Breadcrumb
+   ========================================================================== */
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background-color: var(--surface-sunken);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-brand-deep-slate), var(--color-brand-gold));
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.breadcrumb-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.breadcrumb-nav a:hover {
+  color: var(--color-brand-deep-slate);
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Demo Data Notice Banner
+   ========================================================================== */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background-color: rgba(189, 167, 126, 0.15);
+  border: 1px solid rgba(189, 167, 126, 0.35);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-8);
+  font-size: 13px;
+  color: var(--color-brand-gold-text);
+  line-height: 1.5;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   Certification Card & Grid
+   ========================================================================== */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+  .cert-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cert-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cert-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.cert-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-brand-slate);
+  box-shadow: var(--shadow-md);
+}
+
+.cert-card.featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-brand-deep-slate), var(--color-brand-gold));
+}
+
+.cert-stats-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-xs);
+}
+
+.cert-card.is-coming-soon {
+  border-color: var(--border-default);
+  background-color: #FFFFFF;
+}
+
+.cert-planned-box {
+  background-color: var(--surface-sunken);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin: 14px 0 16px 0;
+}
+
+.cert-planned-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-brand-deep-slate);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.02em;
+}
+
+.cert-planned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cert-planned-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
 }

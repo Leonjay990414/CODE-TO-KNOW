@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 dist/
 build/
 .env
@@ -18,3 +18,10 @@ test-results/
 
 # Temporary upload artifacts
 .tmp.driveupload/
+
+# Large original certification learning materials - keep locally, exclude from Git
+/900060A19.mp3
+/900070A18.mp3
+/900080A15.mp3
+/900090A12.mp3
+/173003B13.7z

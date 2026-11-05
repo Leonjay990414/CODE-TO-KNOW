@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>個人學習歷程與弱點診斷｜碼上學 CODE TO KNOW (Prototype)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/global.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-nav">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <a href="../index.html" style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; flex-shrink: 0;">
+          <svg viewBox="0 0 256 256" width="100%" height="100%">
+            <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
+            <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
+            <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
+            <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--color-brand-charcoal); line-height: 1.1;">碼上學</span>
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--color-brand-deep-slate); text-transform: uppercase;">CODE TO KNOW</span>
+        </div>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px;" class="desktop-nav">
+        <a href="../index.html" class="nav-link-item">首頁</a>
+        <a href="certifications.html" class="nav-link-item">證照中心</a>
+        <a href="theory-learning.html" class="nav-link-item">學科題庫</a>
+        <a href="practical-learning.html" class="nav-link-item">術科實作</a>
+        <a href="mock-exam.html" class="nav-link-item">全真模擬考</a>
+        <a href="learning-progress.html" class="nav-link-item active">學習進度</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;" class="desktop-cta">
+        <a href="code-editor.html" class="btn btn-primary btn-sm">開啟代碼工作台</a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-toggle-btn" aria-label="切換導航選單" aria-expanded="false" style="display: none; padding: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu-drawer" style="display: none;">
+    <div style="background-color: var(--surface-base); padding: 24px; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--border-default);">
+      <a href="../index.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">首頁</a>
+      <a href="certifications.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">證照智慧學習中心</a>
+      <a href="theory-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">學科理論與題庫</a>
+      <a href="practical-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">術科實作工作區</a>
+      <a href="mock-exam.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">全真模擬測驗</a>
+      <a href="code-editor.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">線上代碼編輯器</a>
+      <a href="ai-coach.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">AI 學習助教</a>
+      <a href="learning-progress.html" class="nav-link-item active" style="font-size: 16px; padding: 10px 0;">個人學習進度</a>
+    </div>
+  </div>
+
+  <main>
+    <section class="subpage-hero">
+      <div class="container">
+        <nav class="breadcrumb-nav">
+          <a href="../index.html">首頁</a>
+          <span>/</span>
+          <a href="certifications.html">證照智慧學習中心</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;">個人學習歷程與弱點診斷</span>
+        </nav>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+              <span class="badge badge-gold">個人學習歷程</span>
+              <span style="font-size: 12px; color: var(--text-muted);">雷達落點分析 · 錯題追蹤</span>
+            </div>
+            <h1 class="text-h1">學力進度與考照準備度</h1>
+          </div>
+          <a href="mock-exam.html" class="btn btn-primary">開始新的全真模擬測驗</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-padding" style="background-color: var(--surface-base);">
+      <div class="container">
+
+        <!-- 4 Metric Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: var(--space-8);">
+          <div class="card" style="padding: 20px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">累計答題數</div>
+            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">389 題</div>
+            <div style="font-size: 11px; color: var(--status-success); margin-top: 4px;">↑ 本週新增 64 題</div>
+          </div>
+          <div class="card" style="padding: 20px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">模擬考最高分</div>
+            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-charcoal);">88.75 分</div>
+            <div style="font-size: 11px; color: var(--status-success); margin-top: 4px;">高於國家及格門檻 (60)</div>
+          </div>
+          <div class="card" style="padding: 20px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">考照準備度預估</div>
+            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-gold-text);">78%</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">建議加強術科題組三</div>
+          </div>
+          <div class="card" style="padding: 20px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">AI 啟發點數</div>
+            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">142 顆微光</div>
+            <div style="font-size: 11px; color: var(--color-brand-gold-text); margin-top: 4px;">自主推理成果</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: var(--space-8);">
+          
+          <!-- Enrolled Certifications Track -->
+          <div class="card" style="padding: 28px;">
+            <h3 class="text-h3" style="font-size: 18px; margin-bottom: 16px;">目前進行中的考證目標</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Cert 1 -->
+              <div style="padding: 16px; border: 1px solid var(--border-default); border-radius: var(--radius-md); background-color: #FFFFFF;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div>
+                    <span class="badge badge-gold" style="font-size: 10px;">目標證照</span>
+                    <strong style="font-size: 15px; margin-left: 6px;">網頁設計丙級 (17300)</strong>
+                  </div>
+                  <span style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">45%</span>
+                </div>
+                <div class="progress-track" style="margin-bottom: 12px;">
+                  <div class="progress-bar" style="width: 45%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary);">
+                  <span>學科已刷 189 / 420 題 · 術科已練 2 / 5 題組</span>
+                  <a href="practical-learning.html?id=web-design-c" class="btn btn-outline btn-sm">繼續練習</a>
+                </div>
+              </div>
+
+              <!-- Cert 2 -->
+              <div style="padding: 16px; border: 1px solid var(--border-default); border-radius: var(--radius-md); background-color: #FFFFFF;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div>
+                    <span class="badge badge-slate" style="font-size: 10px;">升學檢測</span>
+                    <strong style="font-size: 15px; margin-left: 6px;">APCS 程式設計先修檢測</strong>
+                  </div>
+                  <span style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">25%</span>
+                </div>
+                <div class="progress-track" style="margin-bottom: 12px;">
+                  <div class="progress-bar" style="width: 25%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary);">
+                  <span>觀念題完成 50 題 · 實作題完成 10 題</span>
+                  <a href="theory-learning.html" class="btn btn-outline btn-sm">繼續練習</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weakness & Diagnosis Radar -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            <div class="card" style="padding: 24px;">
+              <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">智能弱點診斷與推播</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+                系統根據近 3 次模擬考答錯題型，分析您最需要補強的單元：
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <div style="padding: 10px 14px; background-color: var(--status-error-bg); border-left: 3px solid var(--status-error); border-radius: var(--radius-xs); font-size: 12px;">
+                  <strong>高頻卡點 #1</strong>：CSS 浮動清除 (Clearfix) 與 Flexbox 交叉軸對齊
+                </div>
+                <div style="padding: 10px 14px; background-color: var(--status-warning-bg); border-left: 3px solid var(--status-warning); border-radius: var(--radius-xs); font-size: 12px;">
+                  <strong>需留心 #2</strong>：超連結 target 屬性之 iframe 名稱不相符
+                </div>
+              </div>
+              <a href="theory-learning.html" class="btn btn-primary btn-sm btn-mobile-full">針對弱點單元加強刷題</a>
+            </div>
+
+            <div class="card" style="padding: 20px; background-color: var(--surface-sunken);">
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">需要老師協助？</h4>
+              <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                若您所在的班級已由認證教育者開啟班級中心，您的卡點時長將同步推播給任課老師。
+              </p>
+              <button type="button" class="btn btn-outline btn-sm btn-mobile-full" onclick="showPrototypeToast('已將學習進度摘要發送至班級儀表板。')">同步給任課老師</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; font-size: 13px; color: var(--color-brand-slate);">
+      © 2026 CODE TO KNOW 碼上學 AI 智慧學習與教育科技平台. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="../assets/js/prototype-data.js"></script>
+  <script src="../assets/js/navigation.js"></script>
+  <script src="../assets/js/interactions.js"></script>
+</body>
+</html>

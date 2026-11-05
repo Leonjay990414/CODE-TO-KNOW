@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi, User } from '../services/api';
 
+export type AuthModalMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   authModalOpen: boolean;
-  authModalMode: 'login' | 'register';
-  openAuth: (mode?: 'login' | 'register') => void;
+  authModalMode: AuthModalMode;
+  openAuth: (mode?: AuthModalMode) => void;
   closeAuth: () => void;
   login: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   register: (data: { email: string; password: string; displayName: string }) => Promise<{ success: boolean; error?: string }>;
@@ -20,7 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('login');
 
   const refreshUser = async () => {
     try {
@@ -41,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     refreshUser();
   }, []);
 
-  const openAuth = (mode: 'login' | 'register' = 'login') => {
+  const openAuth = (mode: AuthModalMode = 'login') => {
     setAuthModalMode(mode);
     setAuthModalOpen(true);
   };

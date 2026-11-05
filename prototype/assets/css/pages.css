@@ -1,0 +1,277 @@
+/**
+ * CODE TO KNOW (碼上學) Prototype - Page Layouts
+ */
+
+/* ==========================================================================
+   1. Homepage (index.html) Styles
+   ========================================================================== */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-20);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-10);
+  }
+}
+
+.hero-gradient-1 {
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(189, 167, 126, 0.15) 0%, rgba(245, 242, 234, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-gradient-2 {
+  position: absolute;
+  top: 35%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(143, 169, 184, 0.18) 0%, rgba(245, 242, 234, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.experience-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+}
+
+@media (max-width: 900px) {
+  .experience-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+}
+
+.scaffolding-level-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 840px) {
+  .scaffolding-level-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .scaffolding-level-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-10);
+  align-items: center;
+}
+
+@media (max-width: 1023px) {
+  .dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   2. Certifications Center (certifications.html) Styles
+   ========================================================================== */
+.cert-header {
+  padding: var(--space-12) 0 var(--space-8) 0;
+  background-color: var(--surface-base);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cert-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6) 0;
+}
+
+.cert-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.cert-pills-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+  .cert-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cert-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cert-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.cert-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-brand-slate);
+  box-shadow: var(--shadow-md);
+}
+
+.cert-card.featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-brand-deep-slate), var(--color-brand-gold));
+}
+
+.cert-stats-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-xs);
+}
+
+/* ==========================================================================
+   3. Subpage Shared Skeleton / Breadcrumbs Styles
+   ========================================================================== */
+.subpage-hero {
+  padding: var(--space-10) 0 var(--space-8) 0;
+  background-color: var(--surface-base);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.breadcrumb-nav a:hover {
+  color: var(--color-brand-deep-slate);
+  text-decoration: underline;
+}
+
+.prototype-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background-color: rgba(189, 167, 126, 0.15);
+  border: 1px solid rgba(189, 167, 126, 0.35);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-8);
+  font-size: 13px;
+  color: var(--color-brand-gold-text);
+  line-height: 1.5;
+}
+
+.skeleton-box {
+  background-color: #FFFFFF;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10);
+  text-align: center;
+}
+
+/* ==========================================================================
+   4. Footer Layout
+   ========================================================================== */
+.site-footer {
+  background-color: var(--color-brand-charcoal);
+  color: var(--color-brand-ivory);
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-10);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-10);
+  margin-bottom: var(--space-12);
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}
+
+.footer-link {
+  font-size: 13px;
+  color: var(--color-brand-slate);
+  display: block;
+  margin-bottom: 8px;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.footer-link:hover {
+  color: var(--color-brand-ivory);
+}
+

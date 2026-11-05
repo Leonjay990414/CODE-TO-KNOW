@@ -1,0 +1,428 @@
+/**
+ * CODE TO KNOW (碼上學) Prototype - Component Library
+ */
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  font-family: var(--font-sans-tc), var(--font-sans-en);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs);
+}
+
+.btn-lg {
+  height: 48px;
+  padding: 0 var(--space-6);
+  font-size: var(--font-size-base);
+}
+
+.btn-primary {
+  background-color: var(--color-brand-deep-slate);
+  color: var(--color-brand-ivory);
+  box-shadow: var(--shadow-subtle);
+}
+
+.btn-primary:hover {
+  background-color: #445A68;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: var(--color-brand-ice-slate);
+  color: var(--color-brand-charcoal);
+  border-color: rgba(82, 107, 123, 0.15);
+}
+
+.btn-secondary:hover {
+  background-color: #CBD7E2;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-brand-charcoal);
+  border-color: var(--color-brand-slate);
+}
+
+.btn-outline:hover {
+  border-color: var(--color-brand-deep-slate);
+  background-color: rgba(217, 226, 234, 0.4);
+}
+
+.btn-gold {
+  background-color: var(--color-brand-gold);
+  color: var(--color-brand-charcoal);
+  box-shadow: 0 2px 8px rgba(189, 167, 126, 0.25);
+  font-weight: var(--font-weight-semibold);
+}
+
+.btn-gold:hover {
+  background-color: var(--color-brand-gold-hover);
+  color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-gold-spark);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-brand-deep-slate);
+}
+
+.btn-ghost:hover {
+  background-color: rgba(82, 107, 123, 0.08);
+  color: var(--color-brand-charcoal);
+}
+
+@media (max-width: 639px) {
+  .btn-mobile-full {
+    width: 100%;
+    min-height: 44px;
+    height: 48px;
+    font-size: var(--font-size-base);
+  }
+}
+
+/* ==========================================================================
+   Cards & Surfaces
+   ========================================================================== */
+.card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-subtle);
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  border-color: var(--color-brand-slate);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Glassmorphism Header */
+.glass-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-nav);
+  height: 72px;
+  background-color: rgba(245, 242, 234, 0.88);
+  border-bottom: 1px solid rgba(82, 107, 123, 0.08);
+  transition: background-color var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-nav {
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    background-color: rgba(245, 242, 234, 0.82);
+  }
+}
+
+.glass-nav.scrolled {
+  background-color: rgba(245, 242, 234, 0.95);
+  box-shadow: 0 2px 14px rgba(38, 52, 61, 0.06);
+  border-bottom: 1px solid rgba(82, 107, 123, 0.12);
+}
+
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+  }
+}
+
+/* ==========================================================================
+   Badges & Tags
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.badge-gold {
+  background-color: rgba(189, 167, 126, 0.16);
+  color: var(--color-brand-gold-text);
+  border: 1px solid rgba(189, 167, 126, 0.35);
+}
+
+.badge-slate {
+  background-color: var(--color-brand-ice-slate);
+  color: var(--color-brand-deep-slate);
+  border: 1px solid rgba(82, 107, 123, 0.15);
+}
+
+.badge-subtle {
+  background-color: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.badge-neutral {
+  background-color: var(--color-brand-ice-slate);
+  color: var(--color-brand-deep-slate);
+}
+
+.badge-success {
+  background-color: var(--status-success-bg);
+  color: var(--status-success);
+  border: 1px solid rgba(62, 123, 98, 0.2);
+}
+
+.badge-warning {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning);
+}
+
+.badge-error {
+  background-color: var(--status-error-bg);
+  color: var(--status-error);
+}
+
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background-color: var(--surface-sunken);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-brand-deep-slate), var(--color-brand-gold));
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* ==========================================================================
+   Navigation Links & Indicators
+   ========================================================================== */
+.nav-link-item {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  position: relative;
+  padding: 6px 0;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.nav-link-item:hover {
+  color: var(--color-brand-deep-slate);
+}
+
+.nav-link-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-brand-gold);
+  transition: all var(--duration-fast) var(--ease-out);
+  transform: translateX(-50%);
+}
+
+.nav-link-item:hover::after,
+.nav-link-item.active::after {
+  width: 100%;
+}
+
+.nav-link-item.active {
+  color: var(--color-brand-deep-slate);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Filter Pills & Search Inputs
+   ========================================================================== */
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  background-color: #FFFFFF;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.filter-pill:hover {
+  border-color: var(--color-brand-slate);
+  background-color: var(--color-brand-ice-slate);
+}
+
+.filter-pill.active {
+  background-color: var(--color-brand-deep-slate);
+  color: var(--color-brand-ivory);
+  border-color: var(--color-brand-deep-slate);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrap input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.search-input-wrap input:focus {
+  border-color: var(--color-brand-deep-slate);
+  box-shadow: 0 0 0 3px rgba(82, 107, 123, 0.12);
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Prototype Toast Notification
+   ========================================================================== */
+.prototype-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--z-index-toast);
+  background-color: var(--color-brand-charcoal);
+  color: var(--color-brand-ivory);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 380px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all var(--duration-normal) var(--ease-out);
+  pointer-events: none;
+  border-left: 3px solid var(--color-brand-gold);
+}
+
+.prototype-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Scroll Reveal Animations
+   ========================================================================== */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--duration-page) var(--ease-out),
+              transform var(--duration-page) var(--ease-out);
+  will-change: opacity, transform;
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Mobile Navigation & Drawer
+   ========================================================================== */
+@media (max-width: 1023px) {
+  .desktop-nav,
+  .desktop-cta {
+    display: none !important;
+  }
+  .mobile-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    color: var(--color-brand-charcoal);
+    cursor: pointer;
+  }
+}
+
+.mobile-menu-drawer {
+  display: none;
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(38, 52, 61, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: var(--z-index-drawer);
+}
+
+.mobile-menu-drawer.open {
+  display: flex !important;
+  flex-direction: column;
+}

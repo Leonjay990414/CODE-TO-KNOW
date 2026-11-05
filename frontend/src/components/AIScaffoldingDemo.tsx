@@ -39,6 +39,22 @@ export const AIScaffoldingDemo: React.FC = () => {
     },
   ];
 
+  const handleTabKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedLevel((prev) => (prev >= guidanceLevels.length ? 1 : prev + 1));
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedLevel((prev) => (prev <= 1 ? guidanceLevels.length : prev - 1));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setSelectedLevel(1);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setSelectedLevel(guidanceLevels.length);
+    }
+  };
+
   return (
     <section id="ai-learning" className="section-padding" style={{ backgroundColor: 'var(--surface-sunken)', position: 'relative' }}>
       <div className="container">
@@ -60,12 +76,24 @@ export const AIScaffoldingDemo: React.FC = () => {
         </div>
 
         {/* 4-Step Scaffolding Selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: 'var(--space-8)' }} className="scaffolding-level-grid">
+        <div
+          role="tablist"
+          aria-label="思考鷹架四階引導階段選單"
+          onKeyDown={handleTabKeyDown}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: 'var(--space-8)' }}
+          className="scaffolding-level-grid"
+        >
           {guidanceLevels.map((lvl) => {
             const isSelected = selectedLevel === lvl.level;
             return (
-              <div
+              <button
                 key={lvl.level}
+                type="button"
+                role="tab"
+                id={`tab-scaffolding-${lvl.level}`}
+                aria-selected={isSelected}
+                aria-controls={`panel-scaffolding-${lvl.level}`}
+                tabIndex={isSelected ? 0 : -1}
                 onClick={() => setSelectedLevel(lvl.level)}
                 style={{
                   padding: '16px',
@@ -79,9 +107,11 @@ export const AIScaffoldingDemo: React.FC = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '6px',
+                  textAlign: 'left',
+                  width: '100%',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: isSelected ? 'var(--color-brand-gold)' : 'var(--text-muted)' }}>
                     STEP 0{lvl.level}
                   </span>
@@ -93,13 +123,20 @@ export const AIScaffoldingDemo: React.FC = () => {
                 <div style={{ fontSize: '12px', opacity: isSelected ? 0.85 : 0.65 }}>
                   {lvl.shortDesc}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
 
         {/* Dynamic Simulated Dialogue Box */}
-        <div className="card" style={{ padding: '32px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)' }}>
+        <div
+          role="tabpanel"
+          id={`panel-scaffolding-${selectedLevel}`}
+          aria-labelledby={`tab-scaffolding-${selectedLevel}`}
+          tabIndex={0}
+          className="card"
+          style={{ padding: '32px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)' }}
+        >
 
           {/* Status Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '24px' }}>
@@ -134,7 +171,7 @@ export const AIScaffoldingDemo: React.FC = () => {
             </div>
             <div style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-default)', padding: '16px 20px', borderRadius: '4px 16px 16px 16px', maxWidth: '85%', boxShadow: 'var(--shadow-sm)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold-text)', letterSpacing: '0.05em' }}>
                   ✦ 碼上學 AI 思考鷹架助推
                 </span>
               </div>
@@ -146,7 +183,7 @@ export const AIScaffoldingDemo: React.FC = () => {
 
           {/* Educational Purpose Note */}
           <div style={{ padding: '12px 16px', backgroundColor: 'rgba(189, 167, 126, 0.12)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: '#7C663D', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--color-brand-gold-text)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <HelpCircle size={16} />
               教育設計目標：{guidanceLevels[selectedLevel - 1].benefit}
             </span>

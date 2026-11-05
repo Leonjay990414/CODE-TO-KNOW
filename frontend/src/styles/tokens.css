@@ -9,6 +9,8 @@
   --color-brand-sand: #D9D2C4;        /* 自然米灰 (次級中性層、輔助襯底) */
   --color-brand-pink: #E8DCD8;        /* 柔霧裸粉 (極少量溫潤點綴、進階成就光影) */
   --color-brand-gold: #BDA77E;        /* 香檳金 (啟發微光、成就解鎖、焦點點睛色) */
+  --color-brand-gold-hover: #A8936B;  /* 香檳金深色懸停態 */
+  --color-brand-gold-text: #7C663D;   /* 高對比香檳金文字色 (WCAG AA 4.5:1 符合) */
   --color-brand-charcoal: #26343D;    /* 深石墨灰 (主要標題、最高對比正文、深色底色) */
 
   /* ==========================================================================
@@ -27,7 +29,7 @@
   --text-muted: #6C7F8C;
   --text-disabled: #A5B3BC;
   --text-inverted: var(--color-brand-ivory);
-  --text-gold: #968159;
+  --text-gold: var(--color-brand-gold-text);
 
   /* 邊框系統 */
   --border-subtle: rgba(82, 107, 123, 0.12);

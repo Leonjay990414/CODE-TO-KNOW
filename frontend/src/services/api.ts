@@ -17,6 +17,7 @@ export interface User {
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
+  message?: string;
   data?: T;
   error?: {
     code: string;
@@ -114,6 +115,19 @@ async function request<T = unknown>(
   }
 }
 
+export interface TeacherApplication {
+  id: string;
+  userId: string;
+  schoolName: string;
+  subject: string;
+  reason: string;
+  proofUrl?: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const authApi = {
   login: (data: { email: string; password: string }) =>
     request<{ user: User; csrfToken: string; message: string }>('/auth/login', {
@@ -136,17 +150,29 @@ export const authApi = {
     request<{ user: User }>('/auth/me', {
       method: 'GET',
     }),
+
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (data: { token: string; newPassword: string }) =>
+    request<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 export const teacherApi = {
   submitApplication: (data: { schoolName: string; subject: string; reason: string; proofUrl?: string }) =>
-    request<{ application: unknown; message: string }>('/teachers/applications', {
+    request<{ application: TeacherApplication; message: string }>('/teachers/applications', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   getMyApplication: () =>
-    request<{ application: unknown }>('/teachers/my-application', {
+    request<{ application: TeacherApplication | null }>('/teachers/my-application', {
       method: 'GET',
     }),
 };

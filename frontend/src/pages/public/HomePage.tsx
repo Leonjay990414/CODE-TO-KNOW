@@ -8,12 +8,24 @@ import { StudentTeacherDual } from '../../components/StudentTeacherDual';
 import { FinalCTA } from '../../components/FinalCTA';
 import { Footer } from '../../components/Footer';
 import { AuthModal } from '../../components/AuthModal';
+import { TeacherApplyModal } from '../../components/TeacherApplyModal';
+import { useAuth } from '../../context/AuthContext';
 
-export const HomePage: React.FC = () => {
-  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
-    isOpen: false,
-    mode: 'login',
-  });
+interface HomePageProps {
+  onOpenTeacherApply?: () => void;
+}
+
+export const HomePage: React.FC<HomePageProps> = ({ onOpenTeacherApply }) => {
+  const { authModalOpen, authModalMode, openAuth, closeAuth } = useAuth();
+  const [localTeacherModalOpen, setLocalTeacherModalOpen] = useState(false);
+
+  const handleTeacherApplyClick = () => {
+    if (onOpenTeacherApply) {
+      onOpenTeacherApply();
+    } else {
+      setLocalTeacherModalOpen(true);
+    }
+  };
 
   // IntersectionObserver for soft scroll-reveal animations
   useEffect(() => {
@@ -34,17 +46,12 @@ export const HomePage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleOpenAuth = (mode: 'login' | 'register') => {
-    setAuthModal({ isOpen: true, mode });
-  };
-
-  const handleCloseAuth = () => {
-    setAuthModal((prev) => ({ ...prev, isOpen: false }));
-  };
-
   return (
     <div className="homepage-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar onOpenAuth={handleOpenAuth} />
+      <Navbar
+        onOpenAuth={openAuth}
+        onOpenTeacherApply={handleTeacherApplyClick}
+      />
 
       <main style={{ flex: 1 }}>
         <div className="fade-in-section is-visible">
@@ -64,7 +71,9 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="fade-in-section">
-          <StudentTeacherDual />
+          <StudentTeacherDual
+            onOpenTeacherApply={handleTeacherApplyClick}
+          />
         </div>
 
         <div className="fade-in-section">
@@ -74,11 +83,21 @@ export const HomePage: React.FC = () => {
 
       <Footer />
 
-      <AuthModal
-        isOpen={authModal.isOpen}
-        mode={authModal.mode}
-        onClose={handleCloseAuth}
-      />
+      {/* Standalone fallback if rendered without App root modals */}
+      {!onOpenTeacherApply && (
+        <>
+          <AuthModal
+            isOpen={authModalOpen}
+            mode={authModalMode}
+            onClose={closeAuth}
+          />
+          <TeacherApplyModal
+            isOpen={localTeacherModalOpen}
+            onClose={() => setLocalTeacherModalOpen(false)}
+            onOpenAuth={openAuth}
+          />
+        </>
+      )}
     </div>
   );
 };

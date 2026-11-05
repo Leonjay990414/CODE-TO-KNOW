@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全真模擬測驗考場｜碼上學 CODE TO KNOW (Prototype)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/global.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-nav">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <a href="../index.html" style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; flex-shrink: 0;">
+          <svg viewBox="0 0 256 256" width="100%" height="100%">
+            <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
+            <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
+            <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
+            <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--color-brand-charcoal); line-height: 1.1;">碼上學</span>
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--color-brand-deep-slate); text-transform: uppercase;">CODE TO KNOW</span>
+        </div>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px;" class="desktop-nav">
+        <a href="../index.html" class="nav-link-item">首頁</a>
+        <a href="certifications.html" class="nav-link-item">證照中心</a>
+        <a href="theory-learning.html" class="nav-link-item">學科題庫</a>
+        <a href="practical-learning.html" class="nav-link-item">術科實作</a>
+        <a href="mock-exam.html" class="nav-link-item active">全真模擬考</a>
+        <a href="learning-progress.html" class="nav-link-item">學習進度</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;" class="desktop-cta">
+        <a href="certifications.html" class="btn btn-outline btn-sm">離開考場</a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-toggle-btn" aria-label="切換導航選單" aria-expanded="false" style="display: none; padding: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu-drawer" style="display: none;">
+    <div style="background-color: var(--surface-base); padding: 24px; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--border-default);">
+      <a href="../index.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">首頁</a>
+      <a href="certifications.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">證照智慧學習中心</a>
+      <a href="theory-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">學科理論與題庫</a>
+      <a href="practical-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">術科實作工作區</a>
+      <a href="mock-exam.html" class="nav-link-item active" style="font-size: 16px; padding: 10px 0;">全真模擬測驗</a>
+      <a href="code-editor.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">線上代碼編輯器</a>
+      <a href="ai-coach.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">AI 學習助教</a>
+      <a href="learning-progress.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">個人學習進度</a>
+    </div>
+  </div>
+
+  <main>
+    <section class="subpage-hero" style="background-color: var(--surface-sunken);">
+      <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span class="badge badge-gold">全真模擬考場模式</span>
+              <span style="font-size: 12px; color: var(--text-muted);">單選 80 題 · 滿分 100 分 · 及格 60 分</span>
+            </div>
+            <h1 class="text-h1" style="font-size: 24px;">網頁設計丙級 (17300) 全真模擬測驗</h1>
+          </div>
+
+          <!-- Countdown Timer Widget -->
+          <div style="background-color: #FFFFFF; border: 2px solid var(--color-brand-gold); padding: 10px 20px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm);">
+            <div style="font-size: 12px; font-weight: 600; color: var(--color-brand-gold-text);">剩餘時間</div>
+            <div style="font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--color-brand-charcoal);" id="exam-timer">
+              58:34
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-padding" style="background-color: var(--surface-base);">
+      <div class="container">
+
+        <div class="prototype-banner">
+          <span>✦ <strong>考場防弊模擬</strong>：考試進行中已啟動自動計時與作答狀態暫存。點擊「送出考卷」可立即預覽成績報告。</span>
+          <button type="button" class="btn btn-primary btn-sm" onclick="finishExam()">提前交卷評分</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: var(--space-8);">
+          
+          <!-- Exam Question Area -->
+          <div class="card" style="padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">
+                第 1 題 / 共 80 題
+              </span>
+              <span style="font-size: 12px; color: var(--text-muted);">本題配分 1.25 分</span>
+            </div>
+
+            <p style="font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 24px;">
+              依據勞動部技術士檢定網頁設計規範，下列哪一種檔案格式具備無損壓縮特性，且同時支援 8-bit 及 24-bit 全彩與 Alpha 透明通道？
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;">
+                <input type="radio" name="exam_q1" value="A">
+                <span style="font-size: 14px;">(A) JPEG</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;">
+                <input type="radio" name="exam_q1" value="B">
+                <span style="font-size: 14px;">(B) GIF</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;">
+                <input type="radio" name="exam_q1" value="C">
+                <span style="font-size: 14px;">(C) PNG</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; background-color: #FFFFFF;">
+                <input type="radio" name="exam_q1" value="D">
+                <span style="font-size: 14px;">(D) BMP</span>
+              </label>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button type="button" class="btn btn-outline" disabled>上一題</button>
+              <button type="button" class="btn btn-primary" onclick="showPrototypeToast('已儲存第 1 題作答並跳至第 2 題。')">下一題 →</button>
+            </div>
+          </div>
+
+          <!-- Answer Sheet Status Sidebar -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            <div class="card" style="padding: 24px;">
+              <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">作答卡總覽 (80 題)</h4>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px;">
+                <span class="btn btn-sm" style="background-color: var(--color-brand-deep-slate); color: #fff;">1</span>
+                <span class="btn btn-sm btn-outline">2</span>
+                <span class="btn btn-sm btn-outline">3</span>
+                <span class="btn btn-sm btn-outline">4</span>
+                <span class="btn btn-sm btn-outline">5</span>
+                <span class="btn btn-sm btn-outline">6</span>
+                <span class="btn btn-sm btn-outline">7</span>
+                <span class="btn btn-sm btn-outline">8</span>
+                <span class="btn btn-sm btn-outline">9</span>
+                <span class="btn btn-sm btn-outline">10</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                目前進度：已作答 1 / 80 題 (未作答 79 題)
+              </div>
+              <button type="button" class="btn btn-gold btn-mobile-full" onclick="finishExam()">
+                確認交卷評分
+              </button>
+            </div>
+
+            <div class="card" style="padding: 20px; background-color: var(--surface-sunken);">
+              <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">考場規則備忘</h4>
+              <ul style="font-size: 11px; color: var(--text-secondary); line-height: 1.6; list-style: disc; padding-left: 16px;">
+                <li>時限共 60 分鐘，結束自動強制交卷。</li>
+                <li>交卷後即時產生弱點能力雷達圖。</li>
+                <li>錯題自動匯入個人錯題筆記庫。</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Result Modal Overlay (Simulated) -->
+        <div id="result-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(38, 52, 61, 0.7); z-index: var(--z-index-modal); align-items: center; justify-content: center; padding: 16px;">
+          <div class="card" style="max-width: 480px; width: 100%; padding: 32px; text-align: center; background-color: #FFFFFF;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: var(--status-success-bg); color: var(--status-success); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="badge badge-success" style="margin-bottom: 8px;">模擬考驗證通過</span>
+            <h2 class="text-h2" style="font-size: 26px; margin-bottom: 6px;">88.75 分</h2>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+              恭喜達標！國家技術士及格標準為 60 分。您在 HTML5 語意與法規掌握度達 95%，CSS 排版部分有 2 題錯題已收錄至複習本。
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+              <a href="theory-learning.html" class="btn btn-outline btn-sm">檢視錯題解析</a>
+              <a href="certifications.html" class="btn btn-primary btn-sm">返回證照中心</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; font-size: 13px; color: var(--color-brand-slate);">
+      © 2026 CODE TO KNOW 碼上學 AI 智慧學習與教育科技平台. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="../assets/js/prototype-data.js"></script>
+  <script src="../assets/js/navigation.js"></script>
+  <script src="../assets/js/interactions.js"></script>
+  <script>
+    function finishExam() {
+      var modal = document.getElementById('result-modal');
+      if (modal) modal.style.display = 'flex';
+      showPrototypeToast('模擬考成果已結算，落點分析已更新。');
+    }
+  </script>
+</body>
+</html>

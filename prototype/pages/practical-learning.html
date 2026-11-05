@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>術科題組實作工作區｜碼上學 CODE TO KNOW (Prototype)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/global.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-nav">
+    <div class="container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <a href="../index.html" style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; flex-shrink: 0;">
+          <svg viewBox="0 0 256 256" width="100%" height="100%">
+            <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
+            <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
+            <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
+            <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+          </svg>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--color-brand-charcoal); line-height: 1.1;">碼上學</span>
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--color-brand-deep-slate); text-transform: uppercase;">CODE TO KNOW</span>
+        </div>
+      </a>
+      <nav style="display: flex; align-items: center; gap: 28px;" class="desktop-nav">
+        <a href="../index.html" class="nav-link-item">首頁</a>
+        <a href="certifications.html" class="nav-link-item">證照中心</a>
+        <a href="theory-learning.html" class="nav-link-item">學科題庫</a>
+        <a href="practical-learning.html" class="nav-link-item active">術科實作</a>
+        <a href="mock-exam.html" class="nav-link-item">全真模擬考</a>
+        <a href="learning-progress.html" class="nav-link-item">學習進度</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 12px;" class="desktop-cta">
+        <a href="code-editor.html" class="btn btn-primary btn-sm">開啟代碼工作台</a>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-toggle-btn" aria-label="切換導航選單" aria-expanded="false" style="display: none; padding: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu-drawer" style="display: none;">
+    <div style="background-color: var(--surface-base); padding: 24px; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--border-default);">
+      <a href="../index.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">首頁</a>
+      <a href="certifications.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">證照智慧學習中心</a>
+      <a href="theory-learning.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">學科理論與題庫</a>
+      <a href="practical-learning.html" class="nav-link-item active" style="font-size: 16px; padding: 10px 0;">術科實作工作區</a>
+      <a href="mock-exam.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">全真模擬測驗</a>
+      <a href="code-editor.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">線上代碼編輯器</a>
+      <a href="ai-coach.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">AI 學習助教</a>
+      <a href="learning-progress.html" class="nav-link-item" style="font-size: 16px; padding: 10px 0;">個人學習進度</a>
+    </div>
+  </div>
+
+  <main>
+    <section class="subpage-hero">
+      <div class="container">
+        <nav class="breadcrumb-nav">
+          <a href="../index.html">首頁</a>
+          <span>/</span>
+          <a href="certifications.html">證照智慧學習中心</a>
+          <span>/</span>
+          <span style="color: var(--text-primary); font-weight: 600;">術科實作題組拆解 (網頁設計丙級 17300)</span>
+        </nav>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+              <span class="badge badge-gold">術科五大題組全解析</span>
+              <span style="font-size: 12px; color: var(--text-muted);">Step-by-Step 實作指引</span>
+            </div>
+            <h1 class="text-h1">術科題組版型結構實作</h1>
+          </div>
+          <a href="code-editor.html" class="btn btn-primary">進入線上代碼編輯器 →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-padding" style="background-color: var(--surface-base);">
+      <div class="container">
+
+        <!-- Task Selector Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;">
+          <button type="button" class="filter-pill active" onclick="showPrototypeToast('切換至題組一：校園社團介紹網')">題組一：校園社團介紹網</button>
+          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組二：國家公園生態探索網')">題組二：國家公園</button>
+          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組三：體育休閒活動中心')">題組三：體育休閒中心</button>
+          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組四：台灣美食巡禮')">題組四：美食巡禮</button>
+          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組五：影音娛樂網')">題組五：影音娛樂網</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: var(--space-8);">
+          
+          <!-- Left: Structure & Steps -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            
+            <div class="card" style="padding: 28px;">
+              <h3 class="text-h3" style="font-size: 18px; margin-bottom: 8px;">題組一：版型版面規格要求</h3>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+                依照試題要求，整體寬度設定為 1024px 置中，包含主標題區塊、跑馬燈區塊、左側主選單、右側主要內容顯示區與頁尾版權宣告區。
+              </p>
+
+              <!-- Wireframe Layout Diagram Mockup -->
+              <div style="border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: 16px; background-color: var(--surface-sunken); font-family: var(--font-mono); font-size: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+                <div style="background-color: #FFFFFF; padding: 12px; border: 1px solid var(--border-default); font-weight: 700;">
+                  [Header 標題區] 寬度 1024px · 高度 100px (放置標誌與社團主視覺)
+                </div>
+                <div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); color: var(--color-brand-deep-slate);">
+                  [Marquee 跑馬燈] 歡迎光臨校園社團介紹網 · 跑馬燈速度與文字顏色規範
+                </div>
+                <div style="display: grid; grid-template-columns: 200px 1fr; gap: 8px; height: 160px;">
+                  <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                    [左側選單區]<br>寬 200px<br>吉他社 / 熱舞社
+                  </div>
+                  <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                    [主內容區 iframe / 主頁面]<br>依左側選單動態載入 club1.html, club2.html
+                  </div>
+                </div>
+                <div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); font-size: 11px;">
+                  [Footer 頁尾區] 網頁設計維護：王小明 · 更新日期：2026/11/05
+                </div>
+              </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="card" style="padding: 28px;">
+              <h3 class="text-h3" style="font-size: 18px; margin-bottom: 16px;">實作步驟分解 (Step-by-Step)</h3>
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                  <span class="badge badge-gold" style="flex-shrink: 0;">STEP 1</span>
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700;">建立工作目錄與素材規劃</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                      建立 <code>images/</code> 資料夾，複製考場隨附素材圖片及背景音樂檔案。
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                  <span class="badge badge-gold" style="flex-shrink: 0;">STEP 2</span>
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700;">架構 index.html 主頁面與 CSS 重設</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                      使用現代 CSS Grid 或 Flexbox 完成 1024px 水平置中佈局。
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                  <span class="badge badge-gold" style="flex-shrink: 0;">STEP 3</span>
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700;">超連結目標框架 target 設置</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                      確保左側選單連結點擊後於右側主內容區正確載入對應頁面。
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: Actions & Code Launch -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            <div class="card" style="padding: 24px; background-color: var(--surface-sunken);">
+              <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">一鍵載入代碼工作台</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+                將題組一預設 HTML/CSS 骨架直接載入線上雙欄編輯器，即刻開始動手切版！
+              </p>
+              <a href="code-editor.html?task=1" class="btn btn-primary btn-mobile-full">
+                <span>開啟題組一代碼編輯器</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+
+            <div class="card" style="padding: 24px;">
+              <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">考場扣分地雷核對清單</h4>
+              <ul style="font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; list-style: disc; padding-left: 16px;">
+                <li>未設定中文字元編碼 UTF-8 或 Big5 導致亂碼（嚴重扣分）</li>
+                <li>圖片未依規定加入替代文字 <code>alt</code> 屬性</li>
+                <li>超連結失效或開啟於新視窗（未依 target 規定）</li>
+                <li>音樂未設置自動循環播放</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container" style="text-align: center; font-size: 13px; color: var(--color-brand-slate);">
+      © 2026 CODE TO KNOW 碼上學 AI 智慧學習與教育科技平台. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="../assets/js/prototype-data.js"></script>
+  <script src="../assets/js/navigation.js"></script>
+  <script src="../assets/js/interactions.js"></script>
+</body>
+</html>
