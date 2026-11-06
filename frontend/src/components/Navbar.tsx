@@ -43,7 +43,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
     { label: '程式沙盒', href: '#code-editor' },
     { label: 'AI 教練', href: '#ai-coach' },
     { label: '學習進度', href: '#progress' },
-    { label: '題庫來源', href: '#sources' },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {

@@ -16,10 +16,11 @@ import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
 import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
 import { AuthModal } from '../components/AuthModal';
 import { TeacherApplyModal } from '../components/TeacherApplyModal';
+import { ProtectedRoute, INTENDED_ROUTE_STORAGE_KEY } from '../components/ProtectedRoute';
 
 const AppContent: React.FC = () => {
-  const { route } = useNavigation();
-  const { authModalOpen, authModalMode, openAuth, closeAuth } = useAuth();
+  const { route, navigate } = useNavigation();
+  const { authModalOpen, authModalMode, openAuth, closeAuth, refreshUser } = useAuth();
   const [teacherModalOpen, setTeacherModalOpen] = useState(false);
 
   const handleOpenTeacherApply = () => {
@@ -50,11 +51,33 @@ const AppContent: React.FC = () => {
       case 'ai-coach':
         return <AICoachPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'learning-progress':
-        return <LearningProgressPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <ProtectedRoute
+            pageTitle="個人學習歷程與數據儀表板"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <LearningProgressPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
       case 'student-dashboard':
-        return <StudentDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <ProtectedRoute
+            pageTitle="學生中心 (Student Hub)"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <StudentDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
       case 'teacher-dashboard':
-        return <TeacherDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <ProtectedRoute
+            requiredRoles={['TEACHER', 'ADMIN']}
+            pageTitle="教師教學管理中心 (Educator Dashboard)"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <TeacherDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
       case 'import-system':
         return <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'home':
@@ -72,6 +95,18 @@ const AppContent: React.FC = () => {
         isOpen={authModalOpen}
         mode={authModalMode}
         onClose={closeAuth}
+        onSuccess={() => {
+          refreshUser();
+          try {
+            const intended = sessionStorage.getItem(INTENDED_ROUTE_STORAGE_KEY);
+            if (intended) {
+              sessionStorage.removeItem(INTENDED_ROUTE_STORAGE_KEY);
+              navigate(intended);
+            }
+          } catch {
+            // Ignore storage access error
+          }
+        }}
       />
 
       {/* Global Teacher Accreditation Modal */}
