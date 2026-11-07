@@ -82,7 +82,7 @@
             </div>
             <h1 class="text-h1" style="margin-bottom: 8px;">網頁設計丙級技術士 學習大綱</h1>
             <p class="text-lead" style="font-size: 15px; max-width: 640px;">
-              本證照分為「學科單選測驗（420 題）」與「術科五大題組版面實作（5 題抽 1 題）」。以下為完整學習模組指引。
+              本證照分為「學科單選測驗（依官方約 611 題）」與「術科五大題組版面實作（5 題抽 1 題）」。以下為完整學習模組指引。
             </p>
           </div>
           <div style="display: flex; gap: 10px;">
@@ -102,7 +102,7 @@
         </div>
 
         <!-- 2-Column Overview -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-8);">
+        <div class="subpage-split-grid">
           
           <!-- Left: Tracks Outline -->
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
@@ -110,14 +110,14 @@
             <!-- Section 1: 學科考點分佈 -->
             <div class="card" style="padding: 28px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 class="text-h3" style="font-size: 18px;">學科考點分佈 (共 420 題)</h3>
+                <h3 class="text-h3" style="font-size: 18px;">學科考點分佈 (依官方題庫約 611 題)</h3>
                 <span class="badge badge-slate">單選 80 題 測驗時限 60 分鐘</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div style="padding: 12px; background-color: var(--surface-sunken); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="font-size: 14px; font-weight: 600;">單元 1：資訊倫理與智慧財產權相關法規</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">共 80 題 · 記憶型考點</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">共 120 題 · 記憶型考點</div>
                   </div>
                   <a href="theory-learning.html" class="btn btn-outline btn-sm">練習此單元</a>
                 </div>
@@ -125,7 +125,7 @@
                 <div style="padding: 12px; background-color: var(--surface-sunken); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="font-size: 14px; font-weight: 600;">單元 2：HTML5 基礎結構與語意標籤規範</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">共 120 題 · 核心重點</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">共 180 題 · 核心重點</div>
                   </div>
                   <a href="theory-learning.html" class="btn btn-outline btn-sm">練習此單元</a>
                 </div>
@@ -133,7 +133,7 @@
                 <div style="padding: 12px; background-color: var(--surface-sunken); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="font-size: 14px; font-weight: 600;">單元 3：CSS3 樣式與響應式排版規則</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">共 120 題 · 常考陷阱題</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">共 180 題 · 常考陷阱題</div>
                   </div>
                   <a href="theory-learning.html" class="btn btn-outline btn-sm">練習此單元</a>
                 </div>
@@ -141,7 +141,7 @@
                 <div style="padding: 12px; background-color: var(--surface-sunken); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="font-size: 14px; font-weight: 600;">單元 4：多媒體檔案格式與色彩理論原理</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">共 100 題 · 圖形與音效規範</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">共 131 題 · 圖形與音效規範</div>
                   </div>
                   <a href="theory-learning.html" class="btn btn-outline btn-sm">練習此單元</a>
                 </div>
@@ -157,26 +157,42 @@
               <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div style="padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
-                    <div style="font-size: 14px; font-weight: 700;">題組一：校園社團介紹網</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">重點：頁框結構、Flash/HTML5 音效嵌入替代、Marquee 跑馬燈效果</div>
+                    <div style="font-size: 14px; font-weight: 700;">題組一：校園社團介紹網 (17300-104301)</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">重點：頁框結構、跑馬燈廣告、超連結 target 連動與 logo/人物影像合成</div>
                   </div>
                   <a href="practical-learning.html?task=1" class="btn btn-primary btn-sm">題組拆解</a>
                 </div>
 
                 <div style="padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
-                    <div style="font-size: 14px; font-weight: 700;">題組二：國家公園生態探索網</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">重點：圖片展示清單、錨點跳轉、表格屬性設定與超連結目標框架</div>
+                    <div style="font-size: 14px; font-weight: 700;">題組二：運動廣場連結網 (17300-104302)</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">重點：文字陰影、最新消息帶狀列表、縮圖切換原圖展示、Tab 標籤頁與訪客留言表單</div>
                   </div>
                   <a href="practical-learning.html?task=2" class="btn btn-outline btn-sm">題組拆解</a>
                 </div>
 
                 <div style="padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
                   <div>
-                    <div style="font-size: 14px; font-weight: 700;">題組三：體育休閒活動中心</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">重點：選單按鈕翻轉特效、表單控制元件與驗證規則</div>
+                    <div style="font-size: 14px; font-weight: 700;">題組三：國家公園介紹網 (17300-104303)</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">重點：標題圖片定時 1 秒輪播、矩形與多邊形影像地圖 (Image Map)、park.mp3 下載</div>
                   </div>
                   <a href="practical-learning.html?task=3" class="btn btn-outline btn-sm">題組拆解</a>
+                </div>
+
+                <div style="padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700;">題組四：網路行銷購物網 (17300-104304)</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">重點：0401.mp3 背景音樂自動循環、3×3 表格圖文展示、新視窗開啟與商品狀態表單</div>
+                  </div>
+                  <a href="practical-learning.html?task=4" class="btn btn-outline btn-sm">題組拆解</a>
+                </div>
+
+                <div style="padding: 14px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700;">題組五：書曼的旅遊相簿 (17300-104305)</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">重點：0508.gif 動態外框字顏色輪替、選單 hover 圖片互換、相框合成與 album5 電子相簿</div>
+                  </div>
+                  <a href="practical-learning.html?task=5" class="btn btn-outline btn-sm">題組拆解</a>
                 </div>
               </div>
             </div>
@@ -187,7 +203,7 @@
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
             <div class="card" style="padding: 24px;">
               <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">學習進度概覽</h4>
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
+              <div style="display: justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; display: flex;">
                 <span>已完成進度</span>
                 <span style="font-weight: 700; color: var(--text-primary);">45%</span>
               </div>
@@ -195,7 +211,7 @@
                 <div class="progress-bar" style="width: 45%;"></div>
               </div>
               <ul style="font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; list-style: none; margin-bottom: 16px;">
-                <li>✓ 學科完成：189 / 420 題</li>
+                <li>✓ 學科完成：189 / 611 題</li>
                 <li>✓ 術科已練習：2 / 5 題組</li>
                 <li>✓ 模擬考最佳成績：88 分</li>
               </ul>
@@ -226,5 +242,108 @@
   <script src="../assets/js/prototype-data.js"></script>
   <script src="../assets/js/navigation.js"></script>
   <script src="../assets/js/interactions.js"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var certId = params.get('id');
+      if (!certId || certId === 'web-design-c' || !window.PROTOTYPE_DATA || !window.PROTOTYPE_DATA.certifications) return;
+
+      var cert = window.PROTOTYPE_DATA.certifications.find(function (c) { return c.id === certId; });
+      if (!cert) return;
+
+      // Update document title & breadcrumbs
+      document.title = cert.name + ' 檢定介紹與大綱｜碼上學 CODE TO KNOW (Prototype)';
+      var breadcrumbs = document.querySelectorAll('.breadcrumb-nav span');
+      if (breadcrumbs.length > 0) {
+        breadcrumbs[breadcrumbs.length - 1].textContent = cert.name + ' (' + cert.code + ')';
+      }
+
+      // Update Hero Section
+      var heroSection = document.querySelector('.subpage-hero');
+      if (heroSection) {
+        var badge = heroSection.querySelector('.badge');
+        if (badge) {
+          badge.className = 'badge badge-slate';
+          badge.textContent = 'COMING SOON';
+        }
+        var codeEl = heroSection.querySelector('span[style*="font-family"]');
+        if (codeEl) codeEl.textContent = '代碼：' + cert.code;
+
+        var h1 = heroSection.querySelector('h1');
+        if (h1) h1.textContent = cert.name + ' 檢定介紹';
+
+        var lead = heroSection.querySelector('p.text-lead');
+        if (lead) lead.textContent = cert.detailedDesc || cert.shortDesc;
+
+        var actionBox = heroSection.querySelector('div[style*="display: flex; gap: 10px"]');
+        if (actionBox) {
+          actionBox.innerHTML = '<button type="button" class="btn btn-secondary" onclick="showPrototypeToast(\'已收到您的關注！題庫上線時系統將第一時間通知。\')">關注開放進度</button>' +
+            '<a href="certifications.html" class="btn btn-outline">瀏覽其他開放證照</a>';
+        }
+      }
+
+      // Update Main Layout for Coming Soon
+      var mainSection = document.querySelector('section.section-padding .container');
+      if (mainSection) {
+        var banner = mainSection.querySelector('.prototype-banner');
+        if (banner) {
+          banner.innerHTML = '<span>✦ <strong>籌備展示模式</strong>：此證照目前處於官方考綱數位化與沙盒整合階段，線上刷題與實作工作區即將開放。</span>' +
+            '<span class="badge badge-slate">數位化建置中</span>';
+        }
+
+        var gridContainer = mainSection.querySelector('.subpage-split-grid') || mainSection.querySelector('div[style*="display: grid"]');
+        if (gridContainer) {
+          var leftCol = '<div style="display: flex; flex-direction: column; gap: var(--space-6);">';
+
+          // Card 1: Exam Info
+          leftCol += '<div class="card" style="padding: 28px;">';
+          leftCol += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">';
+          leftCol += '    <h3 class="text-h3" style="font-size: 18px;">檢定與考試資訊概要</h3>';
+          leftCol += '    <span class="badge badge-gold">官方標準</span>';
+          leftCol += '  </div>';
+          if (cert.examInfo) {
+            leftCol += '  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">';
+            leftCol += '    <div style="padding: 12px; background: var(--surface-sunken); border-radius: var(--radius-sm);"><div style="color: var(--text-muted); font-size: 11px;">時限</div><strong>' + cert.examInfo.duration + '</strong></div>';
+            leftCol += '    <div style="padding: 12px; background: var(--surface-sunken); border-radius: var(--radius-sm);"><div style="color: var(--text-muted); font-size: 11px;">題數 / 題組</div><strong>' + cert.examInfo.questionCount + '</strong></div>';
+            leftCol += '    <div style="padding: 12px; background: var(--surface-sunken); border-radius: var(--radius-sm);"><div style="color: var(--text-muted); font-size: 11px;">及格門檻</div><strong>' + cert.examInfo.passingScore + '</strong></div>';
+            leftCol += '    <div style="padding: 12px; background: var(--surface-sunken); border-radius: var(--radius-sm);"><div style="color: var(--text-muted); font-size: 11px;">主辦認證單位</div><strong>' + cert.examInfo.organ + '</strong></div>';
+            leftCol += '  </div>';
+          }
+          leftCol += '</div>';
+
+          // Card 2: Planned Features
+          leftCol += '<div class="card" style="padding: 28px;">';
+          leftCol += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">';
+          leftCol += '    <h3 class="text-h3" style="font-size: 18px;">預計開放之 AI 智慧學習功能</h3>';
+          leftCol += '    <span class="badge badge-slate">籌備中</span>';
+          leftCol += '  </div>';
+          leftCol += '  <ul style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; list-style: none;">';
+          (cert.plannedFeatures || []).forEach(function (feat) {
+            leftCol += '    <li style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--color-brand-deep-slate); font-weight: 700;">✦</span> ' + feat + '</li>';
+          });
+          leftCol += '  </ul>';
+          leftCol += '</div>';
+          leftCol += '</div>';
+
+          // Right Column
+          var rightCol = '<div style="display: flex; flex-direction: column; gap: var(--space-6);">';
+          rightCol += '  <div class="card" style="padding: 24px; background-color: var(--surface-sunken); text-align: center;">';
+          rightCol += '    <div style="font-size: 32px; margin-bottom: 8px;">⏳</div>';
+          rightCol += '    <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--color-brand-charcoal);">官方題庫與數位沙盒整合中</h4>';
+          rightCol += '    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">秉持嚴謹治學原則，本平台未取得完整官方題庫前不開放空題刷題。您可點擊下方按鈕預約上線通知。</p>';
+          rightCol += '    <button type="button" class="btn btn-primary btn-mobile-full" onclick="showPrototypeToast(\'已成功預約！' + cert.name + ' 上線時將優先推播通知。\')">預約開放通知</button>';
+          rightCol += '  </div>';
+          rightCol += '  <div class="card" style="padding: 20px;">';
+          rightCol += '    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">已開放實作之示範證照</h4>';
+          rightCol += '    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">網頁設計丙級技術士已備妥學科題庫與四大術科題組逐步解構。</p>';
+          rightCol += '    <a href="certification-detail.html?id=web-design-c" class="btn btn-outline btn-sm btn-mobile-full">前往網頁設計丙級</a>';
+          rightCol += '  </div>';
+          rightCol += '</div>';
+
+          gridContainer.innerHTML = leftCol + rightCol;
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

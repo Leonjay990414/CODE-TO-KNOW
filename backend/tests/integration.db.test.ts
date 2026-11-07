@@ -4,11 +4,27 @@ import { authService } from '../src/modules/auth/auth.service.js';
 import { teacherService } from '../src/modules/teachers/teacher.service.js';
 import { adminService } from '../src/modules/admin/admin.service.js';
 import { hashPassword } from '../src/utils/password.js';
+import { validateTestDatabaseUrl } from '../src/config/db-validation.js';
 
 describe('PostgreSQL Live Database Integration Tests', () => {
   const createdUserIds: string[] = [];
 
   beforeAll(async () => {
+    // Ensure TEST_DATABASE_URL is explicitly set and passes strict whitelist validation (host + dbName)
+    const testDbUrl = process.env.TEST_DATABASE_URL;
+    if (!testDbUrl || !testDbUrl.trim()) {
+      throw new Error(
+        '[INTEGRATION TEST CONFIG ERROR] Integration tests require an explicit TEST_DATABASE_URL targeting an isolated test database. Silent fallback to dev/prod DATABASE_URL is strictly disallowed.'
+      );
+    }
+
+    try {
+      validateTestDatabaseUrl(testDbUrl);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Invalid connection URL format';
+      throw new Error(`[INTEGRATION TEST CONFIG ERROR] ${msg}`);
+    }
+
     // Ensure live PostgreSQL connection is active
     await prisma.$queryRaw`SELECT 1`;
   });

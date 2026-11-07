@@ -21,12 +21,27 @@
   transition: all var(--duration-fast) var(--ease-out);
   text-decoration: none;
   white-space: nowrap;
+  min-width: 0;
+}
+
+@media (max-width: 360px) {
+  .btn {
+    padding: 0 var(--space-2);
+    font-size: 12px;
+  }
 }
 
 .btn-sm {
   height: 32px;
   padding: 0 var(--space-3);
   font-size: var(--font-size-xs);
+}
+
+@media (max-width: 360px) {
+  .btn-sm {
+    padding: 0 8px;
+    font-size: 11px;
+  }
 }
 
 .btn-lg {
@@ -113,9 +128,10 @@
   background-color: var(--surface-raised);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: var(--space-6);
+  padding: clamp(16px, 3vw, 28px);
   box-shadow: var(--shadow-subtle);
   transition: all var(--duration-normal) var(--ease-out);
+  min-width: 0;
 }
 
 .card-interactive {
@@ -346,12 +362,12 @@
    ========================================================================== */
 .prototype-toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  right: max(16px, env(safe-area-inset-right, 16px));
   z-index: var(--z-index-toast);
   background-color: var(--color-brand-charcoal);
   color: var(--color-brand-ivory);
-  padding: 12px 20px;
+  padding: 12px 18px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -359,7 +375,9 @@
   gap: 12px;
   font-size: 13px;
   line-height: 1.4;
-  max-width: 380px;
+  max-width: min(380px, calc(100vw - 32px));
+  width: auto;
+  box-sizing: border-box;
   opacity: 0;
   transform: translateY(20px);
   transition: all var(--duration-normal) var(--ease-out);
@@ -426,3 +444,85 @@
   display: flex !important;
   flex-direction: column;
 }
+
+/* ==========================================================================
+   Mobile Landscape Compact Header (P2-01)
+   ========================================================================== */
+@media (max-height: 480px) and (orientation: landscape) {
+  .glass-nav {
+    height: 48px;
+  }
+  .glass-nav .container {
+    height: 100%;
+  }
+  .glass-nav .container > a > div:first-child {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .glass-nav .container > a > div:last-child span:first-child {
+    font-size: 15px !important;
+  }
+  .glass-nav .container > a > div:last-child span:last-child {
+    font-size: 8px !important;
+    letter-spacing: 1px !important;
+  }
+  .mobile-toggle-btn {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 4px !important;
+  }
+  .mobile-menu-drawer {
+    top: 48px;
+  }
+}
+
+/* ==========================================================================
+   Modal Dialog & Overlay (P3-04)
+   ========================================================================== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(38, 52, 61, 0.7);
+  z-index: var(--z-index-modal);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease-out);
+}
+
+.modal-overlay.open {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  max-width: 480px;
+  width: 100%;
+  padding: 32px;
+  text-align: center;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  transform: scale(0.96);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.modal-overlay.open .modal-dialog {
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-dialog {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

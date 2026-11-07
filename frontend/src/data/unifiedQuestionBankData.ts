@@ -252,7 +252,7 @@ export const UNIFIED_QUESTION_BANK: StructuredQuestion[] = [
  */
 export const UNIFIED_PRACTICAL_TASKS: StructuredPracticalTask[] = [
   // =========================================================================
-  // 17300 網頁設計丙級【官方 4 大題組 · 173003B12 完整解析】
+  // 17300 網頁設計丙級【官方 5 大題組 · 173003B12 完整解析】
   // =========================================================================
   {
     certificationId: 'web-design-c',

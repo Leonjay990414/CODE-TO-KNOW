@@ -92,13 +92,13 @@
           <span>✦ <strong>互動助教展示</strong>：點擊下方熱門提問標籤，體驗 AI 如何以 4 階思考鷹架逐步導引，而非直接拋出程式碼！</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-8);">
+        <div class="subpage-split-grid">
           
           <!-- Chat Window -->
           <div class="card" style="padding: 24px; display: flex; flex-direction: column; height: 560px;">
             
-            <!-- Quick Chips -->
-            <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;">
+            <!-- Quick Chips (Scrollable without native scrollbar) -->
+            <div class="quick-chips-bar">
               <button type="button" class="btn btn-outline btn-sm" onclick="askQuestion('題組一版面該如何以 CSS 達成 1024px 水平置中？')">
                 ❓ 題組一版面如何置中？
               </button>

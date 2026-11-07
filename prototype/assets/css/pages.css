@@ -275,3 +275,435 @@
   color: var(--color-brand-ivory);
 }
 
+/* ==========================================================================
+   5. Global Responsive Subpage Layout Systems
+   ========================================================================== */
+
+/* Subpage 2-column split (Main 2fr : Aside 1fr on desktop; stacked on tablet/mobile) */
+.subpage-split-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .subpage-split-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+}
+
+/* Subpage 2-column split wide (Main 2.2fr : Aside 1fr for Question Banks / Exams) */
+.subpage-split-grid--wide {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .subpage-split-grid--wide {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+}
+
+/* Subpage 2-column split balanced (Main 1.8fr : Aside 1.2fr for Practical & Progress) */
+.subpage-split-grid--balanced {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .subpage-split-grid--balanced {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+}
+
+/* 4-column metric cards grid (Progress stats) */
+.metrics-quad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 960px) {
+  .metrics-quad-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+/* 320px ~ 480px: Keep compact 2x2 grid (P2-02) */
+@media (max-width: 480px) {
+  .metrics-quad-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: var(--space-6);
+  }
+  .metrics-quad-grid .metric-card {
+    padding: 12px 10px !important;
+  }
+  .metrics-quad-grid .metric-card-label {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+  }
+  .metrics-quad-grid .metric-card-value {
+    font-size: 19px !important;
+    letter-spacing: -0.3px;
+  }
+  .metrics-quad-grid .metric-card-hint {
+    font-size: 10px !important;
+    margin-top: 2px !important;
+  }
+}
+
+/* AI Coach Quick Chips Horizontal Scroll with Hidden Native Scrollbars (P3-02) */
+.quick-chips-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
+}
+
+.quick-chips-bar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Hero Trust Metrics (3-column on desktop; auto wrap / single on mobile) */
+.hero-trust-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 640px) {
+  .hero-trust-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Practical wireframe mockup layout: 180px sidebar + 1fr main content */
+.wireframe-mockup-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px;
+  min-height: 160px;
+  background-color: var(--surface-sunken);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+}
+
+@media (max-width: 580px) {
+  .wireframe-mockup-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+
+/* Code Editor Dual / Tabbed Layout */
+.editor-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor-mobile-tabs {
+  display: none;
+  background-color: var(--surface-sunken);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  margin-bottom: 8px;
+}
+
+.editor-mobile-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-out),
+              color 0.2s var(--ease-out),
+              box-shadow 0.2s var(--ease-out);
+}
+
+.editor-mobile-tab-btn.active {
+  background-color: #FFFFFF;
+  color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-mobile-tab-btn {
+    transition: none !important;
+  }
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: 600px;
+}
+
+@media (max-width: 900px) {
+  .editor-mobile-tabs {
+    display: flex;
+  }
+  .editor-grid {
+    display: block;
+    height: auto;
+  }
+  .editor-pane {
+    display: none;
+  }
+  .editor-pane.active {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.code-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 440px;
+  padding: 16px;
+  background-color: var(--color-brand-charcoal);
+  color: #E6EDF3;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  border: 1px solid var(--border-default);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  resize: vertical;
+  outline: none;
+  tab-size: 2;
+  box-sizing: border-box;
+}
+
+.code-textarea:focus {
+  border-color: var(--color-brand-gold);
+}
+
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 440px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-default);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Membership & Guest Comparison Section (選擇你的學習方式)
+   ========================================================================== */
+.comparison-section {
+  background-color: var(--surface-sunken);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto var(--space-10) auto;
+}
+
+.comparison-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-bottom: 48px;
+}
+
+.comparison-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comparison-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.comparison-card.card-member {
+  border-color: rgba(189, 167, 126, 0.45);
+  background: linear-gradient(180deg, rgba(189, 167, 126, 0.05) 0%, var(--surface-raised) 24%);
+}
+
+.comparison-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: 16px;
+  align-self: flex-start;
+}
+
+.comparison-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-brand-charcoal);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.comparison-card-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.comparison-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  flex: 1;
+}
+
+.comparison-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+.comparison-feature-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.comparison-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+
+/* Detailed Comparison Table */
+.comparison-table-container {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.comparison-table-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: #FAFAF8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.comparison-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  min-width: 660px;
+}
+
+.comparison-table th {
+  padding: 16px 24px;
+  background-color: var(--surface-sunken);
+  color: var(--color-brand-deep-slate);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+  line-height: 1.6;
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+.comparison-table tr:hover td {
+  background-color: rgba(245, 242, 234, 0.45);
+}
+
+.comparison-status-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .comparison-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 36px;
+  }
+
+  .comparison-card {
+    padding: 28px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .comparison-table th,
+  .comparison-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+}
+
+
+

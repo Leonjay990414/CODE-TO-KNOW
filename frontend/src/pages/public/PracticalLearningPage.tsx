@@ -73,14 +73,14 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
           <div className="demo-banner">
             <Sparkles size={16} />
             <span>
-              <strong>官方考綱核實保證：</strong>依據勞動部技能檢定中心 173003B12 規範，丙級術科實作試題共 4 大題組（題組一至題組四）。本系統提供 4 大題組全真規範、防呆檢核點與安全代碼沙盒。
+              <strong>官方考綱核實保證：</strong>依據勞動部技能檢定中心 173003B12 規範，丙級術科實作試題共 5 大題組（題組一至題組五，現場抽測 1 組）。本系統提供 5 大題組全真規範、防呆檢核點與安全代碼沙盒。
             </span>
           </div>
         </div>
 
-        {/* 4 Tasks Selector Tabs */}
+        {/* 5 Tasks Selector Tabs */}
         <div className="container" style={{ marginTop: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }} className="task-pill-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '28px' }} className="task-pill-grid">
             {OFFICIAL_PRACTICAL_TASKS.map((task) => {
               const isActive = task.id === activeTaskId;
               return (
@@ -113,6 +113,9 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     建議時限 {task.estimatedMinutes} 分鐘
                   </div>
+                  <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: 600, color: task.status === 'available' ? '#2E7D32' : task.status === 'partially_completed' ? '#B8860B' : '#708090' }}>
+                    {task.status === 'available' ? '● 教材完整就緒' : task.status === 'partially_completed' ? '◐ 規格已就緒' : '○ 教材整理中'}
+                  </div>
                 </button>
               );
             })}
@@ -129,9 +132,18 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                   <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{currentTask.theme}</span>
                 </div>
 
-                <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px', color: 'var(--color-brand-charcoal)' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-brand-charcoal)' }}>
                   {currentTask.title}
                 </h2>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <span className="badge badge-slate" style={{ fontSize: '11px' }}>
+                    {currentTask.materialStatusText}
+                  </span>
+                  <span className="badge badge-gold" style={{ fontSize: '11px' }}>
+                    {currentTask.teachingStatusText}
+                  </span>
+                </div>
 
                 <p style={{ fontSize: '14px', lineHeight: 1.8, color: 'var(--text-secondary)', marginBottom: '24px' }}>
                   {currentTask.overview}

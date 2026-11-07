@@ -89,76 +89,80 @@
     <section class="section-padding" style="background-color: var(--surface-base);">
       <div class="container">
 
-        <!-- Task Selector Tabs -->
-        <div style="display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;">
-          <button type="button" class="filter-pill active" onclick="showPrototypeToast('切換至題組一：校園社團介紹網')">題組一：校園社團介紹網</button>
-          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組二：國家公園生態探索網')">題組二：國家公園</button>
-          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組三：體育休閒活動中心')">題組三：體育休閒中心</button>
-          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組四：台灣美食巡禮')">題組四：美食巡禮</button>
-          <button type="button" class="filter-pill" onclick="showPrototypeToast('切換至題組五：影音娛樂網')">題組五：影音娛樂網</button>
+        <!-- Task Selector Tabs (Official 5 Tasks) -->
+        <div style="display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;" id="task-tab-group">
+          <button type="button" class="filter-pill active" data-task="1" onclick="switchTask(1)">題組一：校園社團介紹網</button>
+          <button type="button" class="filter-pill" data-task="2" onclick="switchTask(2)">題組二：運動廣場連結網</button>
+          <button type="button" class="filter-pill" data-task="3" onclick="switchTask(3)">題組三：國家公園介紹網</button>
+          <button type="button" class="filter-pill" data-task="4" onclick="switchTask(4)">題組四：網路行銷購物網</button>
+          <button type="button" class="filter-pill" data-task="5" onclick="switchTask(5)">題組五：書曼的旅遊相簿</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: var(--space-8);">
+        <div class="subpage-split-grid--balanced">
           
           <!-- Left: Structure & Steps -->
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
             
-            <div class="card" style="padding: 28px;">
-              <h3 class="text-h3" style="font-size: 18px; margin-bottom: 8px;">題組一：版型版面規格要求</h3>
-              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
-                依照試題要求，整體寬度設定為 1024px 置中，包含主標題區塊、跑馬燈區塊、左側主選單、右側主要內容顯示區與頁尾版權宣告區。
+            <div class="card" style="padding: 28px;" id="task-wireframe-card">
+              <h3 class="text-h3" style="font-size: 18px; margin-bottom: 8px;" id="task-title">題組一：校園社團介紹網 (17300-104301)</h3>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;" id="task-status-badges">
+                <span class="badge badge-slate" id="task-material-status" style="font-size: 11px;">已核實官方原始素材（11 個檔案完整）</span>
+                <span class="badge badge-gold" id="task-teaching-status" style="font-size: 11px;">完整版型解構與沙盒骨架就緒</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;" id="task-desc">
+                依照官方試題要求，整體寬度設定為 1024px 水平置中。包含頁首區塊 (1024×65)、跑馬燈區塊、左側主選單 (寬 200px)、右側主要內容顯示區 (iframe name="main" 寬 824×470) 與頁尾版權宣告區 (1024×20)。
               </p>
 
               <!-- Wireframe Layout Diagram Mockup -->
-              <div style="border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: 16px; background-color: var(--surface-sunken); font-family: var(--font-mono); font-size: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+              <div id="wireframe-diagram" style="border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: 16px; background-color: var(--surface-sunken); font-family: var(--font-mono); font-size: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px;">
                 <div style="background-color: #FFFFFF; padding: 12px; border: 1px solid var(--border-default); font-weight: 700;">
-                  [Header 標題區] 寬度 1024px · 高度 100px (放置標誌與社團主視覺)
+                  [Header 標題區] 寬度 1024px · 高度 65px (放置標誌與校園社團主標題)
                 </div>
                 <div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); color: var(--color-brand-deep-slate);">
-                  [Marquee 跑馬燈] 歡迎光臨校園社團介紹網 · 跑馬燈速度與文字顏色規範
+                  [Marquee 跑馬燈] 歡迎光臨校園社團介紹網 · 文字由右向左平滑滾動
                 </div>
-                <div style="display: grid; grid-template-columns: 200px 1fr; gap: 8px; height: 160px;">
+                <div class="wireframe-mockup-grid">
                   <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600;">
                     [左側選單區]<br>寬 200px<br>吉他社 / 熱舞社
                   </div>
                   <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-                    [主內容區 iframe / 主頁面]<br>依左側選單動態載入 club1.html, club2.html
+                    [主內容區 iframe name="main"]<br>依左側選單動態載入 guitar.html, dance.html
                   </div>
                 </div>
                 <div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); font-size: 11px;">
-                  [Footer 頁尾區] 網頁設計維護：王小明 · 更新日期：2026/11/05
+                  [Footer 頁尾區] 網頁維護：應檢人姓名 · 最新更新日期：2026/11/05
                 </div>
               </div>
             </div>
 
             <!-- Steps -->
-            <div class="card" style="padding: 28px;">
+            <div class="card" style="padding: 28px;" id="task-steps-card">
               <h3 class="text-h3" style="font-size: 18px; margin-bottom: 16px;">實作步驟分解 (Step-by-Step)</h3>
-              <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; flex-direction: column; gap: 14px;" id="task-steps-list">
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                   <span class="badge badge-gold" style="flex-shrink: 0;">STEP 1</span>
                   <div>
                     <div style="font-size: 14px; font-weight: 700;">建立工作目錄與素材規劃</div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                      建立 <code>images/</code> 資料夾，複製考場隨附素材圖片及背景音樂檔案。
+                      建立 <code>images/</code> 與 <code>media/</code> 目錄，確認考場素材照片 0101.jpg~0105.jpg 及背景音樂檔。
                     </div>
                   </div>
                 </div>
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                   <span class="badge badge-gold" style="flex-shrink: 0;">STEP 2</span>
                   <div>
-                    <div style="font-size: 14px; font-weight: 700;">架構 index.html 主頁面與 CSS 重設</div>
+                    <div style="font-size: 14px; font-weight: 700;">架構 index.html 主頁面與 1024px 置中</div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                      使用現代 CSS Grid 或 Flexbox 完成 1024px 水平置中佈局。
+                      使用現代 CSS 盒模型設定 <code>width: 1024px; margin: 0 auto;</code> 確保置中佈局。
                     </div>
                   </div>
                 </div>
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                   <span class="badge badge-gold" style="flex-shrink: 0;">STEP 3</span>
                   <div>
-                    <div style="font-size: 14px; font-weight: 700;">超連結目標框架 target 設置</div>
+                    <div style="font-size: 14px; font-weight: 700;">超連結目標框架 target 設置與音訊自動播放</div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                      確保左側選單連結點擊後於右側主內容區正確載入對應頁面。
+                      左側選單設定 <code>target="main"</code>，右側 iframe 設為 <code>name="main"</code>，背景音樂設定循環 <code>loop</code>。
                     </div>
                   </div>
                 </div>
@@ -171,22 +175,22 @@
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
             <div class="card" style="padding: 24px; background-color: var(--surface-sunken);">
               <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">一鍵載入代碼工作台</h4>
-              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;" id="editor-prompt-text">
                 將題組一預設 HTML/CSS 骨架直接載入線上雙欄編輯器，即刻開始動手切版！
               </p>
-              <a href="code-editor.html?task=1" class="btn btn-primary btn-mobile-full">
-                <span>開啟題組一代碼編輯器</span>
+              <a href="code-editor.html?task=1" class="btn btn-primary btn-mobile-full" id="btn-launch-editor">
+                <span id="btn-editor-text">開啟題組一代碼編輯器</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
             </div>
 
             <div class="card" style="padding: 24px;">
               <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">考場扣分地雷核對清單</h4>
-              <ul style="font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; list-style: disc; padding-left: 16px;">
-                <li>未設定中文字元編碼 UTF-8 或 Big5 導致亂碼（嚴重扣分）</li>
+              <ul style="font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; list-style: disc; padding-left: 16px;" id="task-traps-list">
+                <li>所有檔案命名必須符合規定（未依小寫 index.html 命名扣重分）</li>
                 <li>圖片未依規定加入替代文字 <code>alt</code> 屬性</li>
-                <li>超連結失效或開啟於新視窗（未依 target 規定）</li>
-                <li>音樂未設置自動循環播放</li>
+                <li>超連結 target 目標未設定或指向錯誤視窗</li>
+                <li>音樂未設置自動循環播放或無法發聲</li>
               </ul>
             </div>
           </div>
@@ -206,5 +210,162 @@
   <script src="../assets/js/prototype-data.js"></script>
   <script src="../assets/js/navigation.js"></script>
   <script src="../assets/js/interactions.js"></script>
+  <script>
+    var OFFICIAL_TASKS_INFO = {
+      1: {
+        title: '題組一：校園社團介紹網 (17300-104301)',
+        materialStatus: '已核實官方原始素材（11 個檔案完整）',
+        teachingStatus: '完整版型解構與沙盒骨架就緒',
+        desc: '依照官方試題要求，整體寬度設定為 1024px 水平置中。包含頁首標題區 (1000×65)、跑馬燈區塊 (770×29)、左側主選單 (寬 215px)、日期更新區 (215×25)、右側網頁內容區 (iframe name="content" 寬 770) 與頁尾版權宣告區 (1000×20)。需完成 logo.png 與 0104.jpg 影像合成。',
+        headerText: '[Header 標題區] 寬度 1000px · 高度 65px (放置合成標誌 logo.png 與校園社團主標題)',
+        marqueeText: '[Marquee 跑馬燈] 歡迎光臨校園社團介紹網，參觀後請支持社團活動並熱烈參與 · 由右向左平滑滾動',
+        sideText: '[左側選單區]<br>寬 215px<br>吉他社 / 熱舞社 / 棒球社等',
+        mainText: '[主內容區 iframe name="content"]<br>依左側選單動態載入 main.html, guitar_history.html',
+        footerText: '[Footer 頁尾區] 網頁設計及維護：XX○○○ · 寬度 1000px · 高度 20px',
+        traps: [
+          '首頁未依規定命名為 index.html (或 index.htm)',
+          '吉他社子頁面超連結目標 target 未設為 content 內容區',
+          '子頁面「回社團介紹首頁」未設定在 _top 開啟',
+          '跑馬燈文字有錯別字或漏字（每一字扣 1 分）'
+        ]
+      },
+      2: {
+        title: '題組二：運動廣場連結網 (17300-104302)',
+        materialStatus: '已核實官方原始素材（21 個檔案完整含 jQuery）',
+        teachingStatus: '題組規格與骨架已就緒 · 操作分步擴充中',
+        desc: '依照官方試題要求，全站版面 1024×768px 水平置中，首頁標題為「勞動部勞動力發展署─運動廣場連結網」，背景顏色 #FFFFFF，外圍背景 #42413C。包含網站標題區 (1024×90)、選單區 (1024×25)、網頁內容區 (1024×460) 與頁尾版權區 (1024×45)。內容區提供最新消息與縮圖切換原圖展示，並包含健康天地 Tab 標籤頁與訪客留言表單。',
+        headerText: '[Header 標題區] 寬 1024px · 高 90px (logo.png 180×90 與陰影文字「運動廣場連結網」)',
+        marqueeText: '[選單區 1024x25] 首頁 | 健康天地 | 籃球介紹 | 棒球介紹 | 游泳介紹 | 訪客留言 | 資料來源',
+        sideText: '[最新消息區]<br>寬 280px<br>標題列 #3399FF 與帶狀列表',
+        mainText: '[圖片展示區 590px]<br>原圖 0202A~0205A 與縮圖及時切換，背景 #333333',
+        footerText: '[Footer 頁尾區] 寬 1024px · 高 45px · 背景 #CCCCCC (網頁設計及維護與更新日期)',
+        traps: [
+          '點按圖片展示區縮圖未即時切換上方對應原圖',
+          '訪客留言表單單選鈕性別未設相同 name 群組導致可複選',
+          '健康天地標籤頁 (Tab) 切換失效或超出範圍未出現垂直捲軸',
+          '留言表單送出/重寫按鈕未彈出指定回覆確認對話框'
+        ]
+      },
+      3: {
+        title: '題組三：國家公園介紹網 (17300-104303)',
+        materialStatus: '已核實官方原始素材（16 個檔案完整含 park.mp3）',
+        teachingStatus: '題組規格與骨架已就緒 · 影像地圖教學擴充中',
+        desc: '依照官方試題要求，首頁標題為「國家公園介紹網」，全站版面 1024×768px 水平置中。包含標題區 (1000×65，四張風景圖以 1 秒輪播)、跑馬燈廣告區 (29px)、左側選單區 (寬 200px 表格選單)、網頁內容區 (背景 park0301.jpg) 與頁尾版權區 (1000×20)。內容區於地圖上設定陽明山矩形與雪霸多邊形影像地圖，並提供 park.mp3 檔案下載。',
+        headerText: '[Header 輪播區] 寬度 1000px · 高度 65px · 背景 #0000FF (四張園區風景圖定時 1 秒輪播)',
+        marqueeText: '[Marquee 跑馬燈] 歡迎進入國家公園介紹網，本網站有詳細的國家公園介紹哦！',
+        sideText: '[選單區]<br>寬 200px · 背景 #00FFFF<br>園區按鈕與 park.mp3 檔案下載',
+        mainText: '[地圖內容區]<br>national_park.jpg 建立陽明山矩形與雪霸多邊形影像地圖',
+        footerText: '[Footer 頁尾區] 寬度 1000px · 高度 20px (網頁設計及維護與最近更新日期)',
+        traps: [
+          '標題輪播圖片未間隔 1 秒，或圖片尺寸不一產生毛邊',
+          '雪霸國家公園影像地圖座標設定不精確，超出多邊形邊框',
+          '檔案下載超連結未正確彈出 park.mp3 下載對話框',
+          '子頁面未設定回首頁超連結'
+        ]
+      },
+      4: {
+        title: '題組四：網路行銷購物網 (17300-104304)',
+        materialStatus: '已核實官方原始素材（12 個檔案完整含 0401.mp3）',
+        teachingStatus: '題組規格與骨架已就緒 · 購物確認對話框教學擴充中',
+        desc: '依照官方試題要求，首頁標題為「網路行銷購物網」，全站版面 1024×768px 水平置中，自動循環播放背景音樂 0401.mp3。包含網站標題區 (1024×120)、跑馬燈廣告區 (30px)、網頁內容區 (3×3 表格圖文展示) 與頁尾版權區 (1024×78)。點選皮件可開新視窗查看 leather1/leather2，並實作 purchase.html 購物確認與 message.html 意見留言。',
+        headerText: '[Header 購物橫幅] 寬度 1024px · 高度 120px · 背景 0401.jpg (流行精品購物網站)',
+        marqueeText: '[Marquee 跑馬燈] 大家來購物網！精品商品特價大拍賣！要買要快！',
+        sideText: '[商品分類欄]<br>寬 200px<br>流行皮件 / 流行鞋區 / 流行飾品',
+        mainText: '[3×3 商品展示表格]<br>真皮皮包與短夾開新視窗展示，點選皮件開啟 purchase.html',
+        footerText: '[Footer 頁尾區] 寬度 1024px · 高度 78px · 背景 #666600 (訪客留言版連結與版權)',
+        traps: [
+          '背景音樂 0401.mp3 未自動循環播放',
+          '點按真皮皮包或短夾未在新視窗 (target="_blank") 中開啟',
+          '商品購買狀態表單選項按鈕預設值未設為「購買」與「考慮中」',
+          '未建立 results 資料夾存放子網頁'
+        ]
+      },
+      5: {
+        title: '題組五：書曼的旅遊相簿 (17300-104305)',
+        materialStatus: '已核實官方原始素材（25 個檔案完整含相框與動態 GIF）',
+        teachingStatus: '教材整理中 · 題組入口與版型規範已建立',
+        desc: '依照官方試題要求，首頁標題為「書曼的旅遊相簿」，版面 1024×768px 水平置中，背景顏色 #FFFFCC，外圍背景 #333333，自動播放背景音樂 0501.mp3。包含頂端跑馬燈區 (1024×50)、左側選單區 (150px 寬，12×1 表格)、網頁內容區 (874px 寬，padding 36px) 與頁尾日期資訊。選單 5 大景點具備 hover 圖片互換動效，並實作 0510a.gif 相框影像合成與 album5 電子相簿。',
+        headerText: '[Header 跑馬燈] 寬度 1024px · 高度 50px (歡迎來到書曼的旅遊相簿...)',
+        marqueeText: '[首頁規格] 背景顏色 #FFFFCC · 外圍背景 #333333 · 自動播放 0501.mp3',
+        sideText: '[左側選單區 150px]<br>0508.gif、0507.jpg<br>5 大景點 hover 藍紅互換',
+        mainText: '[相簿內容區]<br>0510a.gif 合成圖影像地圖進入 album5 電子相簿 (縮圖切換 400×300 原圖)',
+        footerText: '[選單第十列] 日期：yyyy/mm/dd · 維護：XX○○○',
+        traps: [
+          '背景音樂 0501.mp3 未自動播放',
+          '選單項目滑鼠懸停時未切換至紅色版圖檔 (*r.gif)',
+          '電子相簿點選 5 張小圖時未即時切換上方 400×300 原圖',
+          '未建立 album5 資料夾存放相簿網頁'
+        ]
+      }
+    };
+
+    function switchTask(taskId) {
+      var data = OFFICIAL_TASKS_INFO[taskId];
+      if (!data) return;
+
+      // Update pills
+      var pills = document.querySelectorAll('#task-tab-group .filter-pill');
+      pills.forEach(function (pill) {
+        if (pill.getAttribute('data-task') === String(taskId)) {
+          pill.classList.add('active');
+        } else {
+          pill.classList.remove('active');
+        }
+      });
+
+      // Update titles and descriptions
+      var titleEl = document.getElementById('task-title');
+      var descEl = document.getElementById('task-desc');
+      var matBadge = document.getElementById('task-material-status');
+      var teachBadge = document.getElementById('task-teaching-status');
+      if (titleEl) titleEl.textContent = data.title;
+      if (descEl) descEl.textContent = data.desc;
+      if (matBadge && data.materialStatus) matBadge.textContent = data.materialStatus;
+      if (teachBadge && data.teachingStatus) teachBadge.textContent = data.teachingStatus;
+
+      // Update diagram
+      var diagram = document.getElementById('wireframe-diagram');
+      if (diagram) {
+        diagram.innerHTML =
+          '<div style="background-color: #FFFFFF; padding: 12px; border: 1px solid var(--border-default); font-weight: 700;">' + data.headerText + '</div>' +
+          '<div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); color: var(--color-brand-deep-slate);">' + data.marqueeText + '</div>' +
+          '<div class="wireframe-mockup-grid">' +
+          '  <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; font-weight: 600;">' + data.sideText + '</div>' +
+          '  <div style="background-color: #FFFFFF; border: 1px solid var(--border-default); padding: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">' + data.mainText + '</div>' +
+          '</div>' +
+          '<div style="background-color: #FFFFFF; padding: 8px; border: 1px solid var(--border-default); font-size: 11px;">' + data.footerText + '</div>';
+      }
+
+      // Update launch button & editor prompt
+      var btnText = document.getElementById('btn-editor-text');
+      var btnLaunch = document.getElementById('btn-launch-editor');
+      var promptText = document.getElementById('editor-prompt-text');
+      var taskNames = { 1: '題組一', 2: '題組二', 3: '題組三', 4: '題組四', 5: '題組五' };
+      if (btnText) btnText.textContent = '開啟' + taskNames[taskId] + '代碼編輯器';
+      if (btnLaunch) btnLaunch.href = 'code-editor.html?task=' + taskId;
+      if (promptText) promptText.textContent = '將' + taskNames[taskId] + '預設骨架直接載入線上雙欄編輯器，即刻開始動手切版！';
+
+      // Update traps list
+      var trapsList = document.getElementById('task-traps-list');
+      if (trapsList) {
+        var trapsHtml = '';
+        data.traps.forEach(function (trap) {
+          trapsHtml += '<li>' + trap + '</li>';
+        });
+        trapsList.innerHTML = trapsHtml;
+      }
+
+      showPrototypeToast('已切換至' + data.title);
+    }
+
+    // Read URL task parameter on load
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var taskParam = parseInt(params.get('task'), 10);
+      if (taskParam && taskParam >= 1 && taskParam <= 5) {
+        switchTask(taskParam);
+      }
+    })();
+  </script>
 </body>
 </html>

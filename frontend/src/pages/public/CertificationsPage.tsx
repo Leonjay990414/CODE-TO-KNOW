@@ -367,7 +367,7 @@ export const CertificationsPage: React.FC<CertificationsPageProps> = ({ onOpenTe
                             </div>
                           </div>
                           <div>
-                            <div style={{ color: 'var(--text-muted)' }}>術科四大題組</div>
+                            <div style={{ color: 'var(--text-muted)' }}>術科五大題組</div>
                             <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>
                               {cert.practicalsCount} 題組完整拆解
                             </div>

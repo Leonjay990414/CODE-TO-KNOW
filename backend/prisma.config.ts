@@ -1,5 +1,18 @@
-npx skills listimport 'dotenv/config';
+import 'dotenv/config';
 import { defineConfig, env } from 'prisma/config';
+import {
+  resolveDatasourceUrl,
+  validateTestDatabaseUrl,
+  validateMigrationDatabaseUrl,
+  validateDevelopmentDatabaseUrl,
+} from './src/config/db-validation.js';
+
+export {
+  resolveDatasourceUrl,
+  validateTestDatabaseUrl,
+  validateMigrationDatabaseUrl,
+  validateDevelopmentDatabaseUrl,
+};
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
@@ -7,6 +20,8 @@ export default defineConfig({
     path: 'prisma/migrations',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    get url() {
+      return resolveDatasourceUrl((key) => env(key));
+    },
   },
 });

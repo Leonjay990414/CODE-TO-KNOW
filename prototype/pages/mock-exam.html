@@ -93,7 +93,7 @@
           <button type="button" class="btn btn-primary btn-sm" onclick="finishExam()">提前交卷評分</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: var(--space-8);">
+        <div class="subpage-split-grid--wide">
           
           <!-- Exam Question Area -->
           <div class="card" style="padding: 32px;">
@@ -137,7 +137,7 @@
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
             <div class="card" style="padding: 24px;">
               <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">作答卡總覽 (80 題)</h4>
-              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 16px;">
                 <span class="btn btn-sm" style="background-color: var(--color-brand-deep-slate); color: #fff;">1</span>
                 <span class="btn btn-sm btn-outline">2</span>
                 <span class="btn btn-sm btn-outline">3</span>
@@ -169,19 +169,20 @@
 
         </div>
 
-        <!-- Result Modal Overlay (Simulated) -->
-        <div id="result-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(38, 52, 61, 0.7); z-index: var(--z-index-modal); align-items: center; justify-content: center; padding: 16px;">
-          <div class="card" style="max-width: 480px; width: 100%; padding: 32px; text-align: center; background-color: #FFFFFF;">
+        <!-- Result Modal Overlay (P3-04 with smooth fade-in) -->
+        <div id="result-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-score-title" onclick="if(event.target===this)closeExamModal()">
+          <div class="card modal-dialog">
             <div style="width: 56px; height: 56px; border-radius: 50%; background-color: var(--status-success-bg); color: var(--status-success); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <span class="badge badge-success" style="margin-bottom: 8px;">模擬考驗證通過</span>
-            <h2 class="text-h2" style="font-size: 26px; margin-bottom: 6px;">88.75 分</h2>
+            <h2 class="text-h2" id="modal-score-title" style="font-size: 26px; margin-bottom: 6px;">88.75 分</h2>
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
               恭喜達標！國家技術士及格標準為 60 分。您在 HTML5 語意與法規掌握度達 95%，CSS 排版部分有 2 題錯題已收錄至複習本。
             </p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
               <a href="theory-learning.html" class="btn btn-outline btn-sm">檢視錯題解析</a>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="closeExamModal()">關閉視窗</button>
               <a href="certifications.html" class="btn btn-primary btn-sm">返回證照中心</a>
             </div>
           </div>
@@ -203,9 +204,33 @@
   <script>
     function finishExam() {
       var modal = document.getElementById('result-modal');
-      if (modal) modal.style.display = 'flex';
+      if (modal) {
+        modal.style.display = 'flex';
+        // Force reflow for CSS transition
+        void modal.offsetWidth;
+        modal.classList.add('open');
+      }
       showPrototypeToast('模擬考成果已結算，落點分析已更新。');
     }
+
+    function closeExamModal() {
+      var modal = document.getElementById('result-modal');
+      if (modal) {
+        modal.classList.remove('open');
+        setTimeout(function () {
+          if (!modal.classList.contains('open')) {
+            modal.style.display = 'none';
+          }
+        }, 250);
+      }
+    }
+
+    // Keyboard accessibility: Escape key to close modal
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeExamModal();
+      }
+    });
   </script>
 </body>
 </html>

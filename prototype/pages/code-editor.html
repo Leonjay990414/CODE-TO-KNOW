@@ -8,48 +8,6 @@
   <link rel="stylesheet" href="../assets/css/global.css">
   <link rel="stylesheet" href="../assets/css/components.css">
   <link rel="stylesheet" href="../assets/css/pages.css">
-  <style>
-    .editor-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      height: 600px;
-    }
-    @media (max-width: 900px) {
-      .editor-grid {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-    }
-    .code-textarea {
-      width: 100%;
-      height: 100%;
-      min-height: 480px;
-      padding: 16px;
-      background-color: var(--color-brand-charcoal);
-      color: #E6EDF3;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.6;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      resize: vertical;
-      outline: none;
-      tab-size: 2;
-    }
-    .code-textarea:focus {
-      border-color: var(--color-brand-gold);
-    }
-    .preview-frame {
-      width: 100%;
-      height: 100%;
-      min-height: 480px;
-      background-color: #FFFFFF;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-    }
-  </style>
 </head>
 <body>
 
@@ -138,32 +96,40 @@
     <section style="padding: 16px 0 40px 0; background-color: var(--surface-base);">
       <div class="container">
         
-        <div class="editor-grid">
-          
-          <!-- Left: Code Editor Pane -->
-          <div style="display: flex; flex-direction: column;">
-            <div style="background-color: var(--surface-sunken); padding: 8px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; border: 1px solid var(--border-default); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--color-brand-deep-slate);">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--status-success);"></span>
-                <span>index.html (HTML5 & Inline CSS)</span>
-              </div>
-              <span style="font-size: 11px; color: var(--text-muted);">編輯後點擊「執行」即時預覽</span>
-            </div>
-            <textarea id="code-input" class="code-textarea" spellcheck="false" aria-label="HTML/CSS 代碼輸入區"></textarea>
+        <div class="editor-workspace">
+          <!-- Mobile Tab Switcher (Visible on <= 900px) -->
+          <div class="editor-mobile-tabs" role="tablist" aria-label="工作台視窗切換">
+            <button type="button" class="editor-mobile-tab-btn active" id="tab-btn-code" onclick="switchEditorTab('code')">代碼編輯 (HTML / CSS)</button>
+            <button type="button" class="editor-mobile-tab-btn" id="tab-btn-preview" onclick="switchEditorTab('preview')">即時預覽 (Live View)</button>
           </div>
 
-          <!-- Right: Live Preview Pane -->
-          <div style="display: flex; flex-direction: column;">
-            <div style="background-color: var(--surface-sunken); padding: 8px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; border: 1px solid var(--border-default); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--color-brand-deep-slate);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                <span>即時畫面預覽 (Live View)</span>
+          <div class="editor-grid">
+            
+            <!-- Left: Code Editor Pane -->
+            <div class="editor-pane active" id="editor-pane-code" style="display: flex; flex-direction: column;">
+              <div style="background-color: var(--surface-sunken); padding: 8px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; border: 1px solid var(--border-default); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--color-brand-deep-slate);">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--status-success);"></span>
+                  <span>index.html (HTML5 &amp; Inline CSS)</span>
+                </div>
+                <span style="font-size: 11px; color: var(--text-muted);">編輯後點擊「執行」即時預覽</span>
               </div>
-              <span class="badge badge-success" style="font-size: 10px;">Render Ready</span>
+              <textarea id="code-input" class="code-textarea" spellcheck="false" aria-label="HTML/CSS 代碼輸入區"></textarea>
             </div>
-            <iframe id="code-preview" class="preview-frame" title="代碼即時渲染預覽視窗"></iframe>
-          </div>
 
+            <!-- Right: Live Preview Pane -->
+            <div class="editor-pane" id="editor-pane-preview" style="display: flex; flex-direction: column;">
+              <div style="background-color: var(--surface-sunken); padding: 8px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; border: 1px solid var(--border-default); border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--color-brand-deep-slate);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  <span>即時畫面預覽 (Live View)</span>
+                </div>
+                <span class="badge badge-success" style="font-size: 10px;">Render Ready</span>
+              </div>
+              <iframe id="code-preview" class="preview-frame" title="代碼即時渲染預覽視窗"></iframe>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -185,17 +151,57 @@
     var textarea = document.getElementById('code-input');
     var iframe = document.getElementById('code-preview');
 
+    function switchEditorTab(tab) {
+      var codePane = document.getElementById('editor-pane-code');
+      var previewPane = document.getElementById('editor-pane-preview');
+      var codeBtn = document.getElementById('tab-btn-code');
+      var previewBtn = document.getElementById('tab-btn-preview');
+      
+      if (tab === 'code') {
+        if (codePane) codePane.classList.add('active');
+        if (previewPane) previewPane.classList.remove('active');
+        if (codeBtn) codeBtn.classList.add('active');
+        if (previewBtn) previewBtn.classList.remove('active');
+      } else {
+        if (codePane) codePane.classList.remove('active');
+        if (previewPane) previewPane.classList.add('active');
+        if (codeBtn) codeBtn.classList.remove('active');
+        if (previewBtn) previewBtn.classList.add('active');
+      }
+    }
+
     function runCode() {
       if (!textarea || !iframe) return;
       var code = textarea.value;
       iframe.srcdoc = code;
       showPrototypeToast('代碼已即時渲染完成！');
+      // If mobile view, automatically switch to preview tab so user sees result
+      if (window.innerWidth <= 900) {
+        switchEditorTab('preview');
+      }
     }
 
     function resetEditor() {
       if (textarea) textarea.value = defaultCode;
       runCode();
     }
+
+        // Read URL task parameter on load
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var taskParam = parseInt(params.get('task'), 10);
+      var titles = {
+        1: '網頁設計丙級：題組一「校園社團介紹網」切版實作工作台',
+        2: '網頁設計丙級：題組二「運動廣場連結網」切版實作工作台',
+        3: '網頁設計丙級：題組三「國家公園介紹網」切版實作工作台',
+        4: '網頁設計丙級：題組四「網路行銷購物網」切版實作工作台',
+        5: '網頁設計丙級：題組五「書曼的旅遊相簿」切版實作工作台'
+      };
+      if (taskParam && titles[taskParam]) {
+        var h1 = document.querySelector('.text-h1');
+        if (h1) h1.textContent = titles[taskParam];
+      }
+    })();
 
     // Auto-init with default sample
     resetEditor();

@@ -1,17 +1,22 @@
 /**
  * CODE TO KNOW (碼上學) - 網頁設計丙級 (17300) 術科官方題組規格資料庫
  * 依據勞動部勞動力發展署技能檢定中心 173003B12 術科試題規範：
- * 術科檢定共有 4 大題組（題組一至題組四），現場由考場抽出其中 1 組進行 120 分鐘限時實作。
- * 平台提供 4 大題組完整規格解構、考場防呆檢核點，與安全雙欄沙盒預載骨架。
+ * 術科檢定共有 5 大正式題組（17300-104301 至 17300-104305），現場由考場抽出其中 1 組進行 120 分鐘限時實作。
+ * 平台提供 5 大題組完整規格解構、考場防呆檢核點，與安全雙欄沙盒預載骨架。
  */
 
 export interface PracticalTaskDetail {
   id: number;
   code: string;
+  examCode: string;
   title: string;
   theme: string;
   difficulty: '★☆☆' | '★★☆' | '★★★';
   estimatedMinutes: number;
+  materialPath: string;
+  status: 'available' | 'partially_completed' | 'in_preparation';
+  materialStatusText: string;
+  teachingStatusText: string;
   canvasSpec: {
     width: string;
     centering: string;
@@ -22,7 +27,7 @@ export interface PracticalTaskDetail {
   };
   overview: string;
   requiredAssets: string[];
-  disqualificationTraps: string[]; // 0 分致命陷阱
+  disqualificationTraps: string[]; // 扣分地雷與防呆點
   scoringChecklist: string[];      // 評分關鍵查核項目
   defaultHtmlCode: string;         // 沙盒預載骨架
   defaultCssCode: string;
@@ -33,78 +38,88 @@ export const OFFICIAL_PRACTICAL_TASKS: PracticalTaskDetail[] = [
   {
     id: 1,
     code: '17300-104301',
+    examCode: '17300-104301',
     title: '題組一：校園社團介紹網',
-    theme: '多媒體嵌入、框架頁面 target 連動與跑馬燈特效',
+    materialPath: '173003B13/17300網頁設計丙級檢定用檔案-(應檢人參考用)/素材/17300-104301',
+    status: 'available',
+    materialStatusText: '已核實官方原始素材（11 個檔案完整）',
+    teachingStatusText: '完整版型解構與沙盒骨架就緒',
+    theme: '頁框佈局結構、跑馬燈廣告、選單超連結 target 連動與影像合成',
     difficulty: '★☆☆',
     estimatedMinutes: 90,
     canvasSpec: {
       width: '1024px',
       centering: '水平置中 (margin: 0 auto;)',
-      header: '1024px × 65px（社團總標題與標誌）',
-      menu: '寬度 200px（社團選單按鈕區）',
-      content: '寬度 824px × 高度 470px（iframe name="main" 主內文區）',
-      footer: '1024px × 20px（版權聲明與最新更新日期）',
+      header: '1000px × 65px（標誌 logo.png 與校園社團主標題）',
+      menu: '寬度 215px（選單區 menu1/menu2 動態懸停）',
+      content: '寬度 770px（網頁內容區，預設 main.html，切換社史、活動、教學）',
+      footer: '1000px × 20px（網頁設計及維護：XX○○○）',
     },
-    overview: '本題組評量應檢人建置標準校園社團資訊網之能力。需製作首頁 index.html，並包含跑馬燈、背景音樂自動循環，以及點擊左側選單（如吉他社、熱舞社）後，能在右側主內容框架中正確無刷新切換展示社團專頁。',
+    overview: '本試題評量「校園社團介紹網」網頁設計能力。全站版面尺寸 1024×768px 水平置中，包含網站標題區、跑馬燈廣告區、選單區、日期更新區、網頁內容區與頁尾版權區。需完成 logo 合成、校長照片合成，以及點選吉他社子頁面的超連結目標框架連動。',
     requiredAssets: [
-      '0101.jpg ~ 0105.jpg (社團形象照片)',
-      '0101.gif ~ 0104.gif (動態社團圖標)',
-      'music01.mp3 (背景音樂音訊檔)',
-      'club_intro.txt (社團文字介紹原稿)',
+      '文書檔：0101.txt、0102.txt、0103.txt',
+      '圖形檔：logo1.png、logo2.png、logo3.jpg（合成 logo.png）',
+      '圖形檔：0101.jpg、0102.jpg、0103.jpg（合成 0104.jpg）、menu1.png、menu2.png',
+      '音樂檔：無（官方試題規定無音樂檔）',
     ],
     disqualificationTraps: [
-      '所有檔案命名未符合題目規範（如檔名使用大寫或中文直接扣重分）。',
-      '超連結目標 target 未設定或指向錯誤，導致在全新視窗開啟而非右側框架。',
-      '背景音樂未自動播放或未設定循環 loop。',
-      '首頁未嚴格使用 index.html 命名存於根目錄。',
+      '首頁未依規定命名為 index.html (或 index.htm)。',
+      '未依規定建立 webXX 主目錄及 images 資料夾。',
+      '吉他社子頁面超連結目標 target 未設為 content 區塊，導致跳出全頁。',
+      '「回社團介紹首頁」未設定在 _top 開啟，導致頁面巢狀割裂。',
+      '跑馬燈文字錯字、漏字（每一字扣 1 分）。',
     ],
     scoringChecklist: [
       '全站寬度 1024px 且在不同視窗寬度下維持居中。',
       '跑馬燈文字由右向左平滑捲動，文字內容無錯漏字。',
-      '點選吉他社、熱舞社選單項目，右側主頁面流暢跳轉且排版正常。',
-      '版權宣告「網頁維護：應檢人姓名、座號」正確無誤。',
+      '點選吉他社社史、近期活動、教學內容，右側內容區流暢切換。',
+      '影像合成圖檔（logo.png 與 0104.jpg）尺寸與位置精確相符。',
     ],
     defaultHtmlCode: `<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8">
-  <title>國立科技大學校園社團介紹網</title>
+  <title>國立科技高中─校園社團介紹網</title>
 </head>
 <body>
   <div class="layout-container">
-    <!-- 頂端頁首區 1024x65 -->
+    <!-- 頂端標題區 -->
     <header class="site-header">
-      <h1>校園社團介紹網</h1>
+      <img src="images/logo.png" alt="國立科技高中校園社團介紹網" class="site-logo">
     </header>
 
     <!-- 跑馬燈公告區 -->
     <div class="marquee-bar">
-      <span>✦ 歡迎光臨國立科技大學校園社團介紹網！吉他社迎新表演即將登場！</span>
+      <span>歡迎光臨校園社團介紹網，參觀後請支持社團活動並熱烈參與</span>
     </div>
 
-    <!-- 中間內容區 -->
+    <!-- 中間主要區域 -->
     <div class="main-body">
-      <!-- 左側社團導航選單 -->
-      <nav class="side-menu">
-        <div class="menu-title">社團快速導覽</div>
-        <a href="#guitar" class="menu-btn active">吉他社</a>
-        <a href="#dance" class="menu-btn">熱舞社</a>
-        <a href="#astro" class="menu-btn">天文社</a>
-      </nav>
-
-      <!-- 右側主內容框架區 -->
-      <main class="content-frame">
-        <h2>【吉他社簡介】</h2>
-        <p>吉他社創立於 1998 年，致力於推廣民謠吉他與電吉他演奏藝術。每學期定期舉辦期初草地音樂會與期末成果發表會。</p>
-        <div class="activity-card">
-          <strong>近期活動：</strong>週五晚間 18:30 社團教室迎新民謠彈唱講座。
+      <!-- 左側選單與更新區 -->
+      <aside class="sidebar">
+        <nav class="side-menu">
+          <div class="menu-title">社團介紹</div>
+          <a href="guitar_history.html" target="content" class="menu-item">吉他社</a>
+          <a href="#" class="menu-item">熱舞社</a>
+          <a href="#" class="menu-item">棒球社</a>
+          <a href="#" class="menu-item">羽球社</a>
+          <a href="#" class="menu-item">足球社</a>
+          <a href="#" class="menu-item">童軍社</a>
+        </nav>
+        <div class="date-update">
+          最近更新日期：2026/11/06
         </div>
+      </aside>
+
+      <!-- 右側網頁內容區 -->
+      <main class="content-frame">
+        <iframe name="content" src="main.html" frameborder="0" width="100%" height="100%"></iframe>
       </main>
     </div>
 
-    <!-- 底部頁尾區 1024x20 -->
+    <!-- 頁尾版權區 -->
     <footer class="site-footer">
-      <p>網頁維護：碼上學考生 · 最新更新日期：2026/11/05</p>
+      <p>網頁設計及維護：01碼上學</p>
     </footer>
   </div>
 </body>
@@ -118,7 +133,7 @@ export const OFFICIAL_PRACTICAL_TASKS: PracticalTaskDetail[] = [
 
 body {
   background-color: #F5F2EA;
-  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+  font-family: "標楷體", -apple-system, sans-serif;
   color: #26343D;
   display: flex;
   justify-content: center;
@@ -128,226 +143,183 @@ body {
 .layout-container {
   width: 1024px;
   background-color: #FFFFFF;
-  box-shadow: 0 4px 20px rgba(38, 52, 61, 0.08);
-  border-radius: 8px;
-  overflow: hidden;
   border: 1px solid #D9E2EA;
+  margin: 0 auto;
 }
 
 .site-header {
   height: 65px;
-  background-color: #526B7B;
-  color: #FFFFFF;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  justify-content: center;
 }
 
-.site-header h1 {
-  font-size: 22px;
-  letter-spacing: 1.5px;
+.site-logo {
+  width: 994px;
+  height: 60px;
 }
 
 .marquee-bar {
+  height: 29px;
   background-color: #EFECE3;
-  color: #7C663D;
-  padding: 8px 16px;
-  font-size: 13px;
-  border-bottom: 1px solid #D9D2C4;
+  color: #0000FF;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
 }
 
 .main-body {
   display: flex;
-  min-height: 470px;
+  min-height: 600px;
 }
 
-.side-menu {
-  width: 200px;
+.sidebar {
+  width: 215px;
   background-color: #FAF9F5;
   border-right: 1px solid #D9E2EA;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
 }
 
 .menu-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #8FA9B8;
-  margin-bottom: 4px;
-  text-transform: uppercase;
+  font-size: 24px;
+  color: #FF00FF;
+  text-decoration: underline;
+  text-align: center;
+  margin-bottom: 12px;
 }
 
-.menu-btn {
+.menu-item {
   display: block;
-  padding: 10px 14px;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: #000000;
+  text-decoration: none;
   background-color: #FFFFFF;
   border: 1px solid #D9E2EA;
-  border-radius: 4px;
-  text-decoration: none;
-  color: #26343D;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  margin-bottom: 6px;
+  text-align: center;
 }
 
-.menu-btn:hover, .menu-btn.active {
+.menu-item:hover {
   background-color: #526B7B;
   color: #FFFFFF;
-  border-color: #526B7B;
+}
+
+.date-update {
+  font-size: 16px;
+  color: #000000;
+  text-align: center;
+  padding: 8px 0;
 }
 
 .content-frame {
   flex: 1;
-  padding: 24px;
-  background-color: #FFFFFF;
-}
-
-.content-frame h2 {
-  font-size: 18px;
-  color: #526B7B;
-  margin-bottom: 12px;
-}
-
-.content-frame p {
-  font-size: 14px;
-  line-height: 1.8;
-  color: #4A5B66;
-  margin-bottom: 16px;
-}
-
-.activity-card {
-  background-color: #FAF9F5;
-  border-left: 4px solid #BDA77E;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: #26343D;
+  padding: 16px;
 }
 
 .site-footer {
-  height: 25px;
+  height: 20px;
   background-color: #26343D;
   color: #D9E2EA;
-  font-size: 11px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
 }`,
-    officialReferenceTips: '考場關鍵：請確認主頁面名稱為 index.html，子頁面分別為 guitar.html、dance.html、astro.html，並注意超連結路徑皆採相對路徑。',
+    officialReferenceTips: '考場關鍵：請嚴格遵守 1024×768px 水平置中規範，超連結回首頁請務必加上 target="_top"，避免 iframe 重複嵌套。',
   },
   {
     id: 2,
     code: '17300-104302',
-    title: '題組二：國家公園生態探索網',
-    theme: '頁內錨點跳轉、表格資訊展示與圖文清單等比例排版',
+    examCode: '17300-104302',
+    title: '題組二：運動廣場連結網',
+    materialPath: '173003B13/17300網頁設計丙級檢定用檔案-(應檢人參考用)/素材/17300-104302',
+    status: 'partially_completed',
+    materialStatusText: '已核實官方原始素材（21 個檔案完整含 jQuery）',
+    teachingStatusText: '題組規格與骨架已就緒 · 操作分步擴充中',
+    theme: '文字陰影、最新消息帶狀排版、縮圖切換原圖、標籤頁 Tab 與訪客留言表單',
     difficulty: '★★☆',
     estimatedMinutes: 95,
     canvasSpec: {
       width: '1024px',
       centering: '水平置中 (margin: 0 auto;)',
-      header: '1024px × 65px（生態保育網站標誌）',
-      menu: '水平錨點導覽列（玉山、陽明山、太魯閣、墾丁）',
-      content: '垂直流式圖文排版與保育指標數據表格',
-      footer: '1024px × 20px（版權聲明與版次資訊）',
+      header: '1024px × 90px（標識 logo.png 180×90 與陰影橫幅文字）',
+      menu: '1024px × 25px（七大選單平均分布）',
+      content: '1024px × 460px（padding 至少 20px，最新消息與圖片切換）',
+      footer: '1024px × 45px（背景 #CCCCCC，網頁維護與更新日期）',
     },
-    overview: '本題組著重於台灣國家公園地理景觀介紹。試題要求設計長頁面結構，頂端具備錨點連結，點選後能平滑跳轉至該國家公園之詳細介紹章節；並要求製作表格呈現各國家公園面積、成立年分與代表動植物。',
+    overview: '本試題評量「運動廣場連結網」網頁製作能力。首頁標題為「勞動部勞動力發展署─運動廣場連結網」，背景 #FFFFFF，外圍背景 #42413C。包含七大選單（首頁、健康天地、籃球介紹、棒球介紹、游泳介紹、訪客留言、資料來源）。網頁內容區包含最新消息與縮圖切換原圖展示，並需製作 jQuery 標籤頁與 6×2 訪客留言表單。',
     requiredAssets: [
-      'park01.jpg ~ park08.jpg (國家公園高解析風景圖)',
-      'ecology.txt (生態介紹文字資料庫)',
-      'table_data.txt (統計表格原始數據)',
+      '文書檔：0201.txt 至 0208.txt',
+      '圖形檔：logo.png、0201.png、0202A.png~0205A.png、0202B.png~0205B.png、0206.png、0207.png',
+      '函式庫：jquery-2.1.4.min.js',
+      '音樂檔：無',
     ],
     disqualificationTraps: [
-      '錨點名稱與 href 未配對（如 href="#yushan" 但標籤未設 id="yushan"）。',
-      '圖片未按比例縮放導致嚴重變形失真。',
-      '表格未設定邊框或儲存格間距導致文字重疊。',
+      '未建立 results 資料夾存放 health、basketball、baseball、swimming、msgboard、reference 等子檔案。',
+      '點按圖片展示區縮圖未即時切換上方對應原圖。',
+      '訪客留言表單單選鈕性別未設相同 name 群組，導致男女性別可複選。',
+      '留言表單送出/重寫按鈕功能異常，未彈出指定回覆確認對話框。',
+      '健康天地標籤頁 (Tab) 切換失效或超出範圍未出現垂直捲軸。',
     ],
     scoringChecklist: [
-      '所有錨點跳轉正確無誤，能正確定位至對應章節標題。',
-      '表格具備適當標題 <caption> 與 <th> 表頭欄位。',
-      '每張圖片皆填寫相應之 alt 替代文字。',
+      '橫幅文字具備 CSS 陰影效果（#333333、偏移 10px、模糊 15px）。',
+      '點選縮圖時上方及時呈現對應原圖且無裁切現象。',
+      '訪客留言表單各欄位限制與彈出對話框功能完全正常。',
+      '籃球、棒球、游泳介紹網頁之路徑導覽列完整無誤。',
     ],
     defaultHtmlCode: `<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8">
-  <title>台灣國家公園生態探索網</title>
+  <title>勞動部勞動力發展署─運動廣場連結網</title>
 </head>
 <body>
   <div class="layout-container">
+    <!-- 網站標題區 1024x90 -->
     <header class="site-header">
-      <h1>台灣國家公園生態探索網</h1>
+      <a href="index.html"><img src="images/logo.png" alt="運動廣場連結網-回首頁" class="header-logo"></a>
+      <h1 class="header-title">運動廣場連結網</h1>
     </header>
 
-    <nav class="anchor-nav">
-      <a href="#intro">總體簡介</a>
-      <a href="#yushan">玉山國家公園</a>
-      <a href="#taroko">太魯閣國家公園</a>
-      <a href="#kenting">墾丁國家公園</a>
+    <!-- 選單區 1024x25 -->
+    <nav class="site-menu">
+      <a href="results/main.html" target="content" class="nav-item">首頁</a>
+      <a href="results/health.html" target="content" class="nav-item">健康天地</a>
+      <a href="results/basketball.html" target="content" class="nav-item">籃球介紹</a>
+      <a href="results/baseball.html" target="content" class="nav-item">棒球介紹</a>
+      <a href="results/swimming.html" target="content" class="nav-item">游泳介紹</a>
+      <a href="results/msgboard.html" target="content" class="nav-item">訪客留言</a>
+      <a href="results/reference.html" target="content" class="nav-item">資料來源</a>
     </nav>
 
-    <main class="main-content">
-      <section id="intro" class="info-section">
-        <h2>國家公園基本數據一覽</h2>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>名稱</th>
-              <th>成立年份</th>
-              <th>涵蓋面積 (公頃)</th>
-              <th>主要保護特色</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>墾丁</td>
-              <td>1984</td>
-              <td>33,289</td>
-              <td>珊瑚礁地形與熱帶季風林</td>
-            </tr>
-            <tr>
-              <td>玉山</td>
-              <td>1985</td>
-              <td>103,121</td>
-              <td>高山生態系與台灣黑熊棲地</td>
-            </tr>
-            <tr>
-              <td>太魯閣</td>
-              <td>1986</td>
-              <td>92,000</td>
-              <td>大理岩峽谷與斷崖地形</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section id="yushan" class="info-section">
-        <h2>【玉山國家公園】</h2>
-        <p>玉山國家公園座落於台灣中央地帶，主峰海拔 3,952 公尺，為東北亞第一高峰。涵蓋溫帶至寒帶垂直植物林相，生態多樣性極為豐碩。</p>
-      </section>
-
-      <section id="taroko" class="info-section">
-        <h2>【太魯閣國家公園】</h2>
-        <p>太魯閣國家公園以雄偉壯麗、幾近垂直的大理岩峽谷景觀聞名全球。燕子口、九曲洞更是享譽國際的地質教室。</p>
-      </section>
+    <!-- 網頁內容區 1024x460 -->
+    <main class="site-content">
+      <iframe name="content" src="results/main.html" frameborder="0" width="100%" height="460"></iframe>
     </main>
 
+    <!-- 頁尾版權區 1024x45 -->
     <footer class="site-footer">
-      <p>版權所有 © 2026 國家公園管理處 · 網頁維護：應檢人</p>
+      <p>網頁設計及維護：01碼上學</p>
+      <p>最近更新日期：2026/11/06</p>
     </footer>
   </div>
 </body>
 </html>`,
-    defaultCssCode: `* {
+    defaultCssCode: `/* 題組二：運動廣場連結網樣式設定 */
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  background-color: #F5F2EA;
-  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
-  color: #26343D;
+  background-color: #42413C;
+  font-family: "標楷體", sans-serif;
   display: flex;
   justify-content: center;
   padding: 20px 0;
@@ -356,393 +328,161 @@ body {
 .layout-container {
   width: 1024px;
   background-color: #FFFFFF;
-  border: 1px solid #D9E2EA;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .site-header {
-  height: 65px;
-  background-color: #526B7B;
-  color: white;
+  height: 90px;
+  background-color: #00B0F0;
   display: flex;
   align-items: center;
-  padding: 0 24px;
 }
 
-.anchor-nav {
-  background-color: #FAF9F5;
-  border-bottom: 1px solid #D9E2EA;
-  padding: 10px 24px;
-  display: flex;
-  gap: 16px;
+.header-logo {
+  width: 180px;
+  height: 90px;
 }
 
-.anchor-nav a {
-  color: #526B7B;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 6px 12px;
-  border-radius: 4px;
-}
-
-.anchor-nav a:hover {
-  background-color: #EFECE3;
-  color: #7C663D;
-}
-
-.main-content {
-  padding: 24px;
-}
-
-.info-section {
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px dashed #D9E2EA;
-}
-
-.info-section h2 {
-  font-size: 18px;
-  color: #526B7B;
-  margin-bottom: 12px;
-}
-
-.info-section p {
-  font-size: 14px;
-  line-height: 1.8;
-  color: #4A5B66;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  font-size: 13px;
-}
-
-.data-table th, .data-table td {
-  border: 1px solid #D9E2EA;
-  padding: 10px;
-  text-align: left;
-}
-
-.data-table th {
-  background-color: #FAF9F5;
-  font-weight: 600;
-  color: #26343D;
-}
-
-.site-footer {
-  background-color: #26343D;
-  color: #D9E2EA;
-  font-size: 11px;
+.header-title {
+  flex: 1;
   text-align: center;
-  padding: 10px;
-}`,
-    officialReferenceTips: '考場關鍵：確保 id 命名完全依照試題要求（大小寫須一致），並檢查捲動定位是否順暢。',
-  },
-  {
-    id: 3,
-    code: '17300-104303',
-    title: '題組三：體育休閒活動中心',
-    theme: '表單控制項驗證、多選項群組與動態選單 Hover 反白特效',
-    difficulty: '★★★',
-    estimatedMinutes: 100,
-    canvasSpec: {
-      width: '1024px',
-      centering: '水平置中 (margin: 0 auto;)',
-      header: '1024px × 65px（體育館標章與形象橫幅）',
-      menu: '水平懸停反轉選單（首頁、設施介紹、線上預約）',
-      content: '多功能線上預約報名表單（姓名、證號、項目、時段）',
-      footer: '1024px × 20px（開放時間與聯繫電話）',
-    },
-    overview: '本題組評量應檢人建構互動式表單與動態選單特效之實力。需實作滑鼠移入選單項目時的動態顏色翻轉效果，並建立標準線上預約表單，包含單選鈕 (radio)、核取方塊 (checkbox)、下拉選單 (select) 及送出/清除按鈕。',
-    requiredAssets: [
-      'gym01.jpg ~ gym05.jpg (運動設施器材實景圖)',
-      'sports_rules.txt (借用規則與收費基準)',
-    ],
-    disqualificationTraps: [
-      '表單單選鈕 (radio) 未設定相同的 name 屬性，導致可複選。',
-      '送出 (submit) 或重設 (reset) 按鈕功能遺失或型態設錯。',
-      '必填欄位未加入 required 或表單缺乏 <form> 封裝。',
-    ],
-    scoringChecklist: [
-      '導覽選單在滑鼠懸停 (:hover) 時具備明顯背景與字色反轉動效。',
-      '表單包含完整 <label> 標籤對應 input id。',
-      '點選重設按鈕時，所有填寫欄位確實恢復初始狀態。',
-    ],
-    defaultHtmlCode: `<!DOCTYPE html>
-<html lang="zh-Hant-TW">
-<head>
-  <meta charset="UTF-8">
-  <title>都會體育休閒活動中心</title>
-</head>
-<body>
-  <div class="layout-container">
-    <header class="site-header">
-      <h1>都會體育休閒活動中心</h1>
-    </header>
-
-    <nav class="flip-nav">
-      <a href="#about" class="nav-item">中心簡介</a>
-      <a href="#facilities" class="nav-item">場館設施</a>
-      <a href="#booking" class="nav-item active">線上預約場地</a>
-    </nav>
-
-    <main class="form-container">
-      <h2>場地設施線上預約表單</h2>
-      <form action="#" method="post" class="booking-form">
-        <div class="form-group">
-          <label for="userName">預約人姓名：</label>
-          <input type="text" id="userName" name="userName" required placeholder="請輸入全名">
-        </div>
-
-        <div class="form-group">
-          <label for="sportType">預約運動場館：</label>
-          <select id="sportType" name="sportType">
-            <option value="badminton">羽球場（A~D 館）</option>
-            <option value="basketball">室內標準籃球場</option>
-            <option value="swimming">溫水游泳池水道</option>
-            <option value="fitness">重訓體適能中心</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>預約時段：</label>
-          <div class="radio-options">
-            <label><input type="radio" name="timeSlot" value="morning" checked> 上午 (08:00 - 12:00)</label>
-            <label><input type="radio" name="timeSlot" value="afternoon"> 下午 (13:00 - 17:00)</label>
-            <label><input type="radio" name="timeSlot" value="evening"> 晚間 (18:00 - 22:00)</label>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-submit">確認送出預約</button>
-          <button type="reset" class="btn-reset">清除重填</button>
-        </div>
-      </form>
-    </main>
-
-    <footer class="site-footer">
-      <p>開放時間：每日 06:00 - 22:00 · 服務專線：(02) 2345-6789</p>
-    </footer>
-  </div>
-</body>
-</html>`,
-    defaultCssCode: `* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  color: #FFFFFF;
+  font-size: 52px;
+  text-shadow: 10px 10px 15px #333333;
 }
 
-body {
-  background-color: #F5F2EA;
-  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
-  color: #26343D;
+.site-menu {
+  height: 25px;
   display: flex;
-  justify-content: center;
-  padding: 20px 0;
-}
-
-.layout-container {
-  width: 1024px;
-  background-color: #FFFFFF;
-  border: 1px solid #D9E2EA;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.site-header {
-  height: 65px;
-  background-color: #526B7B;
-  color: white;
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-}
-
-.flip-nav {
-  display: flex;
-  background-color: #26343D;
 }
 
 .nav-item {
   flex: 1;
   text-align: center;
-  padding: 12px;
-  color: #D9E2EA;
+  line-height: 25px;
+  background-color: #EEEEEE;
+  color: #000000;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.nav-item:hover, .nav-item.active {
-  background-color: #BDA77E;
-  color: #FFFFFF;
-}
-
-.form-container {
-  padding: 30px;
-}
-
-.form-container h2 {
-  font-size: 18px;
-  color: #526B7B;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #EFECE3;
-  padding-bottom: 8px;
-}
-
-.booking-form {
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #26343D;
-}
-
-.form-group input[type="text"], .form-group select {
-  padding: 10px 12px;
-  border: 1px solid #D9E2EA;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.radio-options {
-  display: flex;
-  gap: 16px;
   font-size: 13px;
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
+.nav-item:hover {
+  background-color: #FFFF00;
+  color: #FF0000;
+  font-weight: bold;
+  font-size: 14px;
 }
 
-.btn-submit {
-  padding: 10px 20px;
-  background-color: #526B7B;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-reset {
-  padding: 10px 20px;
-  background-color: #EFECE3;
-  color: #7C663D;
-  border: 1px solid #D9D2C4;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
+.site-content {
+  height: 460px;
+  padding: 20px;
+  background-color: #FFFFFF;
 }
 
 .site-footer {
-  background-color: #FAF9F5;
-  border-top: 1px solid #D9E2EA;
-  text-align: center;
-  padding: 12px;
-  font-size: 12px;
-  color: #8FA9B8;
+  height: 45px;
+  background-color: #CCCCCC;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #FFFFFF;
 }`,
-    officialReferenceTips: '考場關鍵：單選鈕群組的 name 屬性必須完全同名，測試時請務必點擊重設按鈕確認能清空。',
+    officialReferenceTips: '考場關鍵：需使用 jQuery 實作縮圖切換原圖與 Tab 標籤頁切換，注意圖片展示區縮圖與原圖比例無裁切。',
   },
   {
-    id: 4,
-    code: '17300-104304',
-    title: '題組四：台灣美食精緻巡禮',
-    theme: '多欄圖文排版、自訂固定浮水印背景與多媒體視訊整合',
+    id: 3,
+    code: '17300-104303',
+    examCode: '17300-104303',
+    title: '題組三：國家公園介紹網',
+    materialPath: '173003B13/17300網頁設計丙級檢定用檔案-(應檢人參考用)/素材/17300-104303',
+    status: 'partially_completed',
+    materialStatusText: '已核實官方原始素材（16 個檔案完整含 park.mp3）',
+    teachingStatusText: '題組規格與骨架已就緒 · 影像地圖教學擴充中',
+    theme: '標題圖片定時輪播、矩形與多邊形影像地圖 (Image Map)、音效下載與多欄表格',
     difficulty: '★★☆',
-    estimatedMinutes: 90,
+    estimatedMinutes: 95,
     canvasSpec: {
       width: '1024px',
       centering: '水平置中 (margin: 0 auto;)',
-      header: '1024px × 65px（在地美食品味標章）',
-      menu: '夜市小吃、傳統筵席、甜品飲品分類項目',
-      content: '多欄網格卡片圖文並茂展示與固定浮水印背景',
-      footer: '1024px × 20px（美食文化推廣委員會）',
+      header: '1000px × 65px（背景 #0000FF，四張圖片定時 1 秒輪播）',
+      menu: '寬度 200px（背景 #00FFFF，七列一欄表格選單）',
+      content: '寬度 800px（背景 park0301.jpg，地圖與超連結）',
+      footer: '1000px × 20px（網頁設計及維護與更新日期）',
     },
-    overview: '本題組評量應檢人進行精緻版面設計與多媒體影音配置能力。需設定頁面背景固定浮水印圖片（background-attachment: fixed;），並將美食特色以整齊的多欄網格排列，嚴格設定圖片 alt 說明文字與語意標籤。',
+    overview: '本試題評量「國家公園介紹網」網頁建置能力。首頁標題為「國家公園介紹網」，包含網站標題區（從 park0307~0313 選 4 張圖片以 1 秒輪播）、跑馬燈廣告區、選單區、網頁內容區與頁尾版權區。內容區需在 national_park.jpg 上設定矩形與黃色多邊形影像地圖，分別連結陽明山與雪霸國家公園，並提供 park.mp3 檔案下載。',
     requiredAssets: [
-      'food01.jpg ~ food06.jpg (台灣經典小吃高畫質圖片)',
-      'watermark.jpg (背景浮水印淺色圖檔)',
-      'food_story.txt (美食歷史淵源介紹)',
+      '文書檔：0301.txt',
+      '圖形檔：national_park.jpg、park0301.jpg 至 park0313.jpg',
+      '音訊檔：park.mp3（檔案下載用途）',
+      '函式庫：無',
     ],
     disqualificationTraps: [
-      '背景圖片未設定不重複 (no-repeat) 或未設固定導致畫面凌亂。',
-      '圖片遺漏 alt 屬性（在檢定評分標準中每漏一張扣 5 分）。',
-      '多欄排列在小螢幕爆版破壞 1024px 基準寬度。',
+      '標題圖片未依間隔 1 秒輪播，或輪播圖片尺寸不一產生毛邊。',
+      '影像地圖 (Image Map) 座標設定不精確，超出邊框或無法點擊。',
+      '檔案下載未正確觸發 park.mp3 下載對話框。',
+      '未建立 park 資料夾存放 yangmingshan.html 與 sheipa.html。',
+      '子網頁缺乏「回首頁」超連結。',
     ],
     scoringChecklist: [
-      '浮水印背景在捲動網頁時維持固定不位移。',
-      '美食卡片間距均勻對齊，文字說明與圖片尺寸統一。',
-      '所有多媒體標籤皆遵循現代 HTML5 標準。',
+      '標題輪播圖片平滑切換且無裁切或毛邊現象。',
+      '地圖上陽明山與雪霸國家公園影像地圖精準感應跳轉。',
+      '選單區滑鼠移過圖片呈現不同顏色動態效果。',
+      '點擊檔案下載能成功彈出下載視窗。',
     ],
     defaultHtmlCode: `<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8">
-  <title>台灣美食精緻巡禮</title>
+  <title>國家公園介紹網</title>
 </head>
 <body>
   <div class="layout-container">
+    <!-- 標題輪播區 1000x65 -->
     <header class="site-header">
-      <h1>台灣美食精緻巡禮</h1>
+      <div class="carousel-container">
+        <img id="banner-img" src="images/park0307.jpg" alt="國家公園介紹網首頁">
+      </div>
     </header>
 
-    <div class="hero-banner">
-      <h2>✦ 舌尖上的島嶼記憶 · 尋訪在地極致美味</h2>
+    <!-- 跑馬燈區 -->
+    <div class="marquee-bar">
+      <span>歡迎進入國家公園介紹網，本網站有詳細的國家公園介紹哦！</span>
     </div>
 
-    <main class="food-grid">
-      <div class="food-card">
-        <h3>珍珠奶茶</h3>
-        <p>Q 彈黑糖珍珠融入濃郁香醇奶茶，成為風靡全球的台灣代表性特色飲品。</p>
-        <span class="tag">經典飲品</span>
-      </div>
+    <!-- 主體內容區 -->
+    <div class="main-body">
+      <!-- 左側選單區 200px -->
+      <aside class="sidebar">
+        <table class="menu-table">
+          <tr><td><a href="park/yangmingshan.html" target="content"><img src="images/park0302.jpg" alt="陽明山國家公園"></a></td></tr>
+          <tr><td></td></tr>
+          <tr><td><a href="park/sheipa.html" target="content"><img src="images/park0303.jpg" alt="雪霸國家公園"></a></td></tr>
+          <tr><td></td></tr>
+          <tr><td><img src="images/park0304.jpg" alt="太魯閣國家公園"></td></tr>
+          <tr><td></td></tr>
+          <tr><td><img src="images/park0305.jpg" alt="玉山國家公園"></td></tr>
+        </table>
+        <div class="download-link">
+          <a href="park.mp3" download>檔案下載</a>
+        </div>
+      </aside>
 
-      <div class="food-card">
-        <h3>傳統牛肉麵</h3>
-        <p>嚴選牛腱慢火燉煮高湯，搭配手打勁道麵條與酸菜，香氣四溢層次豐富。</p>
-        <span class="tag">熱門主食</span>
-      </div>
+      <!-- 右側內容區 -->
+      <main class="content-area">
+        <iframe name="content" src="national_park.jpg" frameborder="0" width="100%" height="100%"></iframe>
+      </main>
+    </div>
 
-      <div class="food-card">
-        <h3>小籠湯包</h3>
-        <p>薄透麵皮包裹豐沛鮮甜肉汁，十八折精巧捏花，一口咬下滿溢濃郁鮮香。</p>
-        <span class="tag">排隊名店</span>
-      </div>
-
-      <div class="food-card">
-        <h3>芒果雪花冰</h3>
-        <p>綿密細緻的牛奶雪花冰底，鋪滿金黃香甜愛文芒果果肉與手作煉乳淋醬。</p>
-        <span class="tag">消暑甜品</span>
-      </div>
-    </main>
-
+    <!-- 頁尾版權區 -->
     <footer class="site-footer">
-      <p>台灣美食文化推廣委員會 · 網頁維護：應檢人</p>
+      <p>網頁設計及維護：01碼上學、最近更新日期：2026/11/06</p>
     </footer>
   </div>
 </body>
 </html>`,
-    defaultCssCode: `* {
+    defaultCssCode: `/* 題組三：國家公園介紹網樣式設定 */
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -750,8 +490,7 @@ body {
 
 body {
   background-color: #F5F2EA;
-  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
-  color: #26343D;
+  font-family: "標楷體", sans-serif;
   display: flex;
   justify-content: center;
   padding: 20px 0;
@@ -760,82 +499,415 @@ body {
 .layout-container {
   width: 1024px;
   background-color: #FFFFFF;
-  border: 1px solid #D9E2EA;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .site-header {
   height: 65px;
-  background-color: #526B7B;
-  color: white;
+  background-color: #0000FF;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  justify-content: center;
 }
 
-.hero-banner {
-  background-color: #FAF9F5;
-  border-bottom: 1px solid #D9D2C4;
-  padding: 16px 24px;
-}
-
-.hero-banner h2 {
-  font-size: 15px;
-  color: #7C663D;
-}
-
-.food-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 24px;
-}
-
-.food-card {
-  border: 1px solid #D9E2EA;
-  border-radius: 6px;
-  padding: 18px;
-  background-color: #FAF9F5;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.food-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(38, 52, 61, 0.08);
-}
-
-.food-card h3 {
-  font-size: 16px;
-  color: #526B7B;
-  margin-bottom: 8px;
-}
-
-.food-card p {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #4A5B66;
-  margin-bottom: 12px;
-}
-
-.food-card .tag {
-  display: inline-block;
+.marquee-bar {
+  height: 29px;
+  display: flex;
+  align-items: center;
   background-color: #EFECE3;
-  color: #7C663D;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
+  color: #0000FF;
+  font-size: 16px;
+}
+
+.main-body {
+  display: flex;
+  min-height: 600px;
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #00FFFF;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.download-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.content-area {
+  flex: 1;
+  background-image: url('images/park0301.jpg');
 }
 
 .site-footer {
+  height: 20px;
   background-color: #26343D;
-  color: #D9E2EA;
-  font-size: 11px;
+  color: #FFFFFF;
+  font-size: 16px;
   text-align: center;
-  padding: 10px;
 }`,
-    officialReferenceTips: '考場關鍵：確認 1024px 版面無橫向溢出捲軸，圖片必須設定 width/height 或保持 CSS 比例相符。',
+    officialReferenceTips: '考場關鍵：注意雪霸國家公園影像地圖為多邊形邊界，需細緻設定座標；park.mp3 下載需設置 download 屬性。',
+  },
+  {
+    id: 4,
+    code: '17300-104304',
+    examCode: '17300-104304',
+    title: '題組四：網路行銷購物網',
+    materialPath: '173003B13/17300網頁設計丙級檢定用檔案-(應檢人參考用)/素材/17300-104304',
+    status: 'partially_completed',
+    materialStatusText: '已核實官方原始素材（12 個檔案完整含 0401.mp3）',
+    teachingStatusText: '題組規格與骨架已就緒 · 購物確認對話框教學擴充中',
+    theme: '精品購物網站、3×3 表格圖文展示、背景音樂自動播放、購買狀態對話框與新視窗超連結',
+    difficulty: '★★★',
+    estimatedMinutes: 100,
+    canvasSpec: {
+      width: '1024px',
+      centering: '水平置中 (margin: 0 auto;)',
+      header: '1024px × 120px（背景 0401.jpg，流行精品購物網站橫幅）',
+      menu: '跑馬燈 1024px × 30px（特價拍賣跑馬燈文字）',
+      content: '3×3 表格圖文區（共用背景 0402.jpg，列高 150px）',
+      footer: '1024px × 78px（背景 #666600，訪客留言版連結與版權）',
+    },
+    overview: '本試題評量「網路行銷購物網」網頁製作能力。首頁標題為「網路行銷購物網」，需自動循環播放背景音樂 0401.mp3。版面分為網站標題區、跑馬燈廣告區、網頁內容區與頁尾版權區。內容區需設置 3×3 表格展示皮件、鞋區與飾品，點選圖片以新視窗開啟 leather1/leather2 詳細介紹，並實作 purchase.html 購物確認與 message.html 留言意見表單。',
+    requiredAssets: [
+      '文書檔：0401.txt、0402.txt',
+      '圖形檔：0401.jpg 至 0409.jpg',
+      '音訊檔：0401.mp3（背景音樂）',
+      '函式庫：無',
+    ],
+    disqualificationTraps: [
+      '背景音樂 0401.mp3 未自動播放或未設定循環 loop。',
+      '點選皮包與短夾圖片未在全新視窗 (target="_blank") 中開啟。',
+      '未建立 results 資料夾存放 leather1、leather2、message、purchase 等檔案。',
+      '購物確認表單單選鈕未依規定設定「購買/不購買/考慮中」之預設值。',
+      '留言意見表單送出後未出現指定提示對話框。',
+    ],
+    scoringChecklist: [
+      '背景音樂自動且持續循環播放。',
+      '3×3 商品展示表格各欄寬度（200px / 300px / 300px）與列高 150px 精確無誤。',
+      '點選真皮皮包與短夾能順暢在新分頁開啟獨立詳情頁並提供回頂端功能。',
+      '購物確認與訪客留言表單之重設按鈕確實清空所有欄位。',
+    ],
+    defaultHtmlCode: `<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>網路行銷購物網</title>
+</head>
+<body>
+  <!-- 背景音樂 0401.mp3 -->
+  <audio src="music/0401.mp3" autoplay loop style="display: none;"></audio>
+
+  <div class="layout-container">
+    <!-- 網站標題區 1024x120 -->
+    <header class="site-header">
+      <h1 class="header-title">流行精品購物網站</h1>
+    </header>
+
+    <!-- 跑馬燈區 1024x30 -->
+    <div class="marquee-bar">
+      <span>大家來購物網！精品商品特價大拍賣！要買要快！</span>
+    </div>
+
+    <!-- 網頁內容區 3x3 表格 -->
+    <main class="site-content">
+      <table class="product-table">
+        <tr>
+          <td class="cat-cell"><a href="results/purchase.html" target="content">流行皮件</a></td>
+          <td class="img-cell"><a href="results/leather1.html" target="_blank"><img src="images/0403.jpg" alt="真皮皮包"></a></td>
+          <td class="img-cell"><a href="results/leather2.html" target="_blank"><img src="images/0404.jpg" alt="真皮短夾"></a></td>
+        </tr>
+        <tr>
+          <td class="cat-cell">流行鞋區</td>
+          <td class="img-cell"><img src="images/0405.jpg" alt="流行鞋一"></td>
+          <td class="img-cell"><img src="images/0406.jpg" alt="流行鞋二"></td>
+        </tr>
+        <tr>
+          <td class="cat-cell">流行飾品</td>
+          <td class="img-cell"><img src="images/0407.jpg" alt="流行飾品一"></td>
+          <td class="img-cell"><img src="images/0408.jpg" alt="流行飾品二"></td>
+        </tr>
+      </table>
+    </main>
+
+    <!-- 頁尾版權區 1024x78 -->
+    <footer class="site-footer">
+      <p><a href="results/message.html" target="content">訪客留言版</a></p>
+      <p>網頁設計及維護：01碼上學、最近更新日期：2026/11/06</p>
+    </footer>
+  </div>
+</body>
+</html>`,
+    defaultCssCode: `/* 題組四：網路行銷購物網樣式設定 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #F5F2EA;
+  font-family: "標楷體", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.layout-container {
+  width: 1024px;
+  background-color: #FFFFFF;
+}
+
+.site-header {
+  height: 120px;
+  background-image: url('images/0401.jpg');
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-title {
+  color: #FFFFFF;
+  font-size: 52px;
+  text-shadow: 10px 10px 15px #333333;
+}
+
+.marquee-bar {
+  height: 30px;
+  line-height: 30px;
+  color: #0000FF;
+  font-size: 19px;
+  background-image: url('images/0402.jpg');
+}
+
+.site-content {
+  background-image: url('images/0402.jpg');
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.product-table {
+  border-collapse: collapse;
+}
+
+.product-table td {
+  height: 150px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cat-cell {
+  width: 200px;
+  font-size: 20px;
+}
+
+.img-cell {
+  width: 300px;
+}
+
+.img-cell img {
+  height: 150px;
+}
+
+.site-footer {
+  height: 78px;
+  background-color: #666600;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  line-height: 2;
+}
+
+.site-footer a {
+  color: #FFFFFF;
+  text-decoration: none;
+}`,
+    officialReferenceTips: '考場關鍵：真皮皮包與短夾的超連結必須設定在全新視窗 target="_blank" 開啟，且音訊需自動循環播放。',
+  },
+  {
+    id: 5,
+    code: '17300-104305',
+    examCode: '17300-104305',
+    title: '題組五：書曼的旅遊相簿',
+    materialPath: '173003B13/17300網頁設計丙級檢定用檔案-(應檢人參考用)/素材/17300-104305',
+    status: 'in_preparation',
+    materialStatusText: '已核實官方原始素材（25 個檔案完整含相框與動態 GIF）',
+    teachingStatusText: '教材整理中 · 題組入口與版型規範已建立',
+    theme: '動態 GIF 標題製作、滑鼠懸停圖片互換效果、影像相框合成與互動電子相簿 (album5)',
+    difficulty: '★★★',
+    estimatedMinutes: 105,
+    canvasSpec: {
+      width: '1024px',
+      centering: '水平置中 (margin: 0 auto;)',
+      header: '跑馬燈 1024px × 50px（歡迎來到書曼的旅遊相簿）',
+      menu: '150px 寬（12×1 表格，0508.gif、0507.jpg 與動態翻轉按鈕）',
+      content: '874px 寬（padding 至少 36px，0510a.gif 合成圖與 album5 電子相簿）',
+      footer: '整合於選單第十列（日期：yyyy/mm/dd 維護：XX○○○）',
+    },
+    overview: '本試題評量「書曼的旅遊相簿」網頁設計能力。全站版面 1024×768px 水平置中，背景 #FFFFCC，外圍背景 #333333，自動播放背景音樂 0501.mp3。左側選單包含動態外框字 0508.gif，以及五個景點按鈕（金門、馬祖、澎湖、綠島、蘭嶼），滑鼠移入時由藍色 b.gif 切換為紅色 r.gif。右側內容區透過 0509 相框合成多景點照片，並實作 album5 縮圖切換 400×300 大圖之互動電子相簿。',
+    requiredAssets: [
+      '圖形檔：0501b.gif~0506r.gif（選單互換圖標）',
+      '圖形檔：0507.jpg（書曼照）、範例0508.gif、0509.jpg（相框）',
+      '圖形檔：0511.jpg、0521.jpg、0531.jpg、0541.jpg、0551.jpg~0555.jpg',
+      '音樂檔：0501.mp3（背景音樂）',
+      '文書檔與函式庫：無',
+    ],
+    disqualificationTraps: [
+      '背景音樂 0501.mp3 未自動播放。',
+      '選單項目滑鼠懸停時未正確切換至紅色版圖檔 (*r.gif)。',
+      '點選蘭嶼賞魚去未正確進入 album5 電子相簿內容。',
+      '電子相簿縮圖滑鼠懸停未呈現手指游標與 #00FFFF 框線。',
+      '未建立 album5 資料夾存放相簿網頁檔案。',
+    ],
+    scoringChecklist: [
+      '0508.gif 動態輪替字體顏色正確循環（或正確使用範例 0508.gif）。',
+      '選單五大景點之滑鼠 hover 圖片切換平滑無破圖。',
+      '影像合成圖 0510a.gif 包含五張景點相框並正確排版。',
+      '電子相簿點選 5 張小圖時，上方即時更新 400×300 原圖且邊框顏色正確切換。',
+    ],
+    defaultHtmlCode: `<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>書曼的旅遊相簿</title>
+</head>
+<body>
+  <!-- 背景音樂 0501.mp3 -->
+  <audio src="music/0501.mp3" autoplay loop style="display: none;"></audio>
+
+  <div class="layout-container">
+    <!-- 頂端跑馬燈區 1024x50 -->
+    <div class="marquee-bar">
+      <span>歡迎來到書曼的旅遊相簿，本網站有我的旅遊影像紀錄介紹耶！</span>
+    </div>
+
+    <!-- 主要內容區 -->
+    <div class="main-body">
+      <!-- 左側選單區 150px -->
+      <aside class="sidebar-menu">
+        <div class="menu-item"><img src="images/0508.gif" alt="書曼的旅遊相簿"></div>
+        <div class="menu-item"><img src="images/0507.jpg" alt="書曼" class="shuman-photo"></div>
+        <div class="menu-item nav-btn"><img src="images/0501b.gif" alt="金門逍遙遊" onmouseover="this.src='images/0501r.gif'" onmouseout="this.src='images/0501b.gif'"></div>
+        <div class="menu-item nav-btn"><img src="images/0502b.gif" alt="卡蹓到馬祖" onmouseover="this.src='images/0502r.gif'" onmouseout="this.src='images/0502b.gif'"></div>
+        <div class="menu-item nav-btn"><img src="images/0503b.gif" alt="踏浪澎湖行" onmouseover="this.src='images/0503r.gif'" onmouseout="this.src='images/0503b.gif'"></div>
+        <div class="menu-item nav-btn"><img src="images/0504b.gif" alt="綠島唱夜曲" onmouseover="this.src='images/0504r.gif'" onmouseout="this.src='images/0504b.gif'"></div>
+        <div class="menu-item nav-btn"><a href="album5/album5.html" target="content"><img src="images/0505b.gif" alt="蘭嶼賞魚去" onmouseover="this.src='images/0505r.gif'" onmouseout="this.src='images/0505b.gif'"></a></div>
+        <div class="date-info">
+          日期：2026/11/06<br>維護：01碼上學
+        </div>
+        <div class="menu-item nav-btn"><a href="index.html"><img src="images/0506b.gif" alt="回首頁" onmouseover="this.src='images/0506r.gif'" onmouseout="this.src='images/0506b.gif'"></a></div>
+      </aside>
+
+      <!-- 右側相簿展示內容區 -->
+      <main class="content-frame">
+        <iframe name="content" src="album5/album5.html" frameborder="0" width="100%" height="100%"></iframe>
+      </main>
+    </div>
+  </div>
+</body>
+</html>`,
+    defaultCssCode: `/* 題組五：書曼的旅遊相簿樣式設定 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #333333;
+  font-family: "標楷體", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.layout-container {
+  width: 1024px;
+  background-color: #FFFFCC;
+  min-height: 768px;
+}
+
+.marquee-bar {
+  height: 50px;
+  line-height: 50px;
+  background-color: #FFFFCC;
+  color: #FF0000;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  overflow: hidden;
+}
+
+.main-body {
+  display: flex;
+  min-height: 718px;
+}
+
+.sidebar-menu {
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.shuman-photo {
+  width: 120px;
+  height: 120px;
+}
+
+.nav-btn img {
+  cursor: pointer;
+}
+
+.date-info {
+  font-family: "新細明體", sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  color: #FF0000;
+  text-align: center;
+  line-height: 1.5;
+  margin: 8px 0;
+}
+
+.content-frame {
+  flex: 1;
+  padding: 36px;
+}`,
+    officialReferenceTips: '考場關鍵：五大景點按鈕懸停交換紅色圖片需確保路徑正確；電子相簿點選縮圖放大圖切換需確保框線樣式完全符合規定。',
   },
 ];
 
+/**
+ * 非官方歷史延伸/自訂練習題組（移出正式檢定題組清單，標示為待確認）
+ * 不得冒充國家技能檢定正式題庫內容。
+ */
+export const NON_OFFICIAL_ARCHIVED_TASKS = [
+  {
+    archivedId: 'custom-taiwan-food',
+    title: '台灣美食精緻巡禮',
+    status: 'non_official_pending_confirmation',
+    note: '此題組非勞動部 17300 技能檢定官方術科試題（官方僅 104301 至 104305 五大題組）。原始自訂示範內容暫予封存供一般網頁切版教學參考，不列入官方檢定模擬考試。',
+    theme: '多欄圖文排版與自訂浮水印背景教學練習',
+  },
+];
+
+/**
+ * 依據題組代碼或 ID 安全查詢題組資料（防呆相容）
+ */
+export const getTaskByCode = (codeOrId: string | number): PracticalTaskDetail | undefined => {
+  return OFFICIAL_PRACTICAL_TASKS.find(
+    (t) => t.code === codeOrId || t.examCode === codeOrId || String(t.id) === String(codeOrId)
+  );
+};

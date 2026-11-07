@@ -22,9 +22,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  max-width: 100%;
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Flex and Grid children safety against intrinsic overflow */
+.container > *,
+.card > *,
+.subpage-split-grid > *,
+.metrics-quad-grid > * {
+  min-width: 0;
 }
 
 ::selection {
@@ -66,31 +76,40 @@ input, textarea, select {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-6);
+  padding-left: max(16px, env(safe-area-inset-left, 16px));
+  padding-right: max(16px, env(safe-area-inset-right, 16px));
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .container {
-    padding: 0 var(--space-4);
+    padding-left: max(24px, env(safe-area-inset-left, 24px));
+    padding-right: max(24px, env(safe-area-inset-right, 24px));
   }
 }
 
 .section-padding {
-  padding: var(--space-20) 0;
-}
-
-@media (max-width: 768px) {
-  .section-padding {
-    padding: var(--space-12) 0;
-  }
+  padding: clamp(var(--space-10), 6vw, var(--space-20)) 0;
 }
 
 /* ==========================================================================
-   Typography Hierarchy
+   Typography Hierarchy & Natural Line Wrapping
    ========================================================================== */
+h1, h2, h3, h4, h5, h6,
+.text-display, .text-h1, .text-h2, .text-h3 {
+  text-wrap: balance;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+p, .text-lead, .text-body {
+  text-wrap: pretty;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
 .text-display {
   font-family: var(--font-sans-tc), var(--font-sans-en);
-  font-size: var(--font-size-display);
+  font-size: var(--font-fluid-display);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
@@ -99,7 +118,7 @@ input, textarea, select {
 
 .text-h1 {
   font-family: var(--font-sans-tc), var(--font-sans-en);
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-fluid-h1);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
@@ -108,7 +127,7 @@ input, textarea, select {
 
 .text-h2 {
   font-family: var(--font-sans-tc), var(--font-sans-en);
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-fluid-h2);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-snug);
   letter-spacing: var(--letter-spacing-tight);
@@ -117,22 +136,24 @@ input, textarea, select {
 
 .text-h3 {
   font-family: var(--font-sans-tc), var(--font-sans-en);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-fluid-h3);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-snug);
   color: var(--color-brand-charcoal);
 }
 
 .text-lead {
-  font-size: var(--font-size-lg);
+  font-size: clamp(1rem, 0.4vw + 0.95rem, 1.2rem);
   line-height: var(--line-height-relaxed);
   color: var(--text-secondary);
+  max-width: 75ch;
 }
 
 .text-body {
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--text-primary);
+  max-width: 75ch;
 }
 
 .text-caption {
@@ -143,19 +164,17 @@ input, textarea, select {
   color: var(--text-muted);
 }
 
-@media (max-width: 768px) {
-  .text-display {
-    font-size: 2.5rem;
-  }
-  .text-h1 {
-    font-size: 2rem;
-  }
-  .text-h2 {
-    font-size: 1.5rem;
-  }
-  .text-h3 {
-    font-size: 1.25rem;
-  }
+.text-break {
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
 }
 
 /* Accessibility: Reduced motion */

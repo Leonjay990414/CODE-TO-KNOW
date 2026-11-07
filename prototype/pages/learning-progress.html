@@ -89,31 +89,31 @@
     <section class="section-padding" style="background-color: var(--surface-base);">
       <div class="container">
 
-        <!-- 4 Metric Cards -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: var(--space-8);">
-          <div class="card" style="padding: 20px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">累計答題數</div>
-            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">389 題</div>
-            <div style="font-size: 11px; color: var(--status-success); margin-top: 4px;">↑ 本週新增 64 題</div>
+        <!-- 4 Metric Cards (2x2 on mobile, 4-col on desktop) -->
+        <div class="metrics-quad-grid">
+          <div class="card metric-card" style="padding: 20px;">
+            <div class="metric-card-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">累計答題數</div>
+            <div class="metric-card-value" style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">389 題</div>
+            <div class="metric-card-hint" style="font-size: 11px; color: var(--status-success); margin-top: 4px;">↑ 本週新增 64 題</div>
           </div>
-          <div class="card" style="padding: 20px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">模擬考最高分</div>
-            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-charcoal);">88.75 分</div>
-            <div style="font-size: 11px; color: var(--status-success); margin-top: 4px;">高於國家及格門檻 (60)</div>
+          <div class="card metric-card" style="padding: 20px;">
+            <div class="metric-card-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">模擬考最高分</div>
+            <div class="metric-card-value" style="font-size: 26px; font-weight: 700; color: var(--color-brand-charcoal);">88.75 分</div>
+            <div class="metric-card-hint" style="font-size: 11px; color: var(--status-success); margin-top: 4px;">高於國家門檻 (60)</div>
           </div>
-          <div class="card" style="padding: 20px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">考照準備度預估</div>
-            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-gold-text);">78%</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">建議加強術科題組三</div>
+          <div class="card metric-card" style="padding: 20px;">
+            <div class="metric-card-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">考照準備度預估</div>
+            <div class="metric-card-value" style="font-size: 26px; font-weight: 700; color: var(--color-brand-gold-text);">78%</div>
+            <div class="metric-card-hint" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">加強術科題組三</div>
           </div>
-          <div class="card" style="padding: 20px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">AI 啟發點數</div>
-            <div style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">142 顆微光</div>
-            <div style="font-size: 11px; color: var(--color-brand-gold-text); margin-top: 4px;">自主推理成果</div>
+          <div class="card metric-card" style="padding: 20px;">
+            <div class="metric-card-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">AI 啟發點數</div>
+            <div class="metric-card-value" style="font-size: 26px; font-weight: 700; color: var(--color-brand-deep-slate);">142 顆微光</div>
+            <div class="metric-card-hint" style="font-size: 11px; color: var(--color-brand-gold-text); margin-top: 4px;">自主推理成果</div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: var(--space-8);">
+        <div class="subpage-split-grid--balanced">
           
           <!-- Enrolled Certifications Track -->
           <div class="card" style="padding: 28px;">
@@ -133,26 +133,26 @@
                   <div class="progress-bar" style="width: 45%;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary);">
-                  <span>學科已刷 189 / 420 題 · 術科已練 2 / 5 題組</span>
+                  <span>學科已刷 189 / 611 題 · 術科已練 2 / 4 題組</span>
                   <a href="practical-learning.html?id=web-design-c" class="btn btn-outline btn-sm">繼續練習</a>
                 </div>
               </div>
 
-              <!-- Cert 2 -->
+              <!-- Cert 2 (Coming Soon Showcase) -->
               <div style="padding: 16px; border: 1px solid var(--border-default); border-radius: var(--radius-md); background-color: #FFFFFF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <div>
-                    <span class="badge badge-slate" style="font-size: 10px;">升學檢測</span>
+                    <span class="badge badge-slate" style="font-size: 10px;">COMING SOON</span>
                     <strong style="font-size: 15px; margin-left: 6px;">APCS 程式設計先修檢測</strong>
                   </div>
-                  <span style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">25%</span>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--color-brand-deep-slate);">籌備中</span>
                 </div>
-                <div class="progress-track" style="margin-bottom: 12px;">
-                  <div class="progress-bar" style="width: 25%;"></div>
+                <div style="font-size: 12px; color: var(--text-muted); margin: 10px 0;">
+                  ✦ 官方歷年試題數位化籌備中 · 預約開放通知已登記
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary);">
-                  <span>觀念題完成 50 題 · 實作題完成 10 題</span>
-                  <a href="theory-learning.html" class="btn btn-outline btn-sm">繼續練習</a>
+                  <span>已關注：程式設計觀念題與實作題</span>
+                  <a href="certification-detail.html?id=apcs-test" class="btn btn-outline btn-sm">查看檢測介紹</a>
                 </div>
               </div>
             </div>

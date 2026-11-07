@@ -163,7 +163,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <Code2 size={20} color="var(--color-brand-gold)" />
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700 }}>術科題組實作</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>已完成 3 / 4 題組</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>已完成 3 / 5 題組</div>
                     </div>
                   </button>
 
@@ -307,7 +307,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid var(--border-default)' }} />
-                    <span>在沙盒演練題組二「國家公園錨點跳轉」</span>
+                    <span>在沙盒演練題組二「運動廣場圖文切換」</span>
                   </div>
                 </div>
               </div>

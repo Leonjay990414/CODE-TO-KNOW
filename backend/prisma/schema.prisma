@@ -32,7 +32,7 @@ model User {
 
 model Role {
   id          String     @id @default(uuid())
-  name        String     @unique // STUDENT, TEACHER, ADMIN
+  name        String     @unique // STUDENT, TEACHER, PLATFORM_ADMIN, SYSTEM_OPERATOR (legacy compatibility: ADMIN)
   description String?
   users       UserRole[]
 }

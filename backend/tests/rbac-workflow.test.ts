@@ -1,9 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { requireRoles } from '../src/middleware/authorize.js';
+import { requireRoles, expandCompatibleRoles } from '../src/middleware/authorize.js';
 import { Request, Response } from 'express';
 import { AppError } from '../src/utils/errors.js';
 
 describe('RBAC & Role Security', () => {
+  describe('expandCompatibleRoles transitional compatibility helper', () => {
+    it('maps ADMIN to include PLATFORM_ADMIN', () => {
+      const roles = expandCompatibleRoles(['ADMIN']);
+      expect(roles).toContain('ADMIN');
+      expect(roles).toContain('PLATFORM_ADMIN');
+      expect(roles).not.toContain('SYSTEM_OPERATOR');
+    });
+
+    it('maps PLATFORM_ADMIN to include ADMIN', () => {
+      const roles = expandCompatibleRoles(['PLATFORM_ADMIN']);
+      expect(roles).toContain('PLATFORM_ADMIN');
+      expect(roles).toContain('ADMIN');
+      expect(roles).not.toContain('SYSTEM_OPERATOR');
+    });
+
+    it('does NOT expand SYSTEM_OPERATOR into PLATFORM_ADMIN or ADMIN', () => {
+      const roles = expandCompatibleRoles(['SYSTEM_OPERATOR']);
+      expect(roles).toEqual(['SYSTEM_OPERATOR']);
+    });
+  });
+
   describe('requireRoles Authorization Middleware', () => {
     it('allows access when user has the required role (ADMIN)', () => {
       const middleware = requireRoles(['ADMIN']);
@@ -21,6 +42,93 @@ describe('RBAC & Role Security', () => {
 
       expect(nextCalled).toBe(true);
       expect(passedError).toBeUndefined();
+    });
+
+    it('allows access when user has PLATFORM_ADMIN on an endpoint requiring ADMIN', () => {
+      const middleware = requireRoles(['ADMIN']);
+      const req = {
+        user: { id: 'u1-pa', email: 'platform_admin@codetoknow.edu', displayName: 'Platform Admin', roles: ['PLATFORM_ADMIN'] },
+      } as unknown as Request;
+      const res = {} as Response;
+      let nextCalled = false;
+      let passedError: unknown = null;
+
+      middleware(req, res, (err) => {
+        nextCalled = true;
+        passedError = err;
+      });
+
+      expect(nextCalled).toBe(true);
+      expect(passedError).toBeUndefined();
+    });
+
+    it('allows access when user has legacy ADMIN on an endpoint requiring PLATFORM_ADMIN', () => {
+      const middleware = requireRoles(['PLATFORM_ADMIN']);
+      const req = {
+        user: { id: 'u1-legacy', email: 'legacy_admin@codetoknow.edu', displayName: 'Legacy Admin', roles: ['ADMIN'] },
+      } as unknown as Request;
+      const res = {} as Response;
+      let nextCalled = false;
+      let passedError: unknown = null;
+
+      middleware(req, res, (err) => {
+        nextCalled = true;
+        passedError = err;
+      });
+
+      expect(nextCalled).toBe(true);
+      expect(passedError).toBeUndefined();
+    });
+
+    it('strictly forbids ADMIN from accessing SYSTEM_OPERATOR endpoints', () => {
+      const middleware = requireRoles(['SYSTEM_OPERATOR']);
+      const req = {
+        user: { id: 'u1-admin-ops', email: 'admin@codetoknow.edu', displayName: 'Admin', roles: ['ADMIN'] },
+      } as unknown as Request;
+      const res = {} as Response;
+      let passedError: unknown = null;
+
+      middleware(req, res, (err) => {
+        passedError = err;
+      });
+
+      expect(passedError).toBeInstanceOf(AppError);
+      expect((passedError as AppError).statusCode).toBe(403);
+      expect((passedError as AppError).code).toBe('INSUFFICIENT_PERMISSIONS');
+    });
+
+    it('strictly forbids PLATFORM_ADMIN from accessing SYSTEM_OPERATOR endpoints', () => {
+      const middleware = requireRoles(['SYSTEM_OPERATOR']);
+      const req = {
+        user: { id: 'u1-pa-ops', email: 'platform_admin@codetoknow.edu', displayName: 'Platform Admin', roles: ['PLATFORM_ADMIN'] },
+      } as unknown as Request;
+      const res = {} as Response;
+      let passedError: unknown = null;
+
+      middleware(req, res, (err) => {
+        passedError = err;
+      });
+
+      expect(passedError).toBeInstanceOf(AppError);
+      expect((passedError as AppError).statusCode).toBe(403);
+      expect((passedError as AppError).code).toBe('INSUFFICIENT_PERMISSIONS');
+    });
+
+    it('strictly forbids SYSTEM_OPERATOR from accessing PLATFORM_ADMIN endpoints', () => {
+      const middleware = requireRoles(['PLATFORM_ADMIN']);
+      const req = {
+        user: { id: 'u1-ops-pa', email: 'ops@codetoknow.edu', displayName: 'Operator', roles: ['SYSTEM_OPERATOR'] },
+      } as unknown as Request;
+      const res = {} as Response;
+      let passedError: unknown = null;
+
+      middleware(req, res, (err) => {
+        passedError = err;
+      });
+
+      expect(passedError).toBeInstanceOf(AppError);
+      expect((passedError as AppError).statusCode).toBe(403);
+      expect((passedError as AppError).code).toBe('INSUFFICIENT_PERMISSIONS');
     });
 
     it('rejects student access to ADMIN API with 403 Forbidden', () => {

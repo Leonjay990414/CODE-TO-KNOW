@@ -176,7 +176,11 @@
         html += '<div class="cert-card ' + (c.isFeatured ? 'featured' : '') + '">';
         html += '  <div>';
         html += '    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">';
-        html += '      <span class="badge badge-gold" style="font-size: 11px;">' + c.badgeText + '</span>';
+        if (c.isComingSoon) {
+          html += '      <span class="badge badge-slate" style="font-size: 11px;">COMING SOON</span>';
+        } else {
+          html += '      <span class="badge badge-gold" style="font-size: 11px;">' + c.badgeText + '</span>';
+        }
         html += '      <span style="font-size: 11px; font-weight: 700; color: var(--color-brand-deep-slate); font-family: var(--font-mono);">' + c.code + '</span>';
         html += '    </div>';
         html += '    <h3 class="text-h3" style="font-size: 18px; margin-bottom: 6px;">' + c.name + '</h3>';
@@ -184,36 +188,52 @@
         html += '    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">' + c.shortDesc + '</p>';
         html += '  </div>';
 
-        // Stats Box
-        html += '  <div>';
-        html += '    <div class="cert-stats-box">';
-        html += '      <div>';
-        html += '        <div style="color: var(--text-muted);">學科題庫</div>';
-        html += '        <div style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">' + c.subjectsCount + ' 題</div>';
-        html += '      </div>';
-        html += '      <div>';
-        html += '        <div style="color: var(--text-muted);">術科實作</div>';
-        html += '        <div style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">' + c.practicalsCount + ' 大題組</div>';
-        html += '      </div>';
-        html += '    </div>';
+        if (c.isComingSoon) {
+          // Coming Soon presentation: No fake stats, no fake progress, single introduction entry
+          html += '  <div>';
+          html += '    <div style="background-color: var(--surface-sunken); border: 1px dashed var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; margin: var(--space-4) 0; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">';
+          html += '      <span>✦ 官方考綱數位化中</span>';
+          html += '      <span style="font-weight: 600; color: var(--color-brand-deep-slate);">即將開放</span>';
+          html += '    </div>';
+          html += '    <div style="margin-bottom: 16px; font-size: 12px; color: var(--text-muted); display: flex; gap: 6px; flex-wrap: wrap;">';
+          (c.tags || []).slice(0, 3).forEach(function (tag) {
+            html += '      <span style="background-color: var(--surface-sunken); padding: 3px 8px; border-radius: 4px; font-size: 11px; color: var(--text-secondary);">' + tag + '</span>';
+          });
+          html += '    </div>';
+          html += '    <div style="display: flex;">';
+          html += '      <a href="' + detailHref + '" class="btn btn-outline btn-sm" style="width: 100%; text-align: center; font-size: 12px;">查看證照介紹</a>';
+          html += '    </div>';
+          html += '  </div>';
+        } else {
+          // Active demonstration: 網頁設計丙級
+          html += '  <div>';
+          html += '    <div class="cert-stats-box">';
+          html += '      <div>';
+          html += '        <div style="color: var(--text-muted);">學科題庫</div>';
+          html += '        <div style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">' + c.subjectsCount + ' 題</div>';
+          html += '      </div>';
+          html += '      <div>';
+          html += '        <div style="color: var(--text-muted);">術科實作</div>';
+          html += '        <div style="font-size: 14px; font-weight: 700; color: var(--color-brand-deep-slate);">' + c.practicalsCount + ' 大題組</div>';
+          html += '      </div>';
+          html += '    </div>';
 
-        // Progress Track
-        html += '    <div style="margin-bottom: 16px;">';
-        html += '      <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">';
-        html += '        <span>學習完成度</span>';
-        html += '        <span style="font-weight: 600; color: var(--text-primary);">' + c.progress + '%</span>';
-        html += '      </div>';
-        html += '      <div class="progress-track">';
-        html += '        <div class="progress-bar" style="width: ' + c.progress + '%;"></div>';
-        html += '      </div>';
-        html += '    </div>';
+          html += '    <div style="margin-bottom: 16px;">';
+          html += '      <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">';
+          html += '        <span>學習完成度</span>';
+          html += '        <span style="font-weight: 600; color: var(--text-primary);">' + c.progress + '%</span>';
+          html += '      </div>';
+          html += '      <div class="progress-track">';
+          html += '        <div class="progress-bar" style="width: ' + c.progress + '%;"></div>';
+          html += '      </div>';
+          html += '    </div>';
 
-        // Actions
-        html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">';
-        html += '      <a href="' + detailHref + '" class="btn btn-outline btn-sm" style="font-size: 12px;">查看大綱</a>';
-        html += '      <a href="' + practicalHref + '" class="btn btn-primary btn-sm" style="font-size: 12px;">進入學習</a>';
-        html += '    </div>';
-        html += '  </div>';
+          html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">';
+          html += '      <a href="' + detailHref + '" class="btn btn-outline btn-sm" style="font-size: 12px;">查看大綱</a>';
+          html += '      <a href="' + practicalHref + '" class="btn btn-primary btn-sm" style="font-size: 12px;">進入學習</a>';
+          html += '    </div>';
+          html += '  </div>';
+        }
         html += '</div>';
       });
 
@@ -238,9 +258,9 @@
         // Discipline filter
         var matchDiscipline = true;
         if (currentDiscipline === 'theory') {
-          matchDiscipline = c.subjectsCount > 0;
+          matchDiscipline = (c.subjectsCount > 0) || c.isComingSoon;
         } else if (currentDiscipline === 'practical') {
-          matchDiscipline = c.practicalsCount > 0;
+          matchDiscipline = (c.practicalsCount > 0) || c.isComingSoon;
         }
 
         // Keyword filter

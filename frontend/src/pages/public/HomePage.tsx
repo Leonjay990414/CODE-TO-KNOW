@@ -5,6 +5,7 @@ import { BrandStory } from '../../components/BrandStory';
 import { LearningExperience } from '../../components/LearningExperience';
 import { AIScaffoldingDemo } from '../../components/AIScaffoldingDemo';
 import { StudentTeacherDual } from '../../components/StudentTeacherDual';
+import { MembershipComparison } from '../../components/MembershipComparison';
 import { FinalCTA } from '../../components/FinalCTA';
 import { Footer } from '../../components/Footer';
 import { AuthModal } from '../../components/AuthModal';
@@ -74,6 +75,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenTeacherApply }) => {
           <StudentTeacherDual
             onOpenTeacherApply={handleTeacherApplyClick}
           />
+        </div>
+
+        <div className="fade-in-section">
+          <MembershipComparison onOpenAuth={openAuth} />
         </div>
 
         <div className="fade-in-section">

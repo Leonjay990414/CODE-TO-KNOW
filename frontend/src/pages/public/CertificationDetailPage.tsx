@@ -403,7 +403,7 @@ export const CertificationDetailPage: React.FC<CertificationDetailPageProps> = (
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <CheckCircle2 size={15} color="var(--status-success)" />
-                        <span>術科練習：官方四大題組全真示範</span>
+                        <span>術科練習：官方五大題組全真示範</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Clock size={15} color="var(--color-brand-gold)" />
