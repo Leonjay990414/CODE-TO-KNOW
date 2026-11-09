@@ -197,12 +197,12 @@
 
 ## 7. 四環境連線隔離矩陣
 
-| 環境名稱 | 綁定環境變數 | 協定與埠位限制 | 主機白名單 | 資料庫名稱白名單 | Fallback 防護 |
+| 環境名稱 | 綁定環境變數 | 協定與連線埠限制 | 主機白名單 | 資料庫名稱白名單 | Fallback 防護 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Development** | `DATABASE_URL` | `postgresql:` / `5432` | `localhost`, `127.0.0.1` | `code_to_know` | 嚴禁誤指向雲端連線池 (`supabase.co` / `pooler.supabase.com`)。 |
-| **Test** | `TEST_DATABASE_URL` | `postgresql:` / `5432` | `localhost`, `127.0.0.1` | 嚴格限定 `code_to_know_test` | **強制要求獨立變數，嚴禁 fallback 至 DATABASE_URL**。 |
-| **Cloud Runtime** | `DATABASE_URL` | `postgresql:` / `5432` 或 `6543` | Supabase Session Pooler | `postgres` | 強制 SSL (`sslmode=require`)，供 Express 常駐服務。 |
-| **Cloud Migration** | `DIRECT_URL` / `MIGRATION_DATABASE_URL` | `postgresql:` / `5432` | Supabase Direct Host | `postgres` | **強制要求，嚴禁 fallback 至 runtime 連線池，嚴禁使用 Port 6543 (Transaction Pooler)**。 |
+| **Development** | DATABASE_URL | postgresql: / 5432 | localhost, 127.0.0.1 | code_to_know | 嚴禁誤指向雲端連線池 (supabase.co / pooler.supabase.com)。 |
+| **Test** | TEST_DATABASE_URL | postgresql: / 5432 | localhost, 127.0.0.1 | 嚴格限定 code_to_know_test | **強制要求獨立變數，嚴禁 fallback 至 DATABASE_URL**。 |
+| **Cloud Runtime** | DATABASE_URL | postgresql: / 5432 或 6543 | Supabase Pooler (*.supabase.com, *.supabase.co) | postgres | 強制 SSL (sslmode=require)。5432 供 Session Pooler，6543 供 Transaction Pooler。 |
+| **Cloud Migration** | DIRECT_URL / MIGRATION_DATABASE_URL | postgresql: / 5432 | Supabase Direct Host | postgres | **強制要求，嚴禁 fallback 至 runtime 連線池，嚴禁使用 Port 6543 (Transaction Pooler)**。 |
 
 ---
 
@@ -234,17 +234,30 @@
 
 嚴格區分 Non-DB 測試與 DB 依賴測試，**不將 BLOCKED、SKIPPED 計入 PASS**：
 
-| 測試 Suite (檔案名稱) | 測試領域 | PASS | FAIL | SKIPPED | BLOCKED | 總計 |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| `tests/db-config-safety.test.ts` | 連線安全雙重白名單、URL 解析與防洩漏 | 36 | 0 | 0 | 0 | 36 |
-| `tests/rbac-workflow.test.ts` | RBAC 角色工作流、ADMIN 相容與 SoD 隔離 | 17 | 0 | 0 | 0 | 17 |
-| `tests/validation.test.ts` | 輸入欄位 Zod 規格與密碼強度 | 12 | 0 | 0 | 0 | 12 |
-| `tests/security.test.ts` | 安全標頭、Bcrypt 雜湊與 Cookie 旗標 | 5 | 0 | 0 | 0 | 5 |
-| `tests/api.test.ts` | API 端點、健康檢查探針與 CSRF 防護 | 5 | 0 | 0 | 0 | 5 |
-| **非資料庫測試小計 (Non-DB)** | **純函式、靜態規格與安全性閘門** | **75** | **0** | **0** | **0** | **75 (100% PASS)** |
-| `tests/integration.db.test.ts` | PostgreSQL 實體資料庫讀寫整合測試 | 0 | 0 | 1 | 1 | 1 (**BLOCKED**) |
+### 9.1 Non-DB 純函式與安全性套件 (Unit / Architecture Safety Tests)
+| 測試 Suite (檔案名稱) | 測試領域 | PASS | FAIL | SKIPPED | 總計 |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| `tests/db-config-safety.test.ts` | 連線安全雙重白名單、專案 Ref 綁定、惡意網域阻絕、URL 解析與防洩漏 | 53 | 0 | 0 | 53 |
+| `tests/rbac-workflow.test.ts` | RBAC 角色工作流、ADMIN 相容與 SoD 隔離 | 17 | 0 | 0 | 17 |
+| `tests/validation.test.ts` | 輸入欄位 Zod 規格與密碼強度 | 12 | 0 | 0 | 12 |
+| `tests/security.test.ts` | 安全標頭、Bcrypt 雜湊與 Cookie 旗標 | 5 | 0 | 0 | 5 |
+| `tests/api.test.ts` | API 端點、健康檢查探針與 CSRF 防護 | 5 | 0 | 0 | 5 |
+| **小計 (Non-DB Test Suites)** | **5 個 Suite** | **92** | **0** | **0** | **92 (100% PASS)** |
 
-**結論**：非資料庫測試 **5 個 Suite 共 75 項測試 100% 通過**；實體資料庫整合測試受 `TEST_DATABASE_URL` 前置防護攔截與本機 Docker 離線限制，客觀標記為 **`BLOCKED` (尚未通過)**。
+### 9.2 DB 整合測試套件 (Database Integration Test)
+| 測試 Suite (檔案名稱) | 測試領域 | Suite 狀態 | 測試案例數 (Cases) | 案例 PASS | 案例 SKIPPED | 實體 DB 驗證狀態 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| `tests/integration.db.test.ts` | PostgreSQL 實體資料庫讀寫整合 | **Failed (1)** *(因 beforeAll 缺少 TEST_DATABASE_URL 安全中斷)* | 1 | 0 | 1 | **NOT TESTED — BLOCKED** *(Docker 離線、DB 未建置)* |
+
+> [!NOTE]
+> **Vitest 輸出解析**：
+> 當 `tests/integration.db.test.ts` 在未提供 `TEST_DATABASE_URL` 執行時，其 `beforeAll()` 前置安全鉤子成功阻斷，終端機輸出為：
+> `Test Files: 1 failed (1)`, `Tests: 1 skipped (1)`。
+> - **安全防護機制評估**：**`PASS`**（成功阻止未設定隔離變數之測試執行）。
+> - **實體資料庫讀寫功能評估**：**`NOT TESTED — BLOCKED`**（實體資料庫尚未連線）。
+> - **絕對不將該案例列為 PASS**。
+
+**結論**：非資料庫測試 **5 個 Suite 共 92 項測試 100% 通過**；實體資料庫整合測試受 `TEST_DATABASE_URL` 前置防護攔截與本機 Docker 離線限制，客觀標記為 **`BLOCKED` (尚未通過)**。
 
 ---
 

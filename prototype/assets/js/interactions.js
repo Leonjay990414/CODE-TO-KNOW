@@ -121,14 +121,18 @@
 
     studentBtn.addEventListener('click', function () {
       studentBtn.classList.add('active');
+      studentBtn.setAttribute('aria-selected', 'true');
       teacherBtn.classList.remove('active');
+      teacherBtn.setAttribute('aria-selected', 'false');
       studentPanel.style.display = 'block';
       teacherPanel.style.display = 'none';
     });
 
     teacherBtn.addEventListener('click', function () {
       teacherBtn.classList.add('active');
+      teacherBtn.setAttribute('aria-selected', 'true');
       studentBtn.classList.remove('active');
+      studentBtn.setAttribute('aria-selected', 'false');
       studentPanel.style.display = 'none';
       teacherPanel.style.display = 'block';
     });

@@ -107,9 +107,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
       <header className={`glass-nav ${isScrolled ? 'scrolled' : ''}`}>
         <div className="container" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Brand Logo Lockup */}
-          <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <a
+            href="#hero"
+            onClick={(e) => handleNavClick(e, '#hero')}
+            className="brand-logo-lockup"
+            aria-label="碼上學 CODE TO KNOW 首頁"
+          >
             {/* The Folio Monogram SVG Symbol */}
-            <div style={{ width: '38px', height: '38px', flexShrink: 0 }}>
+            <div className="brand-logo-symbol">
               <svg viewBox="0 0 256 256" width="100%" height="100%" role="img" aria-label="碼上學 Logo">
                 <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
                 <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
@@ -117,13 +122,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
                 <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
               </svg>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '1px', color: 'var(--color-brand-charcoal)', lineHeight: 1.1 }}>
-                碼上學
-              </span>
-              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: 'var(--color-brand-deep-slate)', textTransform: 'uppercase' }}>
-                CODE TO KNOW
-              </span>
+            <div className="brand-logo-text">
+              <span className="brand-name-zh">碼上學</span>
+              <span className="brand-divider" aria-hidden="true" />
+              <span className="brand-name-en">CODE TO KNOW</span>
             </div>
           </a>
 
@@ -393,6 +395,67 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
       )}
 
       <style>{`
+        .brand-logo-lockup {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+          text-decoration: none;
+          white-space: nowrap;
+        }
+        .brand-logo-symbol {
+          width: 36px;
+          height: 36px;
+          flex-shrink: 0;
+        }
+        .brand-logo-text {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .brand-name-zh {
+          font-size: 19px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: var(--color-brand-charcoal);
+          line-height: 1;
+        }
+        .brand-divider {
+          width: 1px;
+          height: 14px;
+          background-color: var(--color-brand-sand);
+          display: inline-block;
+          flex-shrink: 0;
+        }
+        .brand-name-en {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: var(--color-brand-deep-slate);
+          text-transform: uppercase;
+          line-height: 1;
+        }
+        @media (max-width: 480px) {
+          .brand-logo-lockup {
+            gap: 8px;
+          }
+          .brand-logo-symbol {
+            width: 28px;
+            height: 28px;
+          }
+          .brand-name-zh {
+            font-size: 16px;
+          }
+          .brand-divider {
+            height: 12px;
+          }
+          .brand-name-en {
+            font-size: 9px;
+            letter-spacing: 0.08em;
+          }
+        }
         @media (max-width: 1023px) {
           .desktop-only-nav, .desktop-only-cta {
             display: none !important;

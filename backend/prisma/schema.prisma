@@ -6,6 +6,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ==========================================
+// 1. 既有核心模型 (Core Identity & Security - 9 Models)
+// ==========================================
+
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
@@ -18,13 +22,30 @@ model User {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  roles                    UserRole[]
-  profile                  UserProfile?
-  sessions                 Session[]
-  teacherApplications      TeacherApplication[]
-  auditLogs                AuditLog[]
-  emailVerificationTokens  EmailVerificationToken[]
-  passwordResetTokens      PasswordResetToken[]
+  // 既有關聯 (Existing Relations)
+  roles                   UserRole[]
+  profile                 UserProfile?
+  sessions                Session[]
+  teacherApplications     TeacherApplication[]
+  auditLogs               AuditLog[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+
+  // 新增業務關聯 (New Business Relations)
+  announcements            Announcement[]            @relation("UserAnnouncements")
+  announcementReads        AnnouncementRead[]
+  certificationEnrollments CertificationEnrollment[]
+  unitProgresses           UnitProgress[]
+  wrongQuestions           WrongQuestionRecord[]
+  questionBookmarks        QuestionBookmark[]
+  studyTimeLogs            StudyTimeLog[]
+  teacherProfile           TeacherProfile?
+  createdClasses           Class[]                   @relation("ClassTeacher")
+  classEnrollments         ClassEnrollment[]
+  practicalProgresses      PracticalProgress[]
+  examAttempts             ExamAttempt[]
+  aiChatSessions           AIChatSession[]
+  weaknessAnalyses         StudentWeaknessAnalysis[]
 
   @@index([email])
   @@index([status])
@@ -82,18 +103,18 @@ model Session {
 }
 
 model TeacherApplication {
-  id          String    @id @default(uuid())
-  userId      String
-  schoolName  String
-  subject     String
-  reason      String
-  proofUrl    String?
-  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  reviewedBy  String?
-  reviewedAt  DateTime?
-  reviewNote  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(uuid())
+  userId     String
+  schoolName String
+  subject    String
+  reason     String
+  proofUrl   String?
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewNote String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -143,4 +164,539 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ==========================================
+// 2. 第一層：公告與宣傳管理 (Announcements - 2 Models)
+// ==========================================
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Announcement {
+  id          String             @id @default(uuid())
+  title       String
+  content     String             @db.Text
+  category    String             @default("GENERAL") // GENERAL, EXAM_NEWS, MAINTENANCE
+  targetRole  String             @default("ALL") // ALL, STUDENT, TEACHER
+  status      AnnouncementStatus @default(DRAFT)
+  isPinned    Boolean            @default(false)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  authorId    String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  author User               @relation("UserAnnouncements", fields: [authorId], references: [id], onDelete: Restrict)
+  reads  AnnouncementRead[]
+
+  @@index([publishedAt])
+  @@index([targetRole])
+  @@index([status])
+  @@index([isPinned])
+  @@index([category])
+  @@index([authorId])
+}
+
+model AnnouncementRead {
+  id             String   @id @default(uuid())
+  announcementId String
+  userId         String
+  readAt         DateTime @default(now())
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
+  @@index([announcementId])
+}
+
+// ==========================================
+// 3. 第四層：證照與題庫管理 (Certifications & Question Bank - 6 Models)
+// ==========================================
+
+model Certification {
+  id              String   @id @default(uuid())
+  code            String   @unique // e.g. "17300", "web-design-c"
+  name            String // e.g. "勞動部技能檢定 17300 網頁設計丙級"
+  level           String // LEVEL_C, LEVEL_B, LEVEL_A
+  category        String // WEB_DESIGN, COMPUTER_APPLICATIONS, PROGRAMMING
+  officialVersion String // e.g. "113/114年版"
+  status          String   @default("ACTIVE") // ACTIVE, PREVIEW
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subjects    Subject[]
+  classes     Class[]
+  examPapers  ExamPaper[]
+  enrollments CertificationEnrollment[]
+
+  @@index([code])
+  @@index([status])
+}
+
+model Subject {
+  id              String   @id @default(uuid())
+  certificationId String
+  code            String // e.g. "17300-01", "17300-02"
+  title           String // 工作項目名稱
+  examType        String   @default("THEORY") // THEORY, PRACTICAL
+  displayOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  certification    Certification             @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  questions        Question[]
+  unitProgresses   UnitProgress[]
+  weaknessAnalyses StudentWeaknessAnalysis[]
+
+  @@unique([certificationId, code])
+  @@index([certificationId])
+}
+
+model Question {
+  id             String   @id @default(uuid())
+  subjectId      String
+  officialNumber Int? // 官方考卷題號 (如 24, 58)
+  questionText   String   @db.Text
+  codeSnippet    String?  @db.Text
+  questionType   String   @default("SINGLE_CHOICE") // SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE
+  difficulty     String   @default("MEDIUM") // EASY, MEDIUM, HARD
+  correctAnswer  String // "B" or "A,C"
+  explanation    String   @db.Text
+  sourceName     String // e.g. "勞動部技能檢定中心 173003A17 測試參考資料"
+  sourceUrl      String?
+  sourceVersion  String // e.g. "113/114年版"
+  status         String   @default("ACTIVE") // ACTIVE, DEPRECATED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subject         Subject               @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  options         QuestionOption[]
+  tagRelations    QuestionTagRelation[]
+  wrongRecords    WrongQuestionRecord[]
+  bookmarks       QuestionBookmark[]
+  answerSnapshots ExamAnswerSnapshot[]
+
+  @@index([subjectId, status])
+  @@index([difficulty])
+  @@index([sourceVersion])
+}
+
+model QuestionOption {
+  id           String @id @default(uuid())
+  questionId   String
+  key          String // "A", "B", "C", "D"
+  text         String @db.Text
+  displayOrder Int    @default(0)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, key])
+  @@index([questionId])
+}
+
+model QuestionTag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String? // e.g. "#BDA77E"
+  createdAt DateTime @default(now())
+
+  questionRelations QuestionTagRelation[]
+}
+
+model QuestionTagRelation {
+  questionId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag      QuestionTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, tagId])
+  @@index([tagId])
+  @@index([questionId])
+}
+
+// ==========================================
+// 4. 第二層：學生學習歷程 (Student Learning Progress - 5 Models)
+// ==========================================
+
+model CertificationEnrollment {
+  id              String    @id @default(uuid())
+  userId          String
+  certificationId String
+  targetExamDate  DateTime?
+  targetScore     Int       @default(80)
+  status          String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, PAUSED
+  enrolledAt      DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  certification Certification @relation(fields: [certificationId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, certificationId])
+  @@index([userId])
+  @@index([certificationId])
+  @@index([status])
+}
+
+model UnitProgress {
+  id                 String   @id @default(uuid())
+  userId             String
+  subjectId          String
+  status             String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, MASTERED
+  completedQuestions Int      @default(0)
+  accuracyRate       Float    @default(0.0) // 0.0 ~ 1.0
+  lastStudiedAt      DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model WrongQuestionRecord {
+  id             String    @id @default(uuid())
+  userId         String
+  questionId     String
+  wrongCount     Int       @default(1)
+  lastUserAnswer String // e.g. 'A'
+  isResolved     Boolean   @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, isResolved])
+  @@index([questionId])
+}
+
+model QuestionBookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  note       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+  @@index([questionId])
+}
+
+model StudyTimeLog {
+  id              String   @id @default(uuid())
+  userId          String
+  studyDate       String // format: "YYYY-MM-DD"
+  moduleType      String // "THEORY", "PRACTICAL", "MOCK_EXAM", "AI_COACH"
+  durationSeconds Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, studyDate, moduleType])
+  @@index([userId, studyDate])
+}
+
+// ==========================================
+// 5. 第三層：教師與班級管理 (Teacher & Class Management - 4 Models)
+// ==========================================
+
+model TeacherProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique // 1:1 with User
+  schoolName String
+  department String
+  title      String?
+  isVerified Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Class {
+  id              String   @id @default(uuid())
+  name            String
+  joinCode        String   @unique // 大寫英數 8 碼
+  description     String?  @db.Text
+  certificationId String
+  creatorId       String
+  status          String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  creator       User              @relation("ClassTeacher", fields: [creatorId], references: [id], onDelete: Restrict)
+  certification Certification     @relation(fields: [certificationId], references: [id], onDelete: Restrict)
+  enrollments   ClassEnrollment[]
+  assignments   ClassAssignment[]
+
+  @@index([creatorId])
+  @@index([certificationId])
+  @@index([status])
+}
+
+model ClassEnrollment {
+  id         String   @id @default(uuid())
+  classId    String
+  studentId  String
+  seatNumber String?
+  status     String   @default("JOINED") // JOINED, DROPPED
+  joinedAt   DateTime @default(now())
+
+  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, studentId])
+  @@index([studentId])
+  @@index([classId])
+}
+
+model ClassAssignment {
+  id              String   @id @default(uuid())
+  classId         String
+  title           String
+  type            String // MOCK_EXAM, PRACTICAL_TASK
+  examPaperId     String? // FK to ExamPaper.id
+  practicalTaskId String? // FK to PracticalTask.id
+  deadline        DateTime
+  passingScore    Int      @default(60)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  class         Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  examPaper     ExamPaper?     @relation(fields: [examPaperId], references: [id], onDelete: Restrict)
+  practicalTask PracticalTask? @relation(fields: [practicalTaskId], references: [id], onDelete: Restrict)
+
+  @@index([classId])
+  @@index([examPaperId])
+  @@index([practicalTaskId])
+  @@index([deadline])
+}
+
+// ==========================================
+// 6. 術科練習系統 (Practical Exam System - 4 Models)
+// ==========================================
+
+model PracticalTask {
+  id               String   @id @default(uuid())
+  taskCode         String   @unique // e.g. "17300-104301"
+  taskNumber       Int      @unique // 1 ~ 5 (官方五大題組)
+  title            String // 官方正式試題名稱 (104301 校園社團介紹網...)
+  theme            String
+  canvasWidth      String   @default("1024px")
+  estimatedMinutes Int      @default(120)
+  materialPath     String
+  defaultHtmlCode  String   @db.Text
+  defaultCssCode   String   @db.Text
+  status           String   @default("AVAILABLE") // AVAILABLE, MAINTENANCE
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  steps       PracticalStep[]
+  progresses  PracticalProgress[]
+  assignments ClassAssignment[]
+
+  @@index([status])
+}
+
+model PracticalStep {
+  id                String   @id @default(uuid())
+  taskId            String
+  version           String // VERSION_A, VERSION_B
+  stepNumber        Int
+  title             String
+  description       String   @db.Text
+  videoUrl          String?
+  videoStartSeconds Int?
+  pitfallWarning    String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  task           PracticalTask           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  stepProgresses PracticalStepProgress[]
+
+  @@unique([taskId, version, stepNumber])
+  @@index([taskId])
+  @@index([version])
+}
+
+model PracticalProgress {
+  id              String    @id @default(uuid())
+  userId          String
+  taskId          String
+  version         String // VERSION_A, VERSION_B
+  status          String    @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  practiceCount   Int       @default(1)
+  savedHtmlCode   String?   @db.Text
+  savedCssCode    String?   @db.Text
+  lastPracticedAt DateTime  @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task           PracticalTask           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  stepProgresses PracticalStepProgress[]
+
+  @@unique([userId, taskId, version])
+  @@index([userId, taskId])
+  @@index([status])
+}
+
+model PracticalStepProgress {
+  id          String    @id @default(uuid())
+  progressId  String
+  stepId      String
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  progress PracticalProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  step     PracticalStep     @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@unique([progressId, stepId])
+  @@index([progressId])
+  @@index([stepId])
+}
+
+// ==========================================
+// 7. 模擬測驗系統 (Mock Exam System - 3 Models)
+// ==========================================
+
+model ExamPaper {
+  id               String   @id @default(uuid())
+  title            String
+  certificationId  String
+  timeLimitMinutes Int      @default(60)
+  totalQuestions   Int      @default(80)
+  passingScore     Int      @default(60)
+  version          String   @default("1.0")
+  status           String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  certification Certification     @relation(fields: [certificationId], references: [id], onDelete: Restrict)
+  attempts      ExamAttempt[]
+  assignments   ClassAssignment[]
+
+  @@index([certificationId])
+  @@index([status])
+}
+
+model ExamAttempt {
+  id              String    @id @default(uuid())
+  userId          String
+  examPaperId     String
+  startedAt       DateTime  @default(now())
+  submittedAt     DateTime?
+  durationSeconds Int?
+  score           Float?
+  isPassed        Boolean?
+  correctCount    Int?
+  wrongCount      Int?
+  status          String    @default("IN_PROGRESS") // IN_PROGRESS, SUBMITTED, ABANDONED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examPaper       ExamPaper            @relation(fields: [examPaperId], references: [id], onDelete: Restrict)
+  answerSnapshots ExamAnswerSnapshot[]
+
+  @@index([userId, startedAt])
+  @@index([examPaperId])
+  @@index([status])
+}
+
+model ExamAnswerSnapshot {
+  id                    String   @id @default(uuid())
+  attemptId             String
+  questionId            String? // FK to Question.id (Nullable, SetNull 解耦題庫)
+  questionOrder         Int // 考卷內題號 (1 ~ 80)
+  questionTypeSnapshot  String   @default("SINGLE_CHOICE")
+  questionTextSnapshot  String   @db.Text // 交卷當下的題幹完整文字
+  optionsSnapshot       String   @db.Text // 交卷當下的選項集合快照 (JSON 字串)
+  correctAnswerSnapshot String // 交卷當下的正確答案代碼 (如 'B')
+  explanationSnapshot   String?  @db.Text // 交卷當下的解析文字
+  userAnswer            String? // 學生選填之答案 (未答為 NULL)
+  isCorrect             Boolean // 系統核算之是否答對
+  scoreWeight           Float    @default(1.25) // 單題配分
+  scoreObtained         Float    @default(0.0) // 實得分數
+  timeSpentSeconds      Int      @default(0) // 單題思考秒數
+  answeredAt            DateTime @default(now())
+
+  attempt  ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question?   @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionOrder])
+  @@index([attemptId, isCorrect])
+  @@index([questionId])
+}
+
+// ==========================================
+// 8. 第五層：AI 學習與智慧分析 (AI Coach & Scaffolding - 3 Models)
+// ==========================================
+
+model AIChatSession {
+  id              String   @id @default(uuid())
+  userId          String
+  contextType     String // THEORY_QUESTION, PRACTICAL_STEP, CODE_DEBUG
+  contextId       String?
+  title           String   @default("新學習對話")
+  totalTokensUsed Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIChatMessage[]
+
+  @@index([userId, createdAt])
+}
+
+model AIChatMessage {
+  id               String   @id @default(uuid())
+  sessionId        String
+  role             String // USER, ASSISTANT, SYSTEM
+  content          String   @db.Text
+  scaffoldingStage Int? // 鷹架階段 (1:觀念聚焦, 2:破題思路, 3:邊界提示, 4:架構解構)
+  tokensUsed       Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  session AIChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model StudentWeaknessAnalysis {
+  id              String   @id @default(uuid())
+  userId          String
+  subjectId       String
+  masteryLevel    Float    @default(0.0) // 掌握程度 (0.00 ~ 1.00)
+  weaknessTags    String?  @db.Text // 診斷出的主要盲點標籤清單 (JSON 字串)
+  suggestedAction String?  @db.Text // AI 推薦強化學習指引
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([userId])
+  @@index([subjectId])
 }

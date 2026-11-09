@@ -25,8 +25,14 @@
 
 > [!IMPORTANT]
 > **舊式角色標記 (`ADMIN`) 相容與授權資料來源校驗**：
-> 1. **既有實作相容性**：現有程式碼（`App.tsx`, `Navbar.tsx`, `admin.routes.ts`）中使用的 `ADMIN`，在過渡期內由授權中介層透過陣列比對 `requireRoles(['PLATFORM_ADMIN', 'ADMIN'])` 保持相容，後續將全面規範化為 `PLATFORM_ADMIN`。
-> 2. **教師授權安全保證**：系統**嚴格禁止以前端傳入 `teacherEmail` 或 Email 結尾特徵授權教師**。所有教師身分必須經由申請（`TeacherApplication`）並由管理者在資料庫交易中審核開通，授權資料來源嚴格綁定 `UserRole` 實體資料表。
+> 1. **既有實作相容性（過渡期）**：現有程式碼（`App.tsx`, `Navbar.tsx`, `admin.routes.ts`）中使用的 `ADMIN`，在過渡期內由授權中介層 `expandCompatibleRoles`（`backend/src/middleware/authorize.ts`）進行雙向映射相容（`ADMIN <-> PLATFORM_ADMIN`），以支援漸進式無縫遷移。
+> 2. **嚴格職責分離 (SoD)**：`ADMIN` 與 `PLATFORM_ADMIN` **絕對不得自動取得 `SYSTEM_OPERATOR`**。未來所有系統層級維運 API（如 `/api/ops/*`）必須使用獨立的 `requireRoles(['SYSTEM_OPERATOR'])`，嚴禁與平台管理混用。
+> 3. **新管理 API 開發原則**：所有新開發的管理端點必須以正式角色 `PLATFORM_ADMIN` 宣告，不得再新增以 `ADMIN` 宣告之端點。
+> 4. **相容機制移除條件與部署前檢查**：
+>    - 條件一：本機與雲端資料庫完成正式 Seed 寫入標準五大角色名冊（STUDENT, TEACHER, PLATFORM_ADMIN, SYSTEM_OPERATOR, GUEST）。
+>    - 條件二：前端所有 Route Guard、Navbar 與管理介面徹底淘汰 `ADMIN` 字串，全面換用 `PLATFORM_ADMIN`。
+>    - 執行時機：在進入生產環境部署（Phase 6）前，刪除 `backend/src/middleware/authorize.ts` 中之 `expandCompatibleRoles`，將 `requireRoles` 恢復為直接嚴格比對。
+> 5. **教師授權安全保證**：系統**嚴格禁止以前端傳入 `teacherEmail` 或 Email 結尾特徵授權教師**。所有教師身分必須經由申請（`TeacherApplication`）並由管理者在資料庫交易中審核開通，授權資料來源嚴格綁定 `UserRole` 實體資料表。
 
 ---
 

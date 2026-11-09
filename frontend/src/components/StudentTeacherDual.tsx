@@ -10,6 +10,13 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
   const [activeRole, setActiveRole] = useState<'student' | 'teacher'>('student');
   const { user, openAuth } = useAuth();
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setActiveRole((prev) => (prev === 'student' ? 'teacher' : 'student'));
+    }
+  };
+
   const handleTeacherClick = () => {
     if (user) {
       if (onOpenTeacherApply) {
@@ -37,45 +44,73 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
           </p>
 
           {/* Role Toggle Tabs */}
-          <div style={{ display: 'inline-flex', padding: '4px', backgroundColor: 'var(--color-brand-ice-slate)', borderRadius: 'var(--radius-full)', marginTop: 'var(--space-6)' }}>
+          <div
+            role="tablist"
+            aria-label="學生與教師雙端生態切換"
+            onKeyDown={handleKeyDown}
+            style={{
+              display: 'inline-flex',
+              padding: '4px',
+              backgroundColor: 'var(--color-brand-ice-slate)',
+              borderRadius: 'var(--radius-full)',
+              marginTop: 'var(--space-6)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
             <button
               type="button"
+              role="tab"
+              id="tab-role-student"
+              aria-selected={activeRole === 'student'}
+              aria-controls="panel-role-student"
+              tabIndex={activeRole === 'student' ? 0 : -1}
               onClick={() => setActiveRole('student')}
+              className={`role-toggle-tab ${activeRole === 'student' ? 'active' : ''}`}
               style={{
                 padding: '8px 24px',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '14px',
                 fontWeight: activeRole === 'student' ? 700 : 500,
-                backgroundColor: activeRole === 'student' ? '#FFFFFF' : 'transparent',
-                color: activeRole === 'student' ? 'var(--color-brand-charcoal)' : 'var(--color-brand-deep-slate)',
+                backgroundColor: activeRole === 'student' ? 'var(--color-brand-deep-slate)' : 'transparent',
+                color: activeRole === 'student' ? '#FFFFFF' : 'var(--color-brand-deep-slate)',
                 boxShadow: activeRole === 'student' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all var(--duration-fast) var(--ease-out)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
-              <GraduationCap size={16} />
+              <GraduationCap size={16} color={activeRole === 'student' ? 'var(--color-brand-gold)' : 'var(--color-brand-deep-slate)'} />
               <span>學生端學習體驗</span>
             </button>
             <button
               type="button"
+              role="tab"
+              id="tab-role-teacher"
+              aria-selected={activeRole === 'teacher'}
+              aria-controls="panel-role-teacher"
+              tabIndex={activeRole === 'teacher' ? 0 : -1}
               onClick={() => setActiveRole('teacher')}
+              className={`role-toggle-tab ${activeRole === 'teacher' ? 'active' : ''}`}
               style={{
                 padding: '8px 24px',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '14px',
                 fontWeight: activeRole === 'teacher' ? 700 : 500,
-                backgroundColor: activeRole === 'teacher' ? '#FFFFFF' : 'transparent',
-                color: activeRole === 'teacher' ? 'var(--color-brand-charcoal)' : 'var(--color-brand-deep-slate)',
+                backgroundColor: activeRole === 'teacher' ? 'var(--color-brand-deep-slate)' : 'transparent',
+                color: activeRole === 'teacher' ? '#FFFFFF' : 'var(--color-brand-deep-slate)',
                 boxShadow: activeRole === 'teacher' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all var(--duration-fast) var(--ease-out)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
-              <School size={16} />
+              <School size={16} color={activeRole === 'teacher' ? 'var(--color-brand-gold)' : 'var(--color-brand-deep-slate)'} />
               <span>教師端教學中心</span>
             </button>
           </div>
@@ -83,7 +118,13 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
 
         {/* Content Showcase */}
         {activeRole === 'student' ? (
-          <div className="card" style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}>
+          <div
+            id="panel-role-student"
+            role="tabpanel"
+            aria-labelledby="tab-role-student"
+            className="card"
+            style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}
+          >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'center' }} className="dual-grid">
               <div>
                 <span className="badge badge-gold" style={{ marginBottom: 'var(--space-2)' }}>自主探索 × 個性化</span>
@@ -155,7 +196,13 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
             </div>
           </div>
         ) : (
-          <div className="card" style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}>
+          <div
+            id="panel-role-teacher"
+            role="tabpanel"
+            aria-labelledby="tab-role-teacher"
+            className="card"
+            style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}
+          >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'center' }} className="dual-grid">
               <div>
                 <span className="badge badge-gold" style={{ marginBottom: 'var(--space-2)' }}>數據賦能 × 高效教學</span>
@@ -228,6 +275,14 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
           .dual-grid {
             grid-template-columns: 1fr !important;
           }
+        }
+        .role-toggle-tab:hover:not(.active) {
+          background-color: rgba(255, 255, 255, 0.45) !important;
+          color: var(--color-brand-charcoal) !important;
+        }
+        .role-toggle-tab:focus-visible {
+          outline: 2px solid var(--color-brand-deep-slate) !important;
+          outline-offset: 2px;
         }
       `}</style>
     </section>

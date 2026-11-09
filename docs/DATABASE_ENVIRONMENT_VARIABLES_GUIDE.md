@@ -16,10 +16,10 @@
 
 | 環境名稱 (NODE_ENV) | 資料庫主機與型態 | 主要連線變數規範 | `DIRECT_URL` (Migration 專用) | 隔離防護要求 |
 |---|---|---|---|---|
-| **`development`** | 本機 Docker (`127.0.0.1:5432`) | `DATABASE_URL="postgresql://codetoknow:<DEV_PASS>@127.0.0.1:5432/code_to_know?schema=public"` | 與 `DATABASE_URL` 相同 | 僅限本機開發，連線池大小預設 10。 |
-| **`test`** | 本機獨立測試庫 (`127.0.0.1:5432`) | **`TEST_DATABASE_URL="postgresql://codetoknow:<DEV_PASS>@127.0.0.1:5432/code_to_know_test?schema=public"`** | 與 `TEST_DATABASE_URL` 相同 | **強制獨立變數，嚴禁 fallback 至 DATABASE_URL**。庫名必須含 test。 |
-| **`staging`** | Supabase 雲端測試專案 | `DATABASE_URL="postgresql://postgres.<STAGING_REF>:<STAGING_PASS>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require"` (Session Pooler) | 優先評估 Direct Connection (`NOT TESTED`) | 獨立專案，用於模擬 Production 遷移驗收。禁止臆測真實字串。 |
-| **`production`** | Supabase 正式專案 (`code-to-know-prod`) | `DATABASE_URL="postgresql://postgres.ypibmyfxfhsyfdwxprpi:<PROD_PASS>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require"` (Session Pooler) | 優先評估 Direct Connection (`NOT TESTED`) | 僅存於雲端託管平台環境變數，強制 SSL。 |
+| **`development`** | 本機 Docker (`127.0.0.1:5432`) | `DATABASE_URL="postgresql://codetoknow:<DEV_PASS>@127.0.0.1:5432/code_to_know?schema=public"` | 與 `DATABASE_URL` 相同 | 僅限本機開發（Host: localhost/127.0.0.1, Port: 5432, DB: code_to_know），嚴禁指向雲端連線池。 |
+| **`test`** | 本機獨立測試庫 (`127.0.0.1:5432`) | **`TEST_DATABASE_URL="postgresql://codetoknow:<DEV_PASS>@127.0.0.1:5432/code_to_know_test?schema=public"`** | 與 `TEST_DATABASE_URL` 相同 | **強制獨立變數，嚴禁 fallback 至 DATABASE_URL**。庫名嚴格限定 code_to_know_test，Port: 5432。 |
+| **`staging`** | Supabase 雲端測試專案 | `DATABASE_URL="postgresql://postgres.<STAGING_REF>:<STAGING_PASS>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require"` (Session Pooler) | 優先使用 Direct Connection (`DIRECT_URL`, Port 5432) | 獨立專案，強制 SSL。Runtime 可使用 Port 5432/6543；Migration 嚴禁使用 Port 6543。 |
+| **`production`** | Supabase 正式專案 (`code-to-know-prod`) | `DATABASE_URL="postgresql://postgres.ypibmyfxfhsyfdwxprpi:<PROD_PASS>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require"` (Session Pooler) | 優先使用 Direct Connection (`DIRECT_URL`, Port 5432) | 僅存於雲端託管平台環境變數，強制 SSL。Migration 嚴禁使用 Port 6543。 |
 
 ---
 

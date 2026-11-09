@@ -4,6 +4,7 @@ import {
   validateTestDatabaseUrl,
   validateMigrationDatabaseUrl,
   validateDevelopmentDatabaseUrl,
+  validateCloudRuntimeDatabaseUrl,
 } from '../src/config/db-validation.js';
 
 describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
@@ -192,7 +193,7 @@ describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
     });
 
     it('[4.4.7] PASS: 合法格式之 PostgreSQL Direct Migration 連線', () => {
-      const validDirectUrl = 'postgresql://postgres:secret@db.projectref.supabase.co:5432/postgres';
+      const validDirectUrl = 'postgresql://postgres:secret@db.ypibmyfxfhsyfdwxprpi.supabase.co:5432/postgres';
       expect(validateMigrationDatabaseUrl(validDirectUrl)).toBe(validDirectUrl);
     });
 
@@ -225,8 +226,8 @@ describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
 
     it('[4.4.10] DIRECT_URL 具有優先順序', () => {
       process.env.NODE_ENV = 'production';
-      process.env.DIRECT_URL = 'postgresql://postgres:direct_secret@db.direct.supabase.co:5432/postgres';
-      process.env.MIGRATION_DATABASE_URL = 'postgresql://postgres:mig_secret@db.fallback.supabase.co:5432/postgres';
+      process.env.DIRECT_URL = 'postgresql://postgres:direct_secret@db.ypibmyfxfhsyfdwxprpi.supabase.co:5432/postgres';
+      process.env.MIGRATION_DATABASE_URL = 'postgresql://postgres:mig_secret@db.ypibmyfxfhsyfdwxprpi.supabase.co:5432/postgres';
 
       expect(resolveDatasourceUrl()).toBe(process.env.DIRECT_URL);
     });
@@ -234,7 +235,7 @@ describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
     it('[4.4.11] MIGRATION_DATABASE_URL 作為備援選擇', () => {
       process.env.NODE_ENV = 'production';
       delete process.env.DIRECT_URL;
-      process.env.MIGRATION_DATABASE_URL = 'postgresql://postgres:mig_secret@db.fallback.supabase.co:5432/postgres';
+      process.env.MIGRATION_DATABASE_URL = 'postgresql://postgres:mig_secret@db.ypibmyfxfhsyfdwxprpi.supabase.co:5432/postgres';
 
       expect(resolveDatasourceUrl()).toBe(process.env.MIGRATION_DATABASE_URL);
     });
@@ -301,6 +302,154 @@ describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
       expect(() => resolveDatasourceUrl()).toThrowError(
         /Development mode cannot target cloud databases/
       );
+    });
+
+    it('[4.3.7] BLOCK: Development 連線埠非 5432 時拋出錯誤', () => {
+      expect(() =>
+        validateDevelopmentDatabaseUrl('postgresql://codetoknow:secret@127.0.0.1:5433/code_to_know')
+      ).toThrowError(/not an approved development database port/);
+    });
+
+    it('[4.3.8] BLOCK: Development 資料庫名稱非 code_to_know 時拋出錯誤', () => {
+      expect(() =>
+        validateDevelopmentDatabaseUrl('postgresql://codetoknow:secret@127.0.0.1:5432/other_db')
+      ).toThrowError(/not an approved development database/);
+    });
+
+    it('[4.3.9] BLOCK: Development 主機非 localhost 或 127.0.0.1 時拋出錯誤', () => {
+      expect(() =>
+        validateDevelopmentDatabaseUrl('postgresql://codetoknow:secret@192.168.1.100:5432/code_to_know')
+      ).toThrowError(/not in the allowed development hosts whitelist/);
+    });
+  });
+
+  // =========================================================================
+  // Section 4.5: Cloud Runtime Safety Checks (Supabase Whitelist & Ports 5432/6543)
+  // =========================================================================
+  describe('validateCloudRuntimeDatabaseUrl() Cloud Runtime Checks', () => {
+    it('[4.5.1] PASS: 合法 Supabase Session Pooler (埠位 5432 + app_runtime + sslmode=require)', () => {
+      const url = 'postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require';
+      expect(validateCloudRuntimeDatabaseUrl(url)).toBe(url);
+    });
+
+    it('[4.5.2] PASS: 合法 Supabase Transaction Pooler (埠位 6543 + app_runtime + sslmode=require)', () => {
+      const url = 'postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require';
+      expect(validateCloudRuntimeDatabaseUrl(url)).toBe(url);
+    });
+
+    it('[4.5.3] PASS: 合法 Supabase Direct Host (埠位 5432 + app_runtime + sslmode=require)', () => {
+      const url = 'postgresql://app_runtime:secret@db.ypibmyfxfhsyfdwxprpi.supabase.co:5432/postgres?sslmode=require';
+      expect(validateCloudRuntimeDatabaseUrl(url)).toBe(url);
+    });
+
+    it('[4.5.4] BLOCK: Cloud Runtime 嚴禁指向本機主機 (localhost / 127.0.0.1)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@localhost:5432/postgres?sslmode=require')
+      ).toThrowError(/Cloud runtime cannot target local hostnames/);
+
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@127.0.0.1:5432/postgres?sslmode=require')
+      ).toThrowError(/Cloud runtime cannot target local hostnames/);
+    });
+
+    it('[4.5.5] BLOCK: Cloud Runtime 嚴禁非核准之任意遠端主機', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@unapproved.evil.com:5432/postgres?sslmode=require')
+      ).toThrowError(/not an approved Supabase domain/);
+    });
+
+    it('[4.5.6] BLOCK: Cloud Runtime 未強制 SSL 時拋出錯誤 (缺少 sslmode=require)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres')
+      ).toThrowError(/must explicitly enable SSL/);
+    });
+
+    it('[4.5.7] BLOCK: Cloud Runtime 埠位非 5432 或 6543 時拋出錯誤', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:3306/postgres?sslmode=require')
+      ).toThrowError(/not an approved port/);
+    });
+
+    it('[4.5.8] BLOCK: 缺少 DATABASE_URL 時拋出錯誤', () => {
+      expect(() => validateCloudRuntimeDatabaseUrl(undefined)).toThrowError(/DATABASE_URL must be provided/);
+      expect(() => validateCloudRuntimeDatabaseUrl('')).toThrowError(/DATABASE_URL must be provided/);
+    });
+
+    // 惡意相似網域與專案白名單驗證 (Check A 要求)
+    it('[4.5.9] BLOCK: 相似偽造網域 supabase.com.attacker.example', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@supabase.com.attacker.example:5432/postgres?sslmode=require')
+      ).toThrowError(/not an approved Supabase domain/);
+    });
+
+    it('[4.5.10] BLOCK: 相似偽造網域 fake-supabase.com', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@fake-supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/not an approved Supabase domain/);
+    });
+
+    it('[4.5.11] BLOCK: 相似偽造網域 project.supabase.co.attacker.example', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://user:pass@project.supabase.co.attacker.example:5432/postgres?sslmode=require')
+      ).toThrowError(/not an approved Supabase domain/);
+    });
+
+    it('[4.5.12] BLOCK: 未核准之其他 Supabase 專案 (其他 Project Ref)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://app_runtime:pass@db.otherunapprovedproject.supabase.co:5432/postgres?sslmode=require')
+      ).toThrowError(/not the approved pooler/);
+    });
+
+    it('[4.5.13] BLOCK: Pooler 連線時 username 包含其他未核准專案參照碼', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://app_runtime.other_foreign_ref:pass@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/does not match expected project ref/);
+    });
+
+    it('[4.5.14] BLOCK: 非核准之資料庫名稱 (非 postgres)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/other_database?sslmode=require')
+      ).toThrowError(/not an approved database/);
+    });
+
+    // 最小權限與角色用途隔離驗證 (W-03 要求)
+    it('[4.5.15] BLOCK: Cloud Runtime 嚴格拒絕 postgres (超級使用者)，落實最小權限', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://postgres.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/Role 'postgres' \(superuser\) is strictly prohibited in runtime/);
+    });
+
+    it('[4.5.16] BLOCK: Cloud Runtime 嚴格拒絕 migration_admin (遷移專用帳號)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://migration_admin.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/Role 'migration_admin' is strictly reserved for schema migrations and disallowed in runtime/);
+    });
+
+    it('[4.5.17] BLOCK: Cloud Runtime 嚴格拒絕未授權之任意角色 (如 admin, root)', () => {
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://admin.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/is not an approved runtime role/);
+
+      expect(() =>
+        validateCloudRuntimeDatabaseUrl('postgresql://root.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres?sslmode=require')
+      ).toThrowError(/is not an approved runtime role/);
+    });
+
+    it('[4.5.18] PASS: Migration 接受合法 migration_admin Pooler 帳號', () => {
+      const migUrl = 'postgresql://migration_admin.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres';
+      expect(validateMigrationDatabaseUrl(migUrl)).toBe(migUrl);
+    });
+
+    it('[4.5.19] BLOCK: Migration 嚴格拒絕 app_runtime 帳號 (因缺少 DDL 權限)', () => {
+      expect(() =>
+        validateMigrationDatabaseUrl('postgresql://app_runtime.ypibmyfxfhsyfdwxprpi:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres')
+      ).toThrowError(/Role 'app_runtime' is strictly disallowed for migrations because it lacks DDL privileges/);
+    });
+
+    it('[4.5.20] BLOCK: Migration 拒絕錯誤專案參照碼', () => {
+      expect(() =>
+        validateMigrationDatabaseUrl('postgresql://migration_admin.wrong_ref:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres')
+      ).toThrowError(/does not match expected project ref/);
     });
   });
 });

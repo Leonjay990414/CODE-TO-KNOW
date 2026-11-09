@@ -5,6 +5,7 @@ import {
   validateTestDatabaseUrl,
   validateMigrationDatabaseUrl,
   validateDevelopmentDatabaseUrl,
+  validateCloudRuntimeDatabaseUrl,
 } from './src/config/db-validation.js';
 
 export {
@@ -12,6 +13,7 @@ export {
   validateTestDatabaseUrl,
   validateMigrationDatabaseUrl,
   validateDevelopmentDatabaseUrl,
+  validateCloudRuntimeDatabaseUrl,
 };
 
 export default defineConfig({

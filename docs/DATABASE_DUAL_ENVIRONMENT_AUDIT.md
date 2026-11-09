@@ -97,8 +97,11 @@ graph TD
 #### B. Prisma Migration 適用連線方式
 - **重要限制**：Prisma CLI 執行 `prisma migrate deploy` 時需取得 Advisory Lock（諮詢鎖），以確保同一時間僅單一行程執行遷移。
 - **Direct Connection (Port 5432)**：為 Supabase 官方推薦之結構遷移連線（原生支援 Session Advisory Lock）。目前尚未自控制台取得正式參數，標記為 `NOT OBTAINED` / `NOT TESTED`（優先評估方案）。
-- **Session Pooler (Port 5432)**：可作為 IPv4 環境候選連線，需於 Staging 實測 Prisma Migration 相容性（標記為 `NOT TESTED`）。
-- **Transaction Pooler (Port 6543)**：因無法保證維持 Session 諮詢鎖，**明確不作為預設 Migration 連線**。
+- **Session Pooler (Port 5432)**：可作為常駐服務或 IPv4 環境候選連線，需於 Staging 實測 Prisma Migration 相容性（標記為 `NOT TESTED`）。
+- **Transaction Pooler (Port 6543)**：
+  - **Prisma Migration 嚴格禁用**：因 Transaction Pooler 不維持 Session-level Advisory Locks，`db-validation.ts` 會強制阻斷 Port 6543 之遷移操作。
+  - **Cloud Runtime 允許使用**：高併發、無狀態之 Express 常駐查詢請求可使用 Port 6543 連線池，以最佳化伺服器連線負載。
+- **Direct Connection (Port 5432)**：雲端 Migration 之唯一標準連線模式，透過 `DIRECT_URL` 直連資料庫節點。
 
 #### C. SSL 參數要求
 - Supabase 強制要求所有連線啟用 TLS/SSL。連線字串必須包含 `sslmode=require`。

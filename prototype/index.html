@@ -9,35 +9,7 @@
 
   <!-- Shared Prototype CSS (Relative paths for direct file:// opening) -->
   <link rel="stylesheet" href="./assets/css/tokens.css">
-  <link rel="stylesheet" # CODE TO KNOW（碼上學） # DATABASE PHASE 3.1 — Prisma 連線安全與資料庫驗收報告校正 任務類型：技術校正與文件修正 優先級：P1 —
-    Critical 執行時間：預計 5–10 分鐘 ## 一、執行前限制 本次只處理 Phase 3 報告中尚未釐清的技術問題。 允許： - 檢查程式碼。 - 檢查 Git Diff。 - 修正確定的設定缺陷。 - 更新文件。 -
-    執行 Prisma Validate。 - 執行不涉及資料庫的必要測試。 禁止： - 執行 Migration。 - 執行 db push。 - 執行 Seed。 - 資料庫寫入或刪除。 - 啟動 Docker。 - 修改
-    Supabase 設定。 - 修改任何真實密碼或 API Key。 - Git Commit / Push。 - 部署。 保留所有既有未提交修改。 ## 二、校正 Prisma 7 Migration 連線策略 檢查：
-    backend/prisma.config.ts 目前設定： datasource.url=process.env.DIRECT_URL ? env('DIRECT_URL') : env('DATABASE_URL') 請確認這種
-    fallback 是否可能導致雲端 Migration 意外使用 Runtime DATABASE_URL。 要求： 1. Development 可以明確使用本機 Docker 資料庫。 2. Test 必須使用獨立測試資料庫。
-    3. Staging / Production Migration 必須明確使用 Migration 專用連線設定。 4. 雲端 Migration 不得在缺少必要連線變數時默默 fallback。 5.
-    缺少必要變數時必須安全停止。 6. Runtime DATABASE_URL 與 Migration 連線必須有清楚的責任區分。 7. 不得只為了 Validate 通過而降低連線安全性。 請依據目前 Prisma 7
-    專案實際使用的 Config API，採用相容且可維護的實作方式。 若需要區分環境，請使用明確的環境判斷或獨立執行設定，不得依靠模糊的自動 fallback。 本次只修改設定，不執行 Migration。 ## 三、校正
-    Supabase 連線方式判斷 目前已確認： Shared Session Pooler： - Host：aws-0-ap-southeast-2.pooler.supabase.com - Port：5432 -
-    Database：postgres - User：postgres.ypibmyfxfhsyfdwxprpi Direct Connection： 尚未取得實際連線資訊。 Transaction Pooler：
-    尚未取得實際連線資訊。 請修正文件： 1. Direct Connection 是優先評估方案，不應在未驗證前直接宣稱為絕對阻塞。 2. Session Pooler 可以保留為 IPv4 連線候選。 3. Transaction
-    Pooler 不應直接當成 Migration 的預設連線。 4. Prisma Migration 必須在 Staging 環境進行實際相容性驗證後才能標記 PASS。 5. 不得自行編造 Direct 或 Transaction
-    Pooler 的連線資訊。 清楚區分： - 已取得的資訊。 - 官方文件描述的連線特性。 - 尚未實際驗證的連線能力。 ## 四、校正 Supabase 資訊的驗證狀態 請更新：
-    docs/DATABASE_PHASE3_FINAL_ACCEPTANCE_REPORT.md 以下資料必須區分實際確認與推導： 1. Project URL： 若只是根據 Project Reference 推導，標記為
-    FORMAT INFERRED，不可標記已實際確認。 2. Publishable Key： 使用者已在 Dashboard 確認存在，不需要取得完整內容。 3. Secret Key： 使用者已在 Dashboard
-    確認存在，不需要取得完整內容。 4. Database Password： 未驗證。 5. Project Status： 未確認 Active / Paused。 6. Session Pooler： 已取得連線參數。 7.
-    Direct Connection： 未取得實際連線參數。 8. Transaction Pooler： 未取得實際連線參數。若僅根據一般文件推測 Port 6543，必須標示為未驗證。 不得進行雲端連線探測。 ## 五、校正 33
-    個邏輯實體與 9 個 Models 的差異 請實際比較： - backend/prisma/schema.prisma - backend/prisma/migrations/ -
-    docs/DATABASE_DATA_DICTIONARY.md - docs/DATABASE_API_CONTRACTS.md - docs/DATABASE_RBAC_MATRIX.md 將資料模型分為： A. 已實際建立的
-    Prisma Model。 B. 已完成規格但尚未建立的邏輯實體。 C. 尚待設計的邏輯實體。 D. 尚待實作的 API 與資料存取功能。 目前已知 Schema 有 9 個 Models，但仍須以實際檔案重新核對。 不得把 33
-    個邏輯實體寫成 33 個已建立資料表。 不得在無法連線實體資料庫的情況下宣稱實際資料庫 Drift 檢查通過。 ## 六、校正未證實的測試與題庫數量 請檢查實際測試檔案。 目前已知： - 4 個測試套件。 - 31 項單元測試通過。
-    - Database Integration Test 因 Docker 未啟動而 BLOCKED。 Phase 4 的測試數量不得預先寫死為 32。 必須以實際測試執行結果為準。 另外，Phase 6 原本規劃的 500
-    題題庫匯入，必須重新核對正式題庫來源、實際題數及資料格式。 若尚未確認，改列為待盤點，不得當成已完成的 Seed 驗收條件。 Migration 與 Seed 必須分開授權及驗收。 ## 七、校正 Staging 專案建置計畫
-    目前只有已知 Production 專案： code-to-know-prod Staging 尚未建立。 請確認： - Supabase Free 專案數量限制。 - 是否有可用專案名額。 - 是否可能產生費用。 -
-    自動暫停條件。 - 備份功能限制。 若無法取得即時帳戶資料，標記為 NEEDS USER CONFIRMATION。 不得自行建立專案或升級付費方案。 ## 八、最終交付 更新：
-    docs/DATABASE_PHASE3_FINAL_ACCEPTANCE_REPORT.md 另外建立： docs/DATABASE_PHASE3_1_CORRECTION_REPORT.md 報告必須包含： 1. 修正項目。
-    2. 修正原因。 3. 修改檔案。 4. Git Diff。 5. Prisma Validate 結果。 6. 測試結果。 7. 尚未解決的問題。 8. 下一階段需要使用者操作的項目。 完成後停止。 不得自行啟動
-    Docker、建立資料庫、執行 Migration 或進入下一階段。 等待使用者檢查及授權。href="./assets/css/global.css">
+  <link rel="stylesheet" href="./assets/css/global.css">
   <link rel="stylesheet" href="./assets/css/components.css">
   <link rel="stylesheet" href="./assets/css/pages.css">
 </head>
@@ -591,11 +563,13 @@
 
           <!-- Toggle Pills -->
           <div
-            style="display: inline-flex; padding: 4px; background-color: var(--color-brand-ice-slate); border-radius: var(--radius-full); margin-top: var(--space-6);">
-            <button type="button" id="toggle-student-btn" class="filter-pill active" style="border: none;">
+            role="tablist"
+            aria-label="學生與教師雙端生態切換"
+            style="display: inline-flex; padding: 4px; background-color: var(--color-brand-ice-slate); border-radius: var(--radius-full); margin-top: var(--space-6); border: 1px solid var(--border-subtle);">
+            <button type="button" id="toggle-student-btn" class="role-segmented-tab active" role="tab" aria-selected="true" aria-controls="panel-student-experience">
               學生端學習體驗
             </button>
-            <button type="button" id="toggle-teacher-btn" class="filter-pill" style="border: none;">
+            <button type="button" id="toggle-teacher-btn" class="role-segmented-tab" role="tab" aria-selected="false" aria-controls="panel-teacher-experience">
               教師端教學中心
             </button>
           </div>

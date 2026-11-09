@@ -54,6 +54,17 @@ graph TD
 3. **驗證歷史記錄**：確認 `_prisma_migrations` 表已寫入 `20261103000000_init`，狀態為 `finished_at IS NOT NULL`。
 4. **授權紅線**：在真正執行 Migration 前，**必須取得使用者明確文字授權**，本階段嚴格不執行任何遷移操作。
 
+### 4. 雲端遷移連線模式與環境變數優先原則 (Cloud Migration Dual-Variable Architecture)
+- **連線優先級**：
+  1. **第一優先**：`DIRECT_URL`（指向 Supabase Direct Host 埠位 5432）。
+  2. **備援選擇**：`MIGRATION_DATABASE_URL`（當未配置 `DIRECT_URL` 時自動採用此備援變數）。
+  3. **兩者同時存在時**：系統嚴格優先讀取 `DIRECT_URL`。
+  4. **兩者皆不存在時**：系統立即拋出 `[PRISMA MIGRATION CONFIG ERROR]`，嚴禁靜默 fallback 到常駐服務之 `DATABASE_URL`。
+- **連線限制與埠位規則**：
+  - Migration **只能使用 Direct Connection (Port 5432)**。
+  - **嚴格拒絕 Transaction Pooler (Port 6543)**：因 Transaction Pooler 不支援 Session-level Advisory Locks (`pg_advisory_lock`)，Prisma Migration 將拋出錯誤或發生死鎖。
+  - 驗證函式 `validateMigrationDatabaseUrl` 會主動檢查連線埠，凡帶有 `port === '6543'` 或非 5432 埠位即刻阻斷。
+
 ---
 
 ## 三、十一階段施工細部規格
