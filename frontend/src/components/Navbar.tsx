@@ -8,10 +8,10 @@ interface NavbarProps {
   onOpenTeacherApply?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, openAuth: contextOpenAuth, logout } = useAuth();
+  const { user, openAuth: contextOpenAuth, logout, isDemoMode, loginAsDemo } = useAuth();
   const { route, navigate } = useNavigation();
 
   const handleOpenAuth = (mode: AuthModalMode) => {
@@ -126,6 +126,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
               <span className="brand-name-zh">碼上學</span>
               <span className="brand-divider" aria-hidden="true" />
               <span className="brand-name-en">CODE TO KNOW</span>
+              {isDemoMode && (
+                <span
+                  className="badge badge-gold"
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '10px',
+                    padding: '2px 6px',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    lineHeight: 1,
+                  }}
+                  title="GitHub Pages 公開展示模式"
+                >
+                  DEMO
+                </span>
+              )}
             </div>
           </a>
 
@@ -205,6 +221,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
                   </button>
                 )}
 
+                {isDemoMode && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      const nextRole = user.roles.includes('TEACHER') ? 'STUDENT' : 'TEACHER';
+                      loginAsDemo(nextRole);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '0 8px', height: '30px', color: 'var(--color-brand-deep-slate)' }}
+                    title="展示模式快速切換示範身分"
+                  >
+                    <span>⇄ 切換為{user.roles.includes('TEACHER') ? '示範學員' : '示範教師'}</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -217,6 +248,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
               </div>
             ) : (
               <>
+                {isDemoMode && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => loginAsDemo('STUDENT')}
+                    style={{ fontSize: '12px', padding: '0 10px', height: '32px' }}
+                    title="一鍵以示範學員身分進入"
+                  >
+                    示範學員體驗
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -352,6 +394,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
                     </button>
                   )}
 
+                  {isDemoMode && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-mobile-full"
+                      onClick={() => {
+                        const nextRole = user.roles.includes('TEACHER') ? 'STUDENT' : 'TEACHER';
+                        loginAsDemo(nextRole);
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <span>⇄ 切換為{user.roles.includes('TEACHER') ? '示範學員' : '示範教師'}</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     className="btn btn-secondary btn-mobile-full"
@@ -366,6 +422,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onOpenTeacherApply }
                 </>
               ) : (
                 <>
+                  {isDemoMode && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-mobile-full"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        loginAsDemo('STUDENT');
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <span>以示範學員身分進入</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary btn-mobile-full"

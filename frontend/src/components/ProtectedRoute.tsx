@@ -8,6 +8,7 @@ import {
   School,
   Home,
   User as UserIcon,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
@@ -29,7 +30,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   pageTitle = '受保護專區',
   onOpenTeacherApply,
 }) => {
-  const { user, authStatus, authError, openAuth, refreshUser } = useAuth();
+  const { user, authStatus, authError, openAuth, refreshUser, isDemoMode, loginAsDemo } = useAuth();
   const { route, goToHome, goToStudentDashboard } = useNavigation();
 
   // When unauthenticated, preserve intended route in sessionStorage
@@ -329,7 +330,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   width: '64px',
                   height: '64px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(189, 167, 126, 0.15)',
+                  backgroundColor: isDemoMode ? 'rgba(189, 167, 126, 0.2)' : 'rgba(189, 167, 126, 0.15)',
                   color: 'var(--color-brand-champagne-gold)',
                   display: 'flex',
                   alignItems: 'center',
@@ -337,12 +338,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   margin: '0 auto var(--space-4) auto',
                 }}
               >
-                <Lock size={30} />
+                {isDemoMode ? <Sparkles size={32} /> : <Lock size={30} />}
               </div>
 
               <div style={{ marginBottom: 'var(--space-3)' }}>
                 <span className="badge badge-gold">
-                  {isTeacherRoute ? '教師專區 · 存取限制' : '會員功能 · 需先登入'}
+                  {isDemoMode
+                    ? 'GitHub Pages 公開展示模式 · Demo Mode'
+                    : isTeacherRoute
+                    ? '教師專區 · 存取限制'
+                    : '會員功能 · 需先登入'}
                 </span>
               </div>
 
@@ -355,7 +360,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   marginBottom: 'var(--space-3)',
                 }}
               >
-                請先登入帳號以繼續使用
+                {isDemoMode ? `${pageTitle} · 示範預覽` : '請先登入帳號以繼續使用'}
               </h2>
 
               <p
@@ -364,12 +369,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   color: 'var(--text-secondary)',
                   lineHeight: 1.6,
                   marginBottom: 'var(--space-8)',
-                  maxWidth: '440px',
+                  maxWidth: '460px',
                   marginLeft: 'auto',
                   marginRight: 'auto',
                 }}
               >
-                {isTeacherRoute
+                {isDemoMode
+                  ? '本系統目前運行於 GitHub Pages 靜態公開展示版，無後端伺服器與資料庫連線。此專區在正式版需登入會員帳號，展示版中您可以直接點擊下方按鈕，以「示範學員」或「示範教師」身分即時體驗受保護專區完整介面。'
+                  : isTeacherRoute
                   ? '「教師教學管理中心」包含班級進度追蹤、學生成績報表與教學分析，僅限認證教師登入存取。'
                   : '您所存取的頁面包含個人學習歷程、數據分析儀表板或錯題診斷功能。請先登入或註冊會員，系統將於登入完成後自動為您返回此頁面。'}
               </p>
@@ -383,37 +390,92 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   margin: '0 auto',
                 }}
               >
-                <button
-                  type="button"
-                  className="btn btn-primary btn-lg"
-                  onClick={() => openAuth('login')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                  }}
-                >
-                  <UserIcon size={18} />
-                  立即登入帳號
-                </button>
+                {isDemoMode ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-lg"
+                      onClick={() => loginAsDemo('STUDENT')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                      }}
+                    >
+                      <GraduationCap size={18} />
+                      以示範學員身分預覽
+                    </button>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-lg"
-                  onClick={() => openAuth('register')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                  }}
-                >
-                  <GraduationCap size={18} />
-                  免費註冊學習帳號
-                </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-lg"
+                      onClick={() => loginAsDemo('TEACHER')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                      }}
+                    >
+                      <School size={18} />
+                      以示範教師身分預覽
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => openAuth('login')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      <UserIcon size={16} />
+                      開啟模擬登入視窗
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-lg"
+                      onClick={() => openAuth('login')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                      }}
+                    >
+                      <UserIcon size={18} />
+                      立即登入帳號
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-lg"
+                      onClick={() => openAuth('register')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                      }}
+                    >
+                      <GraduationCap size={18} />
+                      免費註冊學習帳號
+                    </button>
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -575,7 +637,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                       border: '1px solid var(--border-subtle)',
                       borderRadius: 'var(--radius-md)',
                       padding: 'var(--space-4)',
-                      marginBottom: 'var(--space-8)',
+                      marginBottom: isDemoMode ? 'var(--space-4)' : 'var(--space-8)',
                       textAlign: 'left',
                     }}
                   >
@@ -590,6 +652,47 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                         您可以線上提交教師身分資格認證，通過審核後系統將為您開通「教師教學管理中心」與班級管理功能。
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {isDemoMode && isTeacherRequired && (
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(189, 167, 126, 0.12)',
+                      border: '1px solid var(--border-gold)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: 'var(--space-4)',
+                      marginBottom: 'var(--space-8)',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                      <Sparkles
+                        size={20}
+                        style={{ color: 'var(--color-brand-champagne-gold)', flexShrink: 0, marginTop: '2px' }}
+                      />
+                      <div className="text-body-sm" style={{ color: 'var(--text-primary)' }}>
+                        <strong>展示模式快速身分切換：</strong>
+                        <br />
+                        展示版支援一鍵切換為「示範認證教師」，無需真實審核流程即可體驗教師教學管理中心。
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => loginAsDemo('TEACHER')}
+                      style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <School size={16} />
+                      立即切換為示範教師身分預覽
+                    </button>
                   </div>
                 )}
 

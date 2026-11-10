@@ -26,7 +26,7 @@ export const TeacherApplyModal: React.FC<TeacherApplyModalProps> = ({
   onClose,
   onOpenAuth,
 }) => {
-  const { user, openAuth: contextOpenAuth } = useAuth();
+  const { user, openAuth: contextOpenAuth, isDemoMode } = useAuth();
 
   // Form Fields
   const [schoolName, setSchoolName] = useState('');
@@ -304,6 +304,26 @@ export const TeacherApplyModal: React.FC<TeacherApplyModalProps> = ({
             認證教師可享有全班歷程儀表板、出題組卷中心、即時學習卡點熱區圖與 AI 助教自訂派送權限。
           </p>
         </div>
+
+        {/* Demo Mode Notice */}
+        {isDemoMode && (
+          <div
+            style={{
+              backgroundColor: 'rgba(189, 167, 126, 0.12)',
+              border: '1px solid var(--border-gold)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px 14px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              fontSize: '12px',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ color: 'var(--color-brand-deep-slate)' }}>【公開展示模式】</strong>
+            本系統目前為 GitHub Pages 靜態展示模式。在此填寫並送出申請將於當前瀏覽器工作階段中進行模擬記錄，不會發送外部網路請求或寫入遠端資料庫。
+          </div>
+        )}
 
         {/* Error Alert */}
         {errorMessage && (

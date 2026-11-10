@@ -1,0 +1,159 @@
+name: Deploy Preview to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-preview.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: preview-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & Security Audit & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 1. Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 2. Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: 3. Install Frontend Dependencies (Clean Install)
+        run: |
+          npm --prefix frontend ci
+
+      - name: 4. TypeScript Type Check
+        run: |
+          npx --prefix frontend tsc --noEmit
+
+      - name: 5. Build Demo Mode Static Distribution
+        env:
+          VITE_DEMO_MODE: 'true'
+        run: |
+          npm --prefix frontend run build:demo
+
+      - name: 6. Verify Distribution Structure
+        run: |
+          echo "=== Verifying frontend/dist Structure ==="
+          if [ ! -f "frontend/dist/index.html" ]; then
+            echo "ERROR: frontend/dist/index.html does not exist!"
+            exit 1
+          fi
+
+          if [ ! -s "frontend/dist/index.html" ]; then
+            echo "ERROR: frontend/dist/index.html is empty!"
+            exit 1
+          fi
+
+          if [ ! -d "frontend/dist/assets" ]; then
+            echo "ERROR: frontend/dist/assets directory does not exist!"
+            exit 1
+          fi
+
+          if [ ! -f "frontend/dist/images/logo/symbol.svg" ]; then
+            echo "ERROR: Favicon symbol.svg is missing in frontend/dist/images/logo!"
+            exit 1
+          fi
+
+          echo "Distribution structure verified successfully."
+          ls -la frontend/dist
+
+      - name: 7. DevSecOps Pre-Publish Security Audit
+        run: |
+          echo "=== Executing DevSecOps Security Scan ==="
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+
+            function getAllFiles(dirPath, arrayOfFiles) {
+              const files = fs.readdirSync(dirPath);
+              arrayOfFiles = arrayOfFiles || [];
+              files.forEach(function(file) {
+                const fullPath = path.join(dirPath, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                  arrayOfFiles = getAllFiles(fullPath, arrayOfFiles);
+                } else {
+                  arrayOfFiles.push(fullPath);
+                }
+              });
+              return arrayOfFiles;
+            }
+
+            const distFiles = getAllFiles("frontend/dist");
+            console.log("Total files in dist: " + distFiles.length);
+
+            // 1. File Type & Name Whitelist Verification
+            const allowedExtensions = [".html", ".js", ".css", ".svg", ".png", ".jpg", ".jpeg", ".ico", ".json", ".map", ".txt"];
+            for (const file of distFiles) {
+              const ext = path.extname(file).toLowerCase();
+              const base = path.basename(file).toLowerCase();
+
+              if (!allowedExtensions.includes(ext)) {
+                console.error("SECURITY VIOLATION: Disallowed file extension found: " + file);
+                process.exit(1);
+              }
+
+              if (base.startsWith(".env") || base.endsWith(".docx") || base.endsWith(".bak")) {
+                console.error("SECURITY VIOLATION: Disallowed sensitive file pattern: " + file);
+                process.exit(1);
+              }
+            }
+
+            // 2. Sensitive Content & Leak Pattern Scan
+            const forbiddenPatterns = [
+              { label: "Localhost API URL", regex: /http:\/\/localhost:4000/i },
+              { label: "Database Connection String", regex: /postgresql:\/\//i },
+              { label: "Database URL Environment Variable", regex: /DATABASE_URL/i },
+              { label: "Supabase Service Role Key", regex: /SUPABASE_SERVICE_ROLE/i },
+              { label: "Prisma Client Engine Internal", regex: /prisma-client-js/i }
+            ];
+
+            let violations = 0;
+            for (const file of distFiles) {
+              if (file.endsWith(".js") || file.endsWith(".html") || file.endsWith(".css")) {
+                const content = fs.readFileSync(file, "utf8");
+                for (const p of forbiddenPatterns) {
+                  if (p.regex.test(content)) {
+                    console.error("SECURITY SCAN ERROR: Detected forbidden pattern [" + p.label + "] in " + file);
+                    violations++;
+                  }
+                }
+              }
+            }
+
+            if (violations > 0) {
+              console.error("SECURITY AUDIT FAILED with " + violations + " violation(s). Deployment aborted.");
+              process.exit(1);
+            }
+
+            console.log("ALL DEVSECOPS SECURITY CHECKS PASSED: Zero forbidden patterns detected in distribution files.");
+          '
+
+      - name: 8. Deploy to Preview Repository (GitHub Pages)
+        if: success()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PREVIEW_DEPLOY_TOKEN }}
+          external_repository: Leonjay990414/CODE-TO-KNOW-PREVIEW
+          publish_branch: gh-pages
+          publish_dir: ./frontend/dist
+          commit_message: "Automated Preview Deploy from Leonjay990414/CODE-TO-KNOW@${{ github.sha }} [skip ci]"
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'

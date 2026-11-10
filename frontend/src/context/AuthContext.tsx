@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User } from '../services/api';
+import {
+  authApi,
+  User,
+  isDemoMode,
+  DEMO_STUDENT_USER,
+  DEMO_TEACHER_USER,
+  DEMO_STORAGE_KEY,
+} from '../services/api';
 
 export type AuthModalMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
@@ -11,9 +18,11 @@ interface AuthContextType {
   authError: string | null;
   authModalOpen: boolean;
   authModalMode: AuthModalMode;
+  isDemoMode: boolean;
   openAuth: (mode?: AuthModalMode) => void;
   closeAuth: () => void;
   login: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
+  loginAsDemo: (role?: 'STUDENT' | 'TEACHER') => void;
   register: (data: { email: string; password: string; displayName: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -81,6 +90,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const loginAsDemo = (role: 'STUDENT' | 'TEACHER' = 'STUDENT') => {
+    const demoUser = role === 'TEACHER' ? DEMO_TEACHER_USER : DEMO_STUDENT_USER;
+    try {
+      sessionStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demoUser));
+    } catch {
+      // Ignore sessionStorage error
+    }
+    setUser(demoUser);
+    setAuthStatus('authenticated');
+    setAuthError(null);
+    setAuthModalOpen(false);
+  };
+
   const login = async (credentials: { email: string; password: string }) => {
     const res = await authApi.login(credentials);
     if (res.success && res.data?.user) {
@@ -116,7 +138,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(null);
       setAuthStatus('unauthenticated');
       setAuthError(null);
-      sessionStorage.removeItem('ctk_intended_route');
+      try {
+        sessionStorage.removeItem('ctk_intended_route');
+        sessionStorage.removeItem(DEMO_STORAGE_KEY);
+      } catch {
+        // Ignore sessionStorage error
+      }
     }
   };
 
@@ -129,9 +156,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         authError,
         authModalOpen,
         authModalMode,
+        isDemoMode,
         openAuth,
         closeAuth,
         login,
+        loginAsDemo,
         register,
         logout,
         refreshUser,

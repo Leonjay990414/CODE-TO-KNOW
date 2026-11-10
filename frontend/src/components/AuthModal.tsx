@@ -15,7 +15,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { authApi, User } from '../services/api';
-import { AuthModalMode } from '../context/AuthContext';
+import { AuthModalMode, useAuth } from '../context/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +30,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { isDemoMode, loginAsDemo } = useAuth();
   const [currentMode, setCurrentMode] = useState<AuthModalMode>(initialMode);
   const [selectedRoleType, setSelectedRoleType] = useState<'student' | 'teacher'>('student');
 
@@ -392,6 +393,74 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {currentMode === 'reset-password' && '請輸入系統寄送的重設代碼與欲更新的新密碼'}
           </p>
         </div>
+
+        {/* Demo Mode Notice & Quick Switch */}
+        {isDemoMode && (
+          <div
+            style={{
+              backgroundColor: 'rgba(189, 167, 126, 0.12)',
+              border: '1px solid var(--border-gold)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px',
+              marginBottom: '20px',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Sparkles size={16} style={{ color: 'var(--color-brand-champagne-gold)', flexShrink: 0 }} />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>
+                GitHub Pages 公開展示模式
+              </span>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 10px 0' }}>
+              本系統目前為前端靜態展示版，無後端伺服器與資料庫連線。請勿輸入真實個人密碼。您可以點擊下方按鈕以示範帳號即時體驗：
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  loginAsDemo('STUDENT');
+                  handleClose();
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: '130px',
+                  fontSize: '12px',
+                  padding: '8px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <GraduationCap size={15} />
+                一鍵示範學員登入
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  loginAsDemo('TEACHER');
+                  handleClose();
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: '130px',
+                  fontSize: '12px',
+                  padding: '8px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <School size={15} />
+                一鍵示範教師登入
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Role Type Tabs (only visible on login and register) */}
         {(currentMode === 'login' || currentMode === 'register') && (
