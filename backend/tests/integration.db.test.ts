@@ -1,68 +1,110 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { prisma } from '../src/config/database.js';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import type pg from 'pg';
+import type { PrismaClient } from '@prisma/client';
+import { hashPassword } from '../src/utils/password.js';
+import { validateIsolatedPg17TestUrl } from '../src/config/db-validation.js';
+
+const { isolatedTestUrl } = vi.hoisted(() => ({
+  isolatedTestUrl: process.env.TEST_DATABASE_URL,
+}));
+
+vi.mock('../src/config/database.js', async () => {
+  const { default: pgMod } = await import('pg');
+  const { PrismaPg: PgAdapter } = await import('@prisma/adapter-pg');
+  const { PrismaClient: Client } = await import('@prisma/client');
+  const { validateIsolatedPg17TestUrl: validateUrl } = await import('../src/config/db-validation.js');
+
+  let pool: pg.Pool | null = null;
+  let prismaClient: PrismaClient | null = null;
+
+  if (isolatedTestUrl && isolatedTestUrl.trim()) {
+    const safeUrl = validateUrl(isolatedTestUrl);
+    pool = new pgMod.Pool({ connectionString: safeUrl });
+    const adapter = new PgAdapter(pool);
+    prismaClient = new Client({ adapter, log: ['error'] });
+  }
+
+  return {
+    prisma: prismaClient,
+    createDatabasePool: () => pool,
+    resolveProductionSslConfig: () => ({ rejectUnauthorized: true }),
+  };
+});
+
+import { prisma, createDatabasePool } from '../src/config/database.js';
 import { authService } from '../src/modules/auth/auth.service.js';
 import { teacherService } from '../src/modules/teachers/teacher.service.js';
 import { adminService } from '../src/modules/admin/admin.service.js';
-import { hashPassword } from '../src/utils/password.js';
-import { validateTestDatabaseUrl } from '../src/config/db-validation.js';
 
 describe('PostgreSQL Live Database Integration Tests', () => {
   const createdUserIds: string[] = [];
+  let poolInstance: pg.Pool | null = null;
+  let prismaInstance: PrismaClient | null = null;
 
   beforeAll(async () => {
-    // Ensure TEST_DATABASE_URL is explicitly set and passes strict whitelist validation (host + dbName)
-    const testDbUrl = process.env.TEST_DATABASE_URL;
-    if (!testDbUrl || !testDbUrl.trim()) {
+    // Ensure TEST_DATABASE_URL is explicitly set (captured before dotenv.config()) and passes isolated PG17 whitelist
+    if (!isolatedTestUrl || !isolatedTestUrl.trim()) {
       throw new Error(
-        '[INTEGRATION TEST CONFIG ERROR] Integration tests require an explicit TEST_DATABASE_URL targeting an isolated test database. Silent fallback to dev/prod DATABASE_URL is strictly disallowed.'
+        '[INTEGRATION TEST CONFIG ERROR] Integration tests require an explicit TEST_DATABASE_URL targeting an isolated PG17 test database (127.0.0.1:5434/code_to_know_test as c2k_test_app_runtime). Silent fallback to dev/prod DATABASE_URL is strictly disallowed.'
       );
     }
 
     try {
-      validateTestDatabaseUrl(testDbUrl);
+      validateIsolatedPg17TestUrl(isolatedTestUrl);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Invalid connection URL format';
       throw new Error(`[INTEGRATION TEST CONFIG ERROR] ${msg}`);
     }
 
+    prismaInstance = prisma;
+    poolInstance = createDatabasePool();
+    if (!prismaInstance || !poolInstance) {
+      throw new Error('[INTEGRATION TEST CONFIG ERROR] Isolated test database pool failed to initialize.');
+    }
+
     // Ensure live PostgreSQL connection is active
-    await prisma.$queryRaw`SELECT 1`;
+    await prismaInstance.$queryRaw`SELECT 1`;
   });
 
   afterAll(async () => {
-    // Clean up all data created in this test suite in foreign-key safe order
-    if (createdUserIds.length > 0) {
-      try {
-        await prisma.auditLog.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.teacherApplication.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.emailVerificationToken.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.passwordResetToken.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.session.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.userProfile.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.userRole.deleteMany({
-          where: { userId: { in: createdUserIds } },
-        });
-        await prisma.user.deleteMany({
-          where: { id: { in: createdUserIds } },
-        });
-      } catch (err) {
-        console.error('Failed to clean up test data:', err);
+    // Clean up only data created in this test suite in foreign-key safe order.
+    // Note: AuditLog is intentionally NOT deleted because c2k_test_app_runtime enforces append-only AuditLog permissions.
+    try {
+      if (prismaInstance && createdUserIds.length > 0) {
+        try {
+          await prismaInstance.teacherApplication.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.emailVerificationToken.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.passwordResetToken.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.session.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.userProfile.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.userRole.deleteMany({
+            where: { userId: { in: createdUserIds } },
+          });
+          await prismaInstance.user.deleteMany({
+            where: { id: { in: createdUserIds } },
+          });
+        } catch (err) {
+          console.error('Failed to clean up test data:', err instanceof Error ? err.message : 'unknown');
+        }
+      }
+    } finally {
+      if (prismaInstance) {
+        await prismaInstance.$disconnect();
+      }
+      if (poolInstance) {
+        await poolInstance.end();
       }
     }
-
-    await prisma.$disconnect();
   });
 
   it('runs full authentication, teacher application, and admin approval flow against live PostgreSQL', async () => {

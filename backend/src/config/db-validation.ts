@@ -5,6 +5,8 @@
 
 export const ALLOWED_TEST_HOSTS = ['localhost', '127.0.0.1'] as const;
 export const ALLOWED_TEST_DB_NAMES = ['code_to_know_test'] as const;
+export const ALLOWED_ISOLATED_TEST_PORTS = ['5434'] as const;
+export const ALLOWED_ISOLATED_TEST_ROLES = ['c2k_test_app_runtime'] as const;
 export const ALLOWED_DEV_HOSTS = ['localhost', '127.0.0.1'] as const;
 export const ALLOWED_DEV_DB_NAMES = ['code_to_know'] as const;
 
@@ -94,6 +96,100 @@ export function validateTestDatabaseUrl(rawUrl: string | undefined): string {
   if (!(ALLOWED_TEST_DB_NAMES as readonly string[]).includes(dbName)) {
     throw new Error(
       `[TEST DB CONFIG ERROR] Database name '${dbName}' is not an approved test database (allowed: code_to_know_test).`
+    );
+  }
+
+  return trimmed;
+}
+
+/**
+ * 驗證獨立隔離 PG17 測試資料庫連線字串（供 .db.test.ts 共用）：
+ * 1. 必須提供非空字串
+ * 2. 必須為 postgres: 或 postgresql: 協定
+ * 3. Host 必須為 localhost 或 127.0.0.1（拒絕所有雲端與遠端主機）
+ * 4. Port 必須顯式指定為 5434（禁止省略 Port，亦拒絕 5432 PG16、5433 PG17 還原庫與 6543）
+ * 5. Database Name 必須為 code_to_know_test
+ * 6. Role (username) 必須顯式指定且嚴格為 c2k_test_app_runtime
+ * 7. 絕不在錯誤訊息輸出密碼、憑證、Query String 或完整連線字串
+ */
+export function validateIsolatedPg17TestUrl(rawUrl: string | undefined): string {
+  if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.trim()) {
+    throw new Error(
+      '[ISOLATED TEST DB CONFIG ERROR] Isolated PG17 test database URL must be explicitly provided.'
+    );
+  }
+
+  const trimmed = rawUrl.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error('[ISOLATED TEST DB CONFIG ERROR] Invalid connection URL format.');
+  }
+
+  if (!['postgres:', 'postgresql:'].includes(parsed.protocol)) {
+    throw new Error(
+      '[ISOLATED TEST DB CONFIG ERROR] Isolated test database URL must use postgresql: or postgres: protocol.'
+    );
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (!hostname) {
+    throw new Error('[ISOLATED TEST DB CONFIG ERROR] Host is missing in connection URL.');
+  }
+
+  if (!(ALLOWED_TEST_HOSTS as readonly string[]).includes(hostname)) {
+    throw new Error(
+      `[ISOLATED TEST DB CONFIG ERROR] Host '${hostname}' is not in the allowed isolated test hosts whitelist (localhost, 127.0.0.1).`
+    );
+  }
+
+  if (!parsed.port) {
+    throw new Error(
+      '[ISOLATED TEST DB CONFIG ERROR] Port must be explicitly specified as 5434 (omitting port is disallowed).'
+    );
+  }
+
+  if (!(ALLOWED_ISOLATED_TEST_PORTS as readonly string[]).includes(parsed.port)) {
+    throw new Error(
+      `[ISOLATED TEST DB CONFIG ERROR] Port '${parsed.port}' is not an approved isolated PG17 test port (allowed: 5434).`
+    );
+  }
+
+  const rawDbName = parsed.pathname.replace(/^\//, '');
+  if (!rawDbName || !rawDbName.trim()) {
+    throw new Error('[ISOLATED TEST DB CONFIG ERROR] Database name is missing in connection URL.');
+  }
+
+  let dbName: string;
+  try {
+    dbName = decodeURIComponent(rawDbName).trim().toLowerCase();
+  } catch {
+    throw new Error('[ISOLATED TEST DB CONFIG ERROR] Invalid URL-encoded database name.');
+  }
+
+  if (!(ALLOWED_TEST_DB_NAMES as readonly string[]).includes(dbName)) {
+    throw new Error(
+      `[ISOLATED TEST DB CONFIG ERROR] Database name '${dbName}' is not an approved isolated test database (allowed: code_to_know_test).`
+    );
+  }
+
+  if (!parsed.username || !parsed.username.trim()) {
+    throw new Error(
+      '[ISOLATED TEST DB CONFIG ERROR] Role (username) must be explicitly specified (allowed: c2k_test_app_runtime).'
+    );
+  }
+
+  let role: string;
+  try {
+    role = decodeURIComponent(parsed.username).trim();
+  } catch {
+    throw new Error('[ISOLATED TEST DB CONFIG ERROR] Invalid URL-encoded role name.');
+  }
+
+  if (!(ALLOWED_ISOLATED_TEST_ROLES as readonly string[]).includes(role)) {
+    throw new Error(
+      `[ISOLATED TEST DB CONFIG ERROR] Role '${role}' is not an approved isolated test role (allowed: c2k_test_app_runtime).`
     );
   }
 

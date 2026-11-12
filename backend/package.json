@@ -15,6 +15,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "admin:create": "tsx scripts/create-admin.ts",
     "test": "vitest run",
+    "test:offline": "vitest run --exclude tests/**/*.db.test.ts",
+    "test:db": "vitest run --no-file-parallelism tests/app-runtime.db.test.ts tests/integration.db.test.ts",
     "test:watch": "vitest"
   },
   "dependencies": {

@@ -18,7 +18,7 @@ import { AuthModal } from '../components/AuthModal';
 import { TeacherApplyModal } from '../components/TeacherApplyModal';
 import { ProtectedRoute, INTENDED_ROUTE_STORAGE_KEY } from '../components/ProtectedRoute';
 
-const AppContent: React.FC = () => {
+export const AppContent: React.FC = () => {
   const { route, navigate } = useNavigation();
   const { authModalOpen, authModalMode, openAuth, closeAuth, refreshUser } = useAuth();
   const [teacherModalOpen, setTeacherModalOpen] = useState(false);
@@ -79,7 +79,15 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         );
       case 'import-system':
-        return <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <ProtectedRoute
+            requiredRoles={['ADMIN']}
+            pageTitle="官方證照題庫匯入與解析管理系統"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
       case 'home':
       default:
         return <HomePage onOpenTeacherApply={handleOpenTeacherApply} />;

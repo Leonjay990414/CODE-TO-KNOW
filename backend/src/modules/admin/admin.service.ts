@@ -1,13 +1,28 @@
 import { prisma } from '../../config/database.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
-import { ReviewApplicationInput } from './admin.schema.js';
+import { logAuditEvent, sanitizeAuditDetails } from '../../utils/audit.js';
+import { MAX_ADMIN_PAGE_LIMIT, ReviewApplicationInput } from './admin.schema.js';
+
+function normalizePagination(page: number, limit: number, defaultLimit: number) {
+  const safePage = Number.isInteger(page) && page >= 1 ? page : 1;
+  const safeLimit =
+    Number.isInteger(limit) && limit >= 1
+      ? Math.min(limit, MAX_ADMIN_PAGE_LIMIT)
+      : defaultLimit;
+  return {
+    page: safePage,
+    limit: safeLimit,
+    skip: (safePage - 1) * safeLimit,
+  };
+}
 
 export class AdminService {
   /**
    * List teacher applications with pagination and status filter.
    */
   async listTeacherApplications(status?: 'PENDING' | 'APPROVED' | 'REJECTED', page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const pagination = normalizePagination(page, limit, 20);
+    const skip = pagination.skip;
 
     const where = status ? { status } : {};
 
@@ -15,7 +30,7 @@ export class AdminService {
       prisma.teacherApplication.findMany({
         where,
         skip,
-        take: limit,
+        take: pagination.limit,
         orderBy: { createdAt: 'desc' },
         include: {
           user: {
@@ -35,10 +50,10 @@ export class AdminService {
     return {
       applications,
       pagination: {
-        page,
-        limit,
+        page: pagination.page,
+        limit: pagination.limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / pagination.limit),
       },
     };
   }
@@ -64,6 +79,15 @@ export class AdminService {
 
     if (application.status !== 'PENDING') {
       throw new BadRequestError(`該申請目前狀態為 ${application.status}，無法重複審核`);
+    }
+
+    if (
+      !application.user ||
+      application.user.deletedAt != null ||
+      application.user.status === 'SUSPENDED' ||
+      application.user.status === 'DISABLED'
+    ) {
+      throw new BadRequestError('申請人帳號已停用、凍結或刪除，無法處理教師資格申請');
     }
 
     // Ensure TEACHER role exists
@@ -104,19 +128,17 @@ export class AdminService {
         },
         update: {},
       }),
-      prisma.auditLog.create({
-        data: {
-          userId: adminId,
-          action: 'TEACHER_APPLICATION_APPROVED',
-          details: JSON.stringify({
-            applicationId,
-            applicantUserId: application.userId,
-            applicantEmail: application.user.email,
-            note: input.reviewNote,
-          }),
-          ipAddress,
-          userAgent,
+      logAuditEvent({
+        userId: adminId,
+        action: 'TEACHER_APPLICATION_APPROVED',
+        details: {
+          applicationId,
+          applicantUserId: application.userId,
+          applicantEmail: application.user.email,
+          note: input.reviewNote,
         },
+        ipAddress,
+        userAgent,
       }),
     ]);
 
@@ -146,6 +168,15 @@ export class AdminService {
       throw new BadRequestError(`該申請目前狀態為 ${application.status}，無法重複審核`);
     }
 
+    if (
+      !application.user ||
+      application.user.deletedAt != null ||
+      application.user.status === 'SUSPENDED' ||
+      application.user.status === 'DISABLED'
+    ) {
+      throw new BadRequestError('申請人帳號已停用、凍結或刪除，無法處理教師資格申請');
+    }
+
     const [updatedApp] = await prisma.$transaction([
       prisma.teacherApplication.update({
         where: { id: applicationId },
@@ -156,19 +187,17 @@ export class AdminService {
           reviewNote: input.reviewNote || '審核未通過',
         },
       }),
-      prisma.auditLog.create({
-        data: {
-          userId: adminId,
-          action: 'TEACHER_APPLICATION_REJECTED',
-          details: JSON.stringify({
-            applicationId,
-            applicantUserId: application.userId,
-            applicantEmail: application.user.email,
-            note: input.reviewNote,
-          }),
-          ipAddress,
-          userAgent,
+      logAuditEvent({
+        userId: adminId,
+        action: 'TEACHER_APPLICATION_REJECTED',
+        details: {
+          applicationId,
+          applicantUserId: application.userId,
+          applicantEmail: application.user.email,
+          note: input.reviewNote,
         },
+        ipAddress,
+        userAgent,
       }),
     ]);
 
@@ -179,14 +208,21 @@ export class AdminService {
    * List platform audit logs.
    */
   async listAuditLogs(page = 1, limit = 50) {
-    const skip = (page - 1) * limit;
+    const pagination = normalizePagination(page, limit, 50);
 
-    const [logs, total] = await Promise.all([
+    const [rawLogs, total] = await Promise.all([
       prisma.auditLog.findMany({
-        skip,
-        take: limit,
+        skip: pagination.skip,
+        take: pagination.limit,
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          action: true,
+          details: true,
+          ipAddress: true,
+          userAgent: true,
+          createdAt: true,
           user: {
             select: { id: true, email: true, displayName: true },
           },
@@ -195,13 +231,18 @@ export class AdminService {
       prisma.auditLog.count(),
     ]);
 
+    const logs = rawLogs.map((entry) => ({
+      ...entry,
+      details: sanitizeAuditDetails(entry.details),
+    }));
+
     return {
       logs,
       pagination: {
-        page,
-        limit,
+        page: pagination.page,
+        limit: pagination.limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / pagination.limit),
       },
     };
   }

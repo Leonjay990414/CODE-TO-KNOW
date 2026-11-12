@@ -11,11 +11,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
 const {
   MAGIC_HEADER,
   CURRENT_VERSION,
   HEADER_LENGTH,
   TAG_LENGTH,
+  MAX_STDIN_KEY_BYTES,
   generateKey,
   parseKey,
   encryptFile,
@@ -304,6 +306,145 @@ async function runTests() {
     assert.throws(() => parseKey(''), /Missing backup encryption key/);
     assert.throws(() => parseKey('too_short_key'), /Key must be a 64-character hexadecimal/);
     assert.throws(() => parseKey('not_hex_0123456789abcdef0123456789abcdef0123456789abcdef0123456789zzzz'), /Key must be a 64-character hexadecimal/);
+  });
+
+  // =========================================================================
+  // --key-stdin 子行程安全測試 (TC-16 ~ TC-26)
+  // =========================================================================
+  const cliScript = path.resolve(__dirname, './backup-crypto.cjs');
+  const stdinRaw = path.join(TEST_DIR, 'stdin_src.raw');
+  const stdinEnc = path.join(TEST_DIR, 'stdin_src.enc');
+  fs.writeFileSync(stdinRaw, 'STDIN_SECRET_TEST_PAYLOAD_2026');
+  await encryptFile(stdinRaw, stdinEnc, testKey);
+  const stdinOrigHash = sha256(stdinRaw);
+
+  function runCliDecrypt(args, stdinInput, extraEnv = {}) {
+    const cleanEnv = { ...process.env, ...extraEnv };
+    if (!Object.prototype.hasOwnProperty.call(extraEnv, 'BACKUP_ENCRYPTION_KEY')) {
+      delete cleanEnv.BACKUP_ENCRYPTION_KEY;
+    }
+    return spawnSync(process.execPath, [cliScript, 'decrypt', ...args], {
+      input: stdinInput,
+      encoding: 'utf8',
+      env: cleanEnv,
+    });
+  }
+
+  // TC-16: stdin 正確金鑰（LF 與 CRLF）可正常解密且不洩漏金鑰
+  await test('--key-stdin 使用正確金鑰 (LF / CRLF) 可正常解密且輸出不含金鑰', async () => {
+    const decLf = path.join(TEST_DIR, 'stdin_ok_lf.dec');
+    const resLf = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decLf], `${testKey}\n`);
+    assert.strictEqual(resLf.status, 0, `LF decrypt failed: ${resLf.stderr}`);
+    assert.strictEqual(sha256(decLf), stdinOrigHash);
+    assert.strictEqual(resLf.stdout.includes(testKey), false, 'stdout must not contain key');
+    assert.strictEqual(resLf.stderr.includes(testKey), false, 'stderr must not contain key');
+
+    const decCrlf = path.join(TEST_DIR, 'stdin_ok_crlf.dec');
+    const resCrlf = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decCrlf], `${testKey}\r\n`);
+    assert.strictEqual(resCrlf.status, 0, `CRLF decrypt failed: ${resCrlf.stderr}`);
+    assert.strictEqual(sha256(decCrlf), stdinOrigHash);
+  });
+
+  // TC-17: stdin 錯誤金鑰必須失敗且無殘留暫存
+  await test('--key-stdin 錯誤金鑰必須失敗、不洩漏金鑰且無暫存殘留', async () => {
+    const decOut = path.join(TEST_DIR, 'stdin_wrong_key.dec');
+    const res = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decOut], `${wrongKey}\n`);
+    assert.notStrictEqual(res.status, 0);
+    assert.strictEqual(fs.existsSync(decOut), false);
+    assert.strictEqual(fs.readdirSync(TEST_DIR).some(f => f.includes('stdin_wrong_key.dec.tmp')), false);
+    assert.strictEqual(res.stdout.includes(wrongKey), false);
+    assert.strictEqual(res.stderr.includes(wrongKey), false);
+  });
+
+  // TC-18: stdin 正確金鑰但錯誤 GCM AuthTag 必須失敗且清理暫存
+  await test('--key-stdin 錯誤 GCM AuthTag 必須失敗並清理暫存檔', async () => {
+    const tamperedTagEnc = path.join(TEST_DIR, 'stdin_tampered_tag.enc');
+    const buf = fs.readFileSync(stdinEnc);
+    buf[buf.length - 1] ^= 0xff;
+    fs.writeFileSync(tamperedTagEnc, buf);
+
+    const decOut = path.join(TEST_DIR, 'stdin_tampered_tag.dec');
+    const res = runCliDecrypt(['--key-stdin', '-i', tamperedTagEnc, '-o', decOut], `${testKey}\n`);
+    assert.notStrictEqual(res.status, 0);
+    assert.match(res.stderr, /Authentication tag verification failed/);
+    assert.strictEqual(fs.existsSync(decOut), false);
+    assert.strictEqual(fs.readdirSync(TEST_DIR).some(f => f.includes('stdin_tampered_tag.dec.tmp')), false);
+  });
+
+  // TC-19: 缺少 stdin 金鑰必須失敗
+  await test('--key-stdin 缺少 stdin 輸入（立即 EOF）必須失敗', async () => {
+    const decOut = path.join(TEST_DIR, 'stdin_missing.dec');
+    const res = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decOut], '');
+    assert.notStrictEqual(res.status, 0);
+    assert.match(res.stderr, /Missing stdin key input/);
+    assert.strictEqual(fs.existsSync(decOut), false);
+  });
+
+  // TC-20: 空金鑰（僅換行）必須失敗
+  await test('--key-stdin 空金鑰（僅 \\n）必須失敗', async () => {
+    const decOut = path.join(TEST_DIR, 'stdin_empty.dec');
+    const res = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decOut], '\n');
+    assert.notStrictEqual(res.status, 0);
+    assert.strictEqual(fs.existsSync(decOut), false);
+  });
+
+  // TC-21: stdin 超過允許長度必須失敗
+  await test('--key-stdin 超過最大長度限制必須失敗且不回顯輸入', async () => {
+    const oversized = 'a'.repeat(MAX_STDIN_KEY_BYTES + 10) + '\n';
+    const decOut = path.join(TEST_DIR, 'stdin_oversized.dec');
+    const res = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', decOut], oversized);
+    assert.notStrictEqual(res.status, 0);
+    assert.match(res.stderr, /exceeds maximum allowed length/);
+    assert.strictEqual(res.stderr.includes('aaaaaaaaaa'), false);
+    assert.strictEqual(fs.existsSync(decOut), false);
+  });
+
+  // TC-22: 不完整輸入、額外資料或未 trim 空白必須失敗
+  await test('--key-stdin 缺少換行終止符、多餘資料或含空白時必須失敗', async () => {
+    const dec1 = path.join(TEST_DIR, 'stdin_no_nl.dec');
+    const res1 = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', dec1], testKey);
+    assert.notStrictEqual(res1.status, 0);
+    assert.match(res1.stderr, /missing newline terminator/);
+
+    const dec2 = path.join(TEST_DIR, 'stdin_trailing.dec');
+    const res2 = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', dec2], `${testKey}\nextra`);
+    assert.notStrictEqual(res2.status, 0);
+    assert.match(res2.stderr, /Unexpected trailing data/);
+
+    const dec3 = path.join(TEST_DIR, 'stdin_spaces.dec');
+    const res3 = runCliDecrypt(['--key-stdin', '-i', stdinEnc, '-o', dec3], ` ${testKey} \n`);
+    assert.notStrictEqual(res3.status, 0);
+    assert.strictEqual(res3.stderr.includes(testKey), false);
+  });
+
+  // TC-23: 嚴禁與 -k argv 混用
+  await test('--key-stdin 不得從 argv (-k) 讀取或混用', async () => {
+    const decOut = path.join(TEST_DIR, 'stdin_no_argv.dec');
+    const res = runCliDecrypt(['--key-stdin', '-k', testKey, '-i', stdinEnc, '-o', decOut], `${testKey}\n`);
+    assert.notStrictEqual(res.status, 0);
+    assert.match(res.stderr, /Cannot combine --key-stdin with -k/);
+    assert.strictEqual(fs.existsSync(decOut), false);
+  });
+
+  // TC-24: 不得從 process.env 讀取金鑰
+  await test('--key-stdin 不得從 process.env.BACKUP_ENCRYPTION_KEY 讀取金鑰', async () => {
+    const decOut = path.join(TEST_DIR, 'stdin_no_env.dec');
+    // env 放正確金鑰、stdin 放錯誤金鑰 -> 必須失敗（證明不讀 env）
+    const res = runCliDecrypt(
+      ['--key-stdin', '-i', stdinEnc, '-o', decOut],
+      `${wrongKey}\n`,
+      { BACKUP_ENCRYPTION_KEY: testKey }
+    );
+    assert.notStrictEqual(res.status, 0);
+    assert.strictEqual(fs.existsSync(decOut), false);
+
+    // env 放正確金鑰、stdin 空 -> 必須失敗
+    const res2 = runCliDecrypt(
+      ['--key-stdin', '-i', stdinEnc, '-o', decOut],
+      '',
+      { BACKUP_ENCRYPTION_KEY: testKey }
+    );
+    assert.notStrictEqual(res2.status, 0);
   });
 
   console.log(`\n測試總結：${passed} / ${total} 個案例全數通過！\n`);

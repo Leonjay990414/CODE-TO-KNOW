@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../utils/errors.js';
 import { env } from '../config/env.js';
+import { logSafeError, redactStringSecrets } from '../utils/redaction.js';
 
 export function errorHandler(
   err: Error,
@@ -42,7 +43,10 @@ export function errorHandler(
     });
   }
 
-  console.error('Unhandled server error:', err);
+  logSafeError('Unhandled server error:', err, {
+    method: _req.method,
+    path: _req.path,
+  });
 
   const response: {
     success: boolean;
@@ -60,7 +64,7 @@ export function errorHandler(
   };
 
   if (env.NODE_ENV === 'development') {
-    response.error.stack = err.stack;
+    response.error.stack = err.stack ? redactStringSecrets(err.stack) : undefined;
   }
 
   return res.status(500).json(response);

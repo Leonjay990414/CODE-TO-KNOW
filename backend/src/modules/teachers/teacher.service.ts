@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { logAuditEvent } from '../../utils/audit.js';
 import { BadRequestError, ConflictError } from '../../utils/errors.js';
 import { ApplyTeacherInput } from './teacher.schema.js';
 
@@ -41,14 +42,12 @@ export class TeacherService {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'TEACHER_APPLICATION_SUBMITTED',
-        details: JSON.stringify({ applicationId: application.id, school: input.schoolName }),
-        ipAddress,
-        userAgent,
-      },
+    await logAuditEvent({
+      userId,
+      action: 'TEACHER_APPLICATION_SUBMITTED',
+      details: { applicationId: application.id, school: input.schoolName },
+      ipAddress,
+      userAgent,
     });
 
     return application;

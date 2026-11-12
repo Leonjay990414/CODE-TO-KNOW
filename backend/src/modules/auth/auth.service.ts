@@ -1,10 +1,12 @@
 import { prisma } from '../../config/database.js';
 import { emailProvider } from '../../services/email.provider.js';
+import { logAuditEvent } from '../../utils/audit.js';
 import { hashPassword, verifyPassword } from '../../utils/password.js';
 import { generateSecureToken, hashToken } from '../../utils/tokens.js';
 import {
   BadRequestError,
   ConflictError,
+  ForbiddenError,
   NotFoundError,
   UnauthorizedError,
 } from '../../utils/errors.js';
@@ -79,14 +81,12 @@ export class AuthService {
     });
 
     // Record audit event
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_REGISTER',
-        details: JSON.stringify({ email: user.email, roles: ['STUDENT'] }),
-        ipAddress,
-        userAgent,
-      },
+    await logAuditEvent({
+      userId: user.id,
+      action: 'USER_REGISTER',
+      details: { email: user.email, roles: ['STUDENT'] },
+      ipAddress,
+      userAgent,
     });
 
     // Send verification email via provider (console in dev, SMTP in production)
@@ -130,14 +130,12 @@ export class AuthService {
 
     const isValidPassword = await verifyPassword(input.password, user.passwordHash);
     if (!isValidPassword) {
-      await prisma.auditLog.create({
-        data: {
-          userId: user.id,
-          action: 'LOGIN_FAILED',
-          details: JSON.stringify({ reason: 'Invalid password' }),
-          ipAddress,
-          userAgent,
-        },
+      await logAuditEvent({
+        userId: user.id,
+        action: 'LOGIN_FAILED',
+        details: { reason: 'Invalid password' },
+        ipAddress,
+        userAgent,
       });
       throw new UnauthorizedError('帳號或密碼錯誤');
     }
@@ -158,14 +156,12 @@ export class AuthService {
     });
 
     // Record audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_LOGIN',
-        details: JSON.stringify({ sessionId: session.id }),
-        ipAddress,
-        userAgent,
-      },
+    await logAuditEvent({
+      userId: user.id,
+      action: 'USER_LOGIN',
+      details: { sessionId: session.id },
+      ipAddress,
+      userAgent,
     });
 
     return {
@@ -194,14 +190,12 @@ export class AuthService {
     }
 
     if (userId) {
-      await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'USER_LOGOUT',
-          details: JSON.stringify({ sessionId }),
-          ipAddress,
-          userAgent,
-        },
+      await logAuditEvent({
+        userId,
+        action: 'USER_LOGOUT',
+        details: { sessionId },
+        ipAddress,
+        userAgent,
       });
     }
   }
@@ -242,6 +236,28 @@ export class AuthService {
     };
   }
 
+  private assertAccountPermitsTokenAction(
+    user: { id: string; deletedAt: Date | null; status: string } | null | undefined,
+    action: 'VERIFY_EMAIL' | 'RESET_PASSWORD'
+  ): { id: string; status: string } {
+    if (!user || user.deletedAt !== null) {
+      throw new ForbiddenError('此帳號不存在或已刪除，無法執行此操作', 'ACCOUNT_DISABLED');
+    }
+
+    if (user.status === 'SUSPENDED' || user.status === 'DISABLED') {
+      throw new ForbiddenError('此帳號已停用或凍結，無法執行此操作', 'ACCOUNT_DISABLED');
+    }
+
+    const allowedStatuses =
+      action === 'VERIFY_EMAIL' ? ['ACTIVE', 'PENDING_VERIFICATION'] : ['ACTIVE'];
+
+    if (!allowedStatuses.includes(user.status)) {
+      throw new ForbiddenError('此帳號目前狀態不允許執行此操作', 'ACCOUNT_STATUS_INVALID');
+    }
+
+    return { id: user.id, status: user.status };
+  }
+
   /**
    * Verify email via token.
    */
@@ -261,24 +277,37 @@ export class AuthService {
       throw new BadRequestError('此驗證憑證已逾期，請重新申請驗證信');
     }
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: record.userId },
-        data: { emailVerifiedAt: new Date() },
-      }),
-      prisma.emailVerificationToken.update({
-        where: { id: record.id },
-        data: { usedAt: new Date() },
-      }),
-      prisma.auditLog.create({
+    const account = this.assertAccountPermitsTokenAction(record.user, 'VERIFY_EMAIL');
+    const now = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      const tokenClaim = await tx.emailVerificationToken.updateMany({
+        where: { id: record.id, usedAt: null },
+        data: { usedAt: now },
+      });
+      if (tokenClaim.count !== 1) {
+        throw new BadRequestError('無效或已使用過的驗證憑證');
+      }
+
+      await tx.user.update({
+        where: { id: account.id },
         data: {
-          userId: record.userId,
+          emailVerifiedAt: now,
+          ...(account.status === 'PENDING_VERIFICATION' ? { status: 'ACTIVE' } : {}),
+        },
+      });
+
+      await logAuditEvent(
+        {
+          userId: account.id,
           action: 'EMAIL_VERIFIED',
+          details: { userId: account.id, verifiedAt: now.toISOString() },
           ipAddress,
           userAgent,
         },
-      }),
-    ]);
+        tx
+      );
+    });
 
     return { success: true, message: '電子郵件驗證成功' };
   }
@@ -293,8 +322,13 @@ export class AuthService {
       where: { email: normalizedEmail },
     });
 
-    // Always return generic success message to prevent email enumeration
-    if (!user || user.deletedAt !== null) {
+    // Always return generic success message to prevent email or account-status enumeration
+    if (
+      !user ||
+      user.deletedAt !== null ||
+      user.status === 'SUSPENDED' ||
+      user.status === 'DISABLED'
+    ) {
       return { success: true, message: '若帳號存在，且郵件服務已啟用，系統才會寄送密碼重設郵件。' };
     }
 
@@ -309,13 +343,12 @@ export class AuthService {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'PASSWORD_RESET_REQUESTED',
-        ipAddress,
-        userAgent,
-      },
+    await logAuditEvent({
+      userId: user.id,
+      action: 'PASSWORD_RESET_REQUESTED',
+      details: { userId: user.id },
+      ipAddress,
+      userAgent,
     });
 
     // Send reset email via provider
@@ -346,31 +379,41 @@ export class AuthService {
       throw new BadRequestError('重設憑證已逾期，請重新申請重設密碼');
     }
 
+    const account = this.assertAccountPermitsTokenAction(record.user, 'RESET_PASSWORD');
     const passwordHash = await hashPassword(input.newPassword);
+    const now = new Date();
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: record.userId },
+    await prisma.$transaction(async (tx) => {
+      const tokenClaim = await tx.passwordResetToken.updateMany({
+        where: { id: record.id, usedAt: null },
+        data: { usedAt: now },
+      });
+      if (tokenClaim.count !== 1) {
+        throw new BadRequestError('無效或已使用過的重設憑證');
+      }
+
+      await tx.user.update({
+        where: { id: account.id },
         data: { passwordHash },
-      }),
-      prisma.passwordResetToken.update({
-        where: { id: record.id },
-        data: { usedAt: new Date() },
-      }),
+      });
+
       // Revoke all existing sessions upon password reset
-      prisma.session.updateMany({
-        where: { userId: record.userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      }),
-      prisma.auditLog.create({
-        data: {
-          userId: record.userId,
+      await tx.session.updateMany({
+        where: { userId: account.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+
+      await logAuditEvent(
+        {
+          userId: account.id,
           action: 'PASSWORD_RESET_COMPLETED',
+          details: { userId: account.id, revokedExistingSessions: true },
           ipAddress,
           userAgent,
         },
-      }),
-    ]);
+        tx
+      );
+    });
 
     return { success: true, message: '密碼已成功更新，請使用新密碼登入' };
   }

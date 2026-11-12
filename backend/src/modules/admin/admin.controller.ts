@@ -1,12 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import { adminService } from './admin.service.js';
 
+function parseValidatedPositiveInt(raw: unknown, fallback: number): number {
+  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
+    return raw;
+  }
+  if (typeof raw === 'string' && /^\d+$/.test(raw)) {
+    const parsed = parseInt(raw, 10);
+    if (parsed >= 1) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
 export class AdminController {
   async listTeacherApplications(req: Request, res: Response, next: NextFunction) {
     try {
       const status = req.query.status as 'PENDING' | 'APPROVED' | 'REJECTED' | undefined;
-      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
+      const page = parseValidatedPositiveInt(req.query.page, 1);
+      const limit = parseValidatedPositiveInt(req.query.limit, 20);
 
       const result = await adminService.listTeacherApplications(status, page, limit);
 
@@ -67,8 +80,8 @@ export class AdminController {
 
   async listAuditLogs(req: Request, res: Response, next: NextFunction) {
     try {
-      const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const page = parseValidatedPositiveInt(req.query.page, 1);
+      const limit = parseValidatedPositiveInt(req.query.limit, 50);
 
       const result = await adminService.listAuditLogs(page, limit);
 

@@ -17,6 +17,23 @@ import { Footer } from './Footer';
 
 export const INTENDED_ROUTE_STORAGE_KEY = 'ctk_intended_route';
 
+/**
+ * Expands transitional ADMIN / PLATFORM_ADMIN compatibility while strictly keeping
+ * SYSTEM_OPERATOR isolated from educational/admin route permissions.
+ */
+export function expandCompatibleFrontendRoles(requiredRoles: string[] = []): string[] {
+  const expanded = new Set<string>();
+  for (const role of requiredRoles) {
+    expanded.add(role);
+    if (role === 'ADMIN') {
+      expanded.add('PLATFORM_ADMIN');
+    } else if (role === 'PLATFORM_ADMIN') {
+      expanded.add('ADMIN');
+    }
+  }
+  return Array.from(expanded);
+}
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRoles?: string[];
@@ -262,6 +279,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // ==========================================
   if (authStatus === 'unauthenticated' || !user) {
     const isTeacherRoute = requiredRoles?.includes('TEACHER');
+    const isAdminRoute =
+      !isTeacherRoute &&
+      Boolean(requiredRoles?.some((role) => role === 'ADMIN' || role === 'PLATFORM_ADMIN'));
 
     return (
       <div
@@ -345,6 +365,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                 <span className="badge badge-gold">
                   {isDemoMode
                     ? 'GitHub Pages 公開展示模式 · Demo Mode'
+                    : isAdminRoute
+                    ? '管理員專區 · 存取限制'
                     : isTeacherRoute
                     ? '教師專區 · 存取限制'
                     : '會員功能 · 需先登入'}
@@ -376,6 +398,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               >
                 {isDemoMode
                   ? '本系統目前運行於 GitHub Pages 靜態公開展示版，無後端伺服器與資料庫連線。此專區在正式版需登入會員帳號，展示版中您可以直接點擊下方按鈕，以「示範學員」或「示範教師」身分即時體驗受保護專區完整介面。'
+                  : isAdminRoute
+                  ? '「官方證照題庫匯入與解析管理系統」僅限具備平台管理員身分之帳號登入存取。'
                   : isTeacherRoute
                   ? '「教師教學管理中心」包含班級進度追蹤、學生成績報表與教學分析，僅限認證教師登入存取。'
                   : '您所存取的頁面包含個人學習歷程、數據分析儀表板或錯題診斷功能。請先登入或註冊會員，系統將於登入完成後自動為您返回此頁面。'}
@@ -503,7 +527,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // ==========================================
   if (requiredRoles && requiredRoles.length > 0) {
     const userRoles = user.roles || [];
-    const hasRequiredRole = userRoles.some((role) => requiredRoles.includes(role));
+    const acceptedRoles = expandCompatibleFrontendRoles(requiredRoles);
+    const hasRequiredRole = userRoles.some((role) => acceptedRoles.includes(role));
 
     if (!hasRequiredRole) {
       const isTeacherRequired = requiredRoles.includes('TEACHER');
@@ -626,7 +651,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                   」（身份角色：
                   {userRoles.length > 0 ? userRoles.join(', ') : 'STUDENT'}
                   ）。此頁面僅限具有 [
-                  {requiredRoles.map((r) => (r === 'TEACHER' ? '認證教師' : r)).join(' 或 ')}]
+                  {requiredRoles
+                    .map((r) => (r === 'TEACHER' ? '認證教師' : r === 'ADMIN' ? '平台管理員' : r))
+                    .join(' 或 ')}]
                   身分的專屬管理人員存取。
                 </p>
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   resolveDatasourceUrl,
   validateTestDatabaseUrl,
+  validateIsolatedPg17TestUrl,
   validateMigrationDatabaseUrl,
   validateDevelopmentDatabaseUrl,
   validateCloudRuntimeDatabaseUrl,
@@ -450,6 +451,107 @@ describe('Database Configuration & Connection Safety Gate (Phase 3.3)', () => {
       expect(() =>
         validateMigrationDatabaseUrl('postgresql://migration_admin.wrong_ref:secret@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres')
       ).toThrowError(/does not match expected project ref/);
+    });
+  });
+
+  // =========================================================================
+  // Section 5: Isolated PG17 Test URL Quadruple Whitelist (Phase 3-C-27)
+  // =========================================================================
+  describe('validateIsolatedPg17TestUrl() Strict Quadruple Whitelist (FC-01 ~ FC-10)', () => {
+    it('[FC-01] PASS: 允許正確的隔離測試 URL (127.0.0.1 / localhost + 5434 + code_to_know_test + c2k_test_app_runtime)', () => {
+      const url1 = 'postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5434/code_to_know_test';
+      const url2 = 'postgres://c2k_test_app_runtime:dummy_pw@localhost:5434/code_to_know_test';
+      expect(validateIsolatedPg17TestUrl(url1)).toBe(url1);
+      expect(validateIsolatedPg17TestUrl(url2)).toBe(url2);
+    });
+
+    it('[FC-02] BLOCK: 拒絕 Port 5432 (PG16 同埠)', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5432/code_to_know_test')
+      ).toThrowError(/Port '5432' is not an approved isolated PG17 test port/);
+    });
+
+    it('[FC-03] BLOCK: 拒絕 Port 5433 (PG17 還原庫埠) 與其他非 5434 埠', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5433/code_to_know_test')
+      ).toThrowError(/Port '5433' is not an approved isolated PG17 test port/);
+
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:6543/code_to_know_test')
+      ).toThrowError(/Port '6543' is not an approved isolated PG17 test port/);
+    });
+
+    it('[FC-04] BLOCK: 拒絕錯誤資料庫名稱 (code_to_know / postgres / code-to-know-prod)', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5434/code_to_know')
+      ).toThrowError(/not an approved isolated test database/);
+
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5434/postgres')
+      ).toThrowError(/not an approved isolated test database/);
+
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5434/code-to-know-prod')
+      ).toThrowError(/not an approved isolated test database/);
+    });
+
+    it('[FC-05] BLOCK: 拒絕錯誤角色 (postgres / codetoknow / migration_admin / app_runtime)', () => {
+      for (const badRole of ['postgres', 'codetoknow', 'migration_admin', 'app_runtime']) {
+        expect(() =>
+          validateIsolatedPg17TestUrl(`postgresql://${badRole}:dummy_pw@127.0.0.1:5434/code_to_know_test`)
+        ).toThrowError(/not an approved isolated test role/);
+      }
+    });
+
+    it('[FC-06] BLOCK: 拒絕雲端與遠端 Host (Supabase / 任意遠端網域)', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@aws-0-ap-southeast-2.pooler.supabase.com:5434/code_to_know_test')
+      ).toThrowError(/not in the allowed isolated test hosts whitelist/);
+
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@db.ypibmyfxfhsyfdwxprpi.supabase.co:5434/code_to_know_test')
+      ).toThrowError(/not in the allowed isolated test hosts whitelist/);
+    });
+
+    it('[FC-07] BLOCK: 拒絕省略 Port (防止隱性預設連線至 5432)', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://c2k_test_app_runtime:dummy_pw@127.0.0.1/code_to_know_test')
+      ).toThrowError(/Port must be explicitly specified as 5434/);
+    });
+
+    it('[FC-08] BLOCK: 拒絕省略角色 (防止隱性使用系統預設角色)', () => {
+      expect(() =>
+        validateIsolatedPg17TestUrl('postgresql://127.0.0.1:5434/code_to_know_test')
+      ).toThrowError(/Role \(username\) must be explicitly specified/);
+    });
+
+    it('[FC-09] BLOCK: 拒絕錯誤 Protocol、空值與無效 URL 格式', () => {
+      expect(() => validateIsolatedPg17TestUrl(undefined)).toThrowError(/must be explicitly provided/);
+      expect(() => validateIsolatedPg17TestUrl('')).toThrowError(/must be explicitly provided/);
+      expect(() => validateIsolatedPg17TestUrl('   ')).toThrowError(/must be explicitly provided/);
+      expect(() =>
+        validateIsolatedPg17TestUrl('mysql://c2k_test_app_runtime:dummy_pw@127.0.0.1:5434/code_to_know_test')
+      ).toThrowError(/must use postgresql: or postgres: protocol/);
+      expect(() => validateIsolatedPg17TestUrl('not-a-url')).toThrowError(/Invalid connection URL format/);
+    });
+
+    it('[FC-10] BLOCK: 錯誤訊息不得包含密碼、Query String 或完整連線字串', () => {
+      const secretPw = 'FakeIsolatedTestSecret!987654';
+      const malformed = `postgresql://c2k_test_app_runtime:${secretPw}@bad host:5434/code_to_know_test?sslmode=disable`;
+      const wrongPort = `postgresql://c2k_test_app_runtime:${secretPw}@127.0.0.1:5432/code_to_know_test?sslmode=disable`;
+
+      for (const candidate of [malformed, wrongPort]) {
+        try {
+          validateIsolatedPg17TestUrl(candidate);
+          expect.unreachable('Should have thrown');
+        } catch (err: unknown) {
+          const msg = (err as Error).message;
+          expect(msg).not.toContain(secretPw);
+          expect(msg).not.toContain('sslmode=disable');
+          expect(msg).not.toContain('postgresql://');
+          expect(msg).toContain('[ISOLATED TEST DB CONFIG ERROR]');
+        }
+      }
     });
   });
 });

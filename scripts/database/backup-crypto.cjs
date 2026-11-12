@@ -23,6 +23,100 @@ const NONCE_LENGTH = 12; // 96-bit IV for AES-GCM
 const TAG_LENGTH = 16;   // 128-bit Authentication Tag
 const HEADER_LENGTH = MAGIC_HEADER.length + 1 + NONCE_LENGTH; // 4 + 1 + 12 = 17 bytes
 const MIN_CONTAINER_SIZE = HEADER_LENGTH + TAG_LENGTH;        // 17 + 16 = 33 bytes
+const MAX_STDIN_KEY_BYTES = 128;
+
+/**
+ * 從 stdin 安全讀取 256-bit Hex 金鑰（單行協定，必須以 \n 或 \r\n 結尾，不進行 trim）
+ */
+function readKeyFromStdin(stdinStream = process.stdin) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let totalBytes = 0;
+    let settled = false;
+
+    const zeroChunks = () => {
+      for (let i = 0; i < chunks.length; i++) {
+        if (Buffer.isBuffer(chunks[i])) {
+          chunks[i].fill(0);
+        }
+        chunks[i] = null;
+      }
+      chunks.length = 0;
+    };
+
+    const fail = (message) => {
+      if (settled) return;
+      settled = true;
+      cleanupListeners();
+      zeroChunks();
+      reject(new Error(message));
+    };
+
+    const onData = (chunk) => {
+      if (settled) return;
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, 'utf8');
+      totalBytes += buf.length;
+      if (totalBytes > MAX_STDIN_KEY_BYTES) {
+        buf.fill(0);
+        return fail(`[CRYPTO CONFIG ERROR] Stdin key input exceeds maximum allowed length (${MAX_STDIN_KEY_BYTES} bytes).`);
+      }
+      chunks.push(buf);
+    };
+
+    const onEnd = () => {
+      if (settled) return;
+      cleanupListeners();
+
+      let combined = null;
+      let keyBuf = null;
+      try {
+        if (chunks.length === 0 || totalBytes === 0) {
+          return fail('[CRYPTO CONFIG ERROR] Missing stdin key input.');
+        }
+
+        combined = Buffer.concat(chunks, totalBytes);
+        zeroChunks();
+
+        const lfIndex = combined.indexOf(0x0a); // '\n'
+        if (lfIndex === -1) {
+          return fail('[CRYPTO CONFIG ERROR] Incomplete stdin key input: missing newline terminator.');
+        }
+        if (lfIndex !== combined.length - 1) {
+          return fail('[CRYPTO CONFIG ERROR] Unexpected trailing data after stdin key terminator.');
+        }
+
+        const endOffset = (lfIndex > 0 && combined[lfIndex - 1] === 0x0d) ? lfIndex - 1 : lfIndex;
+        keyBuf = combined.subarray(0, endOffset);
+        const keyStr = keyBuf.toString('utf8');
+
+        if (!/^[0-9a-fA-F]{64}$/.test(keyStr)) {
+          return fail('[CRYPTO CONFIG ERROR] Stdin key must be an exact 64-character hexadecimal string (256-bit).');
+        }
+
+        settled = true;
+        resolve(keyStr);
+      } finally {
+        if (keyBuf) keyBuf.fill(0);
+        if (combined) combined.fill(0);
+        zeroChunks();
+      }
+    };
+
+    const onError = (err) => {
+      fail(`[CRYPTO CONFIG ERROR] Stdin read error: ${err.message}`);
+    };
+
+    const cleanupListeners = () => {
+      stdinStream.removeListener('data', onData);
+      stdinStream.removeListener('end', onEnd);
+      stdinStream.removeListener('error', onError);
+    };
+
+    stdinStream.on('data', onData);
+    stdinStream.on('end', onEnd);
+    stdinStream.on('error', onError);
+  });
+}
 
 /**
  * 驗證並解析 256-bit 金鑰（64 位元 Hex 字串）
@@ -265,13 +359,13 @@ function printHelp() {
 CODE TO KNOW (碼上學) - 備份獨立 AES-256-GCM 加解密工具
 
 使用說明：
-  node backup-crypto.cjs encrypt -i <inputFile> -o <outputFile> [-k <keyHex>]
-  node backup-crypto.cjs decrypt -i <inputFile> -o <outputFile> [-k <keyHex>]
+  node backup-crypto.cjs encrypt -i <inputFile> -o <outputFile> [-k <keyHex> | --key-stdin]
+  node backup-crypto.cjs decrypt -i <inputFile> -o <outputFile> [-k <keyHex> | --key-stdin]
   node backup-crypto.cjs genkey
   node backup-crypto.cjs help
 
 環境變數：
-  BACKUP_ENCRYPTION_KEY    32-byte (64 hex characters) AES-GCM 金鑰
+  BACKUP_ENCRYPTION_KEY    32-byte (64 hex characters) AES-GCM 金鑰（未使用 --key-stdin 時）
 `);
 }
 
@@ -297,7 +391,8 @@ async function main() {
 
   let inputFile = null;
   let outputFile = null;
-  let keyHex = process.env.BACKUP_ENCRYPTION_KEY || null;
+  let useKeyStdin = false;
+  let cliKeyArg = null;
 
   for (let i = 1; i < args.length; i++) {
     if (args[i] === '-i' || args[i] === '--input') {
@@ -305,7 +400,9 @@ async function main() {
     } else if (args[i] === '-o' || args[i] === '--output') {
       outputFile = args[++i];
     } else if (args[i] === '-k' || args[i] === '--key') {
-      keyHex = args[++i];
+      cliKeyArg = args[++i];
+    } else if (args[i] === '--key-stdin') {
+      useKeyStdin = true;
     }
   }
 
@@ -314,7 +411,20 @@ async function main() {
     process.exit(1);
   }
 
+  if (useKeyStdin && cliKeyArg !== null) {
+    console.error('[CRYPTO CONFIG ERROR] Cannot combine --key-stdin with -k/--key.');
+    process.exit(1);
+  }
+
+  let keyHex = null;
   try {
+    if (useKeyStdin) {
+      // 安全模式：僅從 stdin 讀取，不讀取 argv 或 process.env
+      keyHex = await readKeyFromStdin(process.stdin);
+    } else {
+      keyHex = cliKeyArg || process.env.BACKUP_ENCRYPTION_KEY || null;
+    }
+
     if (command === 'encrypt') {
       const res = await encryptFile(inputFile, outputFile, keyHex);
       console.log(`[SUCCESS] Encrypted: ${res.outputPath} (${res.bytesWritten} bytes)`);
@@ -322,8 +432,12 @@ async function main() {
       const res = await decryptFile(inputFile, outputFile, keyHex);
       console.log(`[SUCCESS] Decrypted: ${res.outputPath} (${res.bytesWritten} bytes)`);
     }
+    keyHex = null;
+    cliKeyArg = null;
     process.exit(0);
   } catch (err) {
+    keyHex = null;
+    cliKeyArg = null;
     console.error(err.message);
     process.exit(1);
   }
@@ -339,8 +453,10 @@ module.exports = {
   HEADER_LENGTH,
   TAG_LENGTH,
   MIN_CONTAINER_SIZE,
+  MAX_STDIN_KEY_BYTES,
   generateKey,
   parseKey,
+  readKeyFromStdin,
   encryptFile,
   decryptFile,
 };

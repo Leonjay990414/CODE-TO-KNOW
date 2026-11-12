@@ -1,3 +1,4 @@
+
 /**
  * CODE TO KNOW (碼上學) - 資料庫備份與加密整合管線安全自動化測試
  * File: scripts/database/backup-pipeline.test.cjs
@@ -258,7 +259,7 @@ async function runAllPipelineTests() {
         keyHex: 'BAD_KEY',
         keepPlaintext: false, // 即使指定不保留，失敗時亦絕不可刪除
       });
-    } catch {}
+    } catch { }
 
     assert.strictEqual(fs.existsSync(rawDump), true, 'Original dump must be preserved on pipeline failure');
   });
