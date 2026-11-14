@@ -184,7 +184,7 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
           </div>
 
           {/* Current Task Detail Layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px', alignItems: 'start' }} className="practical-detail-grid">
+          <div className="practical-detail-grid">
             {/* Left Column: Requirements & Guide */}
             <div>
               {/* Task Overview Card */}

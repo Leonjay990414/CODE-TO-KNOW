@@ -19,7 +19,8 @@ export type AppPage =
   | 'code-puzzle'
   | 'css-designer'
   | 'bug-hunter'
-  | 'quiz-rush';
+  | 'quiz-rush'
+  | 'web-builder';
 
 export interface RouteState {
   page: AppPage;
@@ -51,6 +52,7 @@ interface NavigationContextType {
   goToCSSDesigner: () => void;
   goToBugHunter: () => void;
   goToQuizRush: () => void;
+  goToWebBuilder: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -144,6 +146,9 @@ export function parseHash(rawHash: string): RouteState {
   }
   if (hash === 'games/quiz-rush' || hash === 'quiz-rush') {
     return { page: 'quiz-rush', hash: rawHash };
+  }
+  if (hash === 'games/web-builder' || hash === 'web-builder') {
+    return { page: 'web-builder', hash: rawHash };
   }
 
   // Route: certifications overview
@@ -264,6 +269,10 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     navigate('#games/quiz-rush');
   };
 
+  const goToWebBuilder = () => {
+    navigate('#games/web-builder');
+  };
+
   return (
     <NavigationContext.Provider
       value={{
@@ -288,6 +297,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         goToCSSDesigner,
         goToBugHunter,
         goToQuizRush,
+        goToWebBuilder,
       }}
     >
       {children}

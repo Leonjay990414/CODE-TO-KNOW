@@ -12,11 +12,14 @@ import {
   Code2,
   Sparkles,
   AlertCircle,
+  HelpCircle,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { GameBriefingModal } from '../../components/GameBriefingModal';
+import { GAME_BRIEFING_CONFIGS } from '../../data/gameBriefingConfigs';
 import {
   CODE_PUZZLE_LEVELS,
   CodePuzzleLevel,
@@ -47,6 +50,7 @@ export const CodePuzzlePage: React.FC<CodePuzzlePageProps> = ({ onOpenTeacherApp
 
   // Working state for active level
   const [userBlocks, setUserBlocks] = useState<PuzzleBlock[]>(() => [...currentLevel.blocks]);
+  const [isBriefingOpen, setIsBriefingOpen] = useState(false);
   const [hintsRevealed, setHintsRevealed] = useState<number>(0);
   const [validationResult, setValidationResult] = useState<{
     tested: boolean;
@@ -207,6 +211,25 @@ export const CodePuzzlePage: React.FC<CodePuzzlePageProps> = ({ onOpenTeacherApp
                     Code Puzzle｜程式邏輯拼圖
                   </h1>
                   <span className="badge badge-gold">P14-GAM-004</span>
+                  <button
+                    onClick={() => setIsBriefingOpen(true)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#FEF3C7',
+                      border: '1px solid #FCD34D',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#92400E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <HelpCircle size={14} />
+                    <span>玩法與計分說明</span>
+                  </button>
                 </div>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
                   重組打亂的程式區塊，鍛鍊標準 HTML5 語意架構、CSS 樣式排版與 JS 執行順序。
@@ -517,9 +540,16 @@ export const CodePuzzlePage: React.FC<CodePuzzlePageProps> = ({ onOpenTeacherApp
                     </div>
                     {validationResult.isCorrect ? (
                       <div style={{ fontSize: '13px', color: '#047857' }}>
-                        獲得評級：{'★'.repeat(validationResult.starsEarned)} (
-                        {validationResult.starsEarned} 顆星)｜積分獎勵：+
-                        {validationResult.scoreEarned} 分
+                        <div>
+                          <strong>本次通關表現：</strong>
+                          獲得評級：{'★'.repeat(validationResult.starsEarned)} ({validationResult.starsEarned} 顆星)｜積分獎勵：+{validationResult.scoreEarned} 分
+                        </div>
+                        {gameRecord.levels[currentLevel.levelId] && (
+                          <div style={{ marginTop: '4px', fontSize: '12px', color: '#065F46' }}>
+                            <strong>歷史最佳紀錄：</strong>
+                            最高得分 {gameRecord.levels[currentLevel.levelId].highScore} 分｜最佳星級 {'★'.repeat(gameRecord.levels[currentLevel.levelId].stars)} ({gameRecord.levels[currentLevel.levelId].stars} 顆星)
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div style={{ fontSize: '13px', color: '#BE123C' }}>
@@ -607,6 +637,12 @@ export const CodePuzzlePage: React.FC<CodePuzzlePageProps> = ({ onOpenTeacherApp
           </div>
         </div>
       </main>
+
+      <GameBriefingModal
+        isOpen={isBriefingOpen}
+        onClose={() => setIsBriefingOpen(false)}
+        config={GAME_BRIEFING_CONFIGS['code-puzzle']}
+      />
 
       <Footer />
     </div>

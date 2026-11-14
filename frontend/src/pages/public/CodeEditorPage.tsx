@@ -26,6 +26,7 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
   const [selectedTaskId, setSelectedTaskId] = useState<number>(initialTaskId);
   const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [mobilePane, setMobilePane] = useState<'code' | 'preview'>('code');
 
   const currentTask: PracticalTaskDetail =
     OFFICIAL_PRACTICAL_TASKS.find((t) => t.id === selectedTaskId) || OFFICIAL_PRACTICAL_TASKS[0];
@@ -272,22 +273,62 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
             </div>
           </div>
 
+          {/* Mobile Pane Switcher (visible only on screens <= 767px) */}
+          <div
+            className="editor-mobile-switcher"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#FFFFFF',
+              borderLeft: '1px solid var(--border-default)',
+              borderRight: '1px solid var(--border-default)',
+              borderBottom: '1px solid var(--border-subtle)',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>行動端檢視切換：</span>
+            <div style={{ display: 'flex', gap: '4px', background: 'var(--surface-base)', padding: '2px', borderRadius: '4px' }}>
+              <button
+                type="button"
+                onClick={() => setMobilePane('code')}
+                style={{
+                  padding: '4px 10px',
+                  border: 'none',
+                  borderRadius: '3px',
+                  backgroundColor: mobilePane === 'code' ? 'var(--color-brand-deep-slate)' : 'transparent',
+                  color: mobilePane === 'code' ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                程式碼編輯區
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobilePane('preview')}
+                style={{
+                  padding: '4px 10px',
+                  border: 'none',
+                  borderRadius: '3px',
+                  backgroundColor: mobilePane === 'preview' ? 'var(--color-brand-gold)' : 'transparent',
+                  color: mobilePane === 'preview' ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                即時預覽區
+              </button>
+            </div>
+          </div>
+
           {/* Dual Column Workspace Container */}
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              height: '620px',
-              border: '1px solid var(--border-default)',
-              borderBottomLeftRadius: 'var(--radius-md)',
-              borderBottomRightRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              backgroundColor: '#FFFFFF',
-            }}
-            className="editor-dual-grid"
+            className={`editor-dual-grid ${mobilePane === 'code' ? 'show-editor-only' : 'show-preview-only'}`}
           >
             {/* Left Column: Code Editor */}
-            <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-default)' }}>
+            <div className="editor-pane-code" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-default)', height: '100%', minHeight: '380px' }}>
               <div style={{ backgroundColor: '#26343D', color: '#D9E2EA', padding: '8px 16px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                 {activeTab === 'html' ? 'HTML Editor (可即時編輯)' : 'CSS Editor (可即時編輯)'}
               </div>
@@ -336,7 +377,7 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
             </div>
 
             {/* Right Column: Isolated Preview Canvas */}
-            <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#EFECE3' }}>
+            <div className="editor-pane-preview" style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#EFECE3', height: '100%', minHeight: '380px' }}>
               <div style={{ backgroundColor: '#FAF9F5', borderBottom: '1px solid var(--border-subtle)', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-deep-slate)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>即時預覽畫布（安全沙盒隔離）</span>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>

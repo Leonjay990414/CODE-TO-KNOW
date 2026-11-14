@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
+import { StatCard } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { getWrongQuestionsStats, getWrongQuestionsList, WrongQuestionItem } from '../../utils/wrongQuestionsStorage';
@@ -86,58 +87,44 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
 
         {/* Overview Stat Cards */}
         <div className="container" style={{ marginTop: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }} className="stats-row">
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>累計研讀時數</span>
-                <Clock size={16} color="var(--color-brand-deep-slate)" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-charcoal)' }}>
-                38.5 <span style={{ fontSize: '13px', fontWeight: 500 }}>小時</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>
-                ↑ 本週研讀成長 4.2 小時
-              </div>
-            </div>
+          <div className="stats-row">
+            <StatCard
+              label="累計研讀時數"
+              value="38.5"
+              unit="小時"
+              icon={Clock}
+              iconColor="var(--color-brand-deep-slate)"
+              trendText="↑ 本週研讀成長 4.2 小時"
+              trendType="positive"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>學科題庫完成率</span>
-                <BookOpen size={16} color="var(--color-brand-gold)" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-deep-slate)' }}>
-                45% <span style={{ fontSize: '13px', fontWeight: 500 }}>/ 611 題</span>
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                已完成 275 題精選題目
-              </div>
-            </div>
+            <StatCard
+              label="學科題庫完成率"
+              value="45%"
+              unit="/ 611 題"
+              icon={BookOpen}
+              iconColor="var(--color-brand-gold)"
+              subText="已完成 275 題精選題目"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>模擬考最高成績</span>
-                <Award size={16} color="#2E7D32" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: '#2E7D32' }}>
-                88 <span style={{ fontSize: '13px', fontWeight: 500 }}>分</span>
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                及格標準：60 分（安全達標）
-              </div>
-            </div>
+            <StatCard
+              label="模擬考最高成績"
+              value="88"
+              unit="分"
+              icon={Award}
+              iconColor="#2E7D32"
+              trendText="及格標準：60 分（安全達標）"
+              trendType="positive"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>術科題組完成度</span>
-                <CheckCircle2 size={16} color="var(--color-brand-gold)" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-charcoal)' }}>
-                3 <span style={{ fontSize: '13px', fontWeight: 500 }}>/ 5 題組</span>
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                官方題組一至五規格已全量就緒
-              </div>
-            </div>
+            <StatCard
+              label="術科題組完成度"
+              value="3"
+              unit="/ 5 題組"
+              icon={CheckCircle2}
+              iconColor="var(--color-brand-gold)"
+              subText="官方題組一至五規格已全量就緒"
+            />
           </div>
 
           {/* Chapter Mastery Breakdown & Review Recommendations */}

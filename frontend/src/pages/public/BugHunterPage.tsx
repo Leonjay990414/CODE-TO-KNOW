@@ -12,11 +12,14 @@ import {
   Check,
   ShieldCheck,
   Edit3,
+  HelpCircle,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { GameBriefingModal } from '../../components/GameBriefingModal';
+import { GAME_BRIEFING_CONFIGS } from '../../data/gameBriefingConfigs';
 import {
   BUG_HUNTER_LEVELS,
   BugHunterLevel,
@@ -54,6 +57,7 @@ export const BugHunterPage: React.FC<BugHunterPageProps> = ({ onOpenTeacherApply
   const [selectedLineIndex, setSelectedLineIndex] = useState<number | null>(null);
   // resolvedBugs: set of line numbers that have been fixed
   const [resolvedBugs, setResolvedBugs] = useState<Record<number, boolean>>({});
+  const [isBriefingOpen, setIsBriefingOpen] = useState(false);
 
   // Mode: 'line-select' or 'code-edit'
   const [interactiveMode, setInteractiveMode] = useState<'line-select' | 'code-edit'>('line-select');
@@ -260,6 +264,25 @@ export const BugHunterPage: React.FC<BugHunterPageProps> = ({ onOpenTeacherApply
                     Bug Hunter｜程式除錯獵人
                   </h1>
                   <span className="badge badge-gold">P14-GAM-006</span>
+                  <button
+                    onClick={() => setIsBriefingOpen(true)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#FEF3C7',
+                      border: '1px solid #FCD34D',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#92400E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <HelpCircle size={14} />
+                    <span>玩法與計分說明</span>
+                  </button>
                 </div>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
                   火眼金睛揪出考場常見失分陷阱！排查未閉合標籤、非法 CSS 與 JS 大小寫邏輯漏洞。
@@ -800,9 +823,16 @@ export const BugHunterPage: React.FC<BugHunterPageProps> = ({ onOpenTeacherApply
                     </div>
                     {validationResult.isCorrect ? (
                       <div style={{ fontSize: '13px', color: '#047857' }}>
-                        獲得評級：{'★'.repeat(validationResult.starsEarned)} (
-                        {validationResult.starsEarned} 顆星)｜積分獎勵：+
-                        {validationResult.scoreEarned} 分
+                        <div>
+                          <strong>本次獵蟲表現：</strong>
+                          獲得評級：{'★'.repeat(validationResult.starsEarned)} ({validationResult.starsEarned} 顆星)｜積分獎勵：+{validationResult.scoreEarned} 分
+                        </div>
+                        {gameRecord.levels[currentLevel.levelId] && (
+                          <div style={{ marginTop: '4px', fontSize: '12px', color: '#065F46' }}>
+                            <strong>歷史最佳紀錄：</strong>
+                            最高得分 {gameRecord.levels[currentLevel.levelId].highScore} 分｜最佳星級 {'★'.repeat(gameRecord.levels[currentLevel.levelId].stars)} ({gameRecord.levels[currentLevel.levelId].stars} 顆星)
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div style={{ fontSize: '13px', color: '#BE123C' }}>
@@ -875,6 +905,12 @@ export const BugHunterPage: React.FC<BugHunterPageProps> = ({ onOpenTeacherApply
           </div>
         </div>
       </main>
+
+      <GameBriefingModal
+        isOpen={isBriefingOpen}
+        onClose={() => setIsBriefingOpen(false)}
+        config={GAME_BRIEFING_CONFIGS['bug-hunter']}
+      />
 
       <Footer />
     </div>

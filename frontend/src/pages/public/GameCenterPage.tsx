@@ -11,12 +11,15 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
+  Award,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { getOverallGameStats, getUserGameRecord } from '../../utils/gameStorage';
+import { GameAchievementsModal } from '../../components/GameAchievementsModal';
+import { getDetailedAchievements } from '../../utils/gameAchievementEngine';
 
 interface GameCenterPageProps {
   onOpenTeacherApply?: () => void;
@@ -28,17 +31,22 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
 
   const userId = user?.id || 'guest-anonymous';
   const [stats, setStats] = useState(() => getOverallGameStats(userId));
+  const [achievements, setAchievements] = useState(() => getDetailedAchievements(userId));
+  const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false);
   const [puzzleRecord, setPuzzleRecord] = useState(() => getUserGameRecord(userId, 'code-puzzle'));
   const [cssRecord, setCssRecord] = useState(() => getUserGameRecord(userId, 'css-designer'));
   const [bugRecord, setBugRecord] = useState(() => getUserGameRecord(userId, 'bug-hunter'));
   const [quizRecord, setQuizRecord] = useState(() => getUserGameRecord(userId, 'quiz-rush'));
+  const [webBuilderRecord, setWebBuilderRecord] = useState(() => getUserGameRecord(userId, 'web-builder'));
 
   useEffect(() => {
     setStats(getOverallGameStats(userId));
+    setAchievements(getDetailedAchievements(userId));
     setPuzzleRecord(getUserGameRecord(userId, 'code-puzzle'));
     setCssRecord(getUserGameRecord(userId, 'css-designer'));
     setBugRecord(getUserGameRecord(userId, 'bug-hunter'));
     setQuizRecord(getUserGameRecord(userId, 'quiz-rush'));
+    setWebBuilderRecord(getUserGameRecord(userId, 'web-builder'));
   }, [userId]);
 
   const gamesList = [
@@ -112,15 +120,15 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       title: 'Web Builder (網頁架構拼裝工坊)',
       subtitle: '模組化組裝完整網頁區塊，即時預覽版面成果',
       icon: <Layout size={28} color="#059669" />,
-      status: 'UPCOMING',
-      statusText: '即將推出 (規劃中)',
-      tag: '微型網頁組裝',
-      levelsCount: 3,
-      completedLevels: 0,
-      stars: 0,
-      score: 0,
-      actionHash: '#',
-      description: '將導覽、輪播、表格與頁尾等組件積木拼裝成完整網頁，培養全域架構視野。',
+      status: 'AVAILABLE',
+      statusText: '已開放遊玩',
+      tag: 'HTML5 語意地標 / 結構拼裝',
+      levelsCount: 4,
+      completedLevels: webBuilderRecord.completedLevelsCount,
+      stars: webBuilderRecord.totalStars,
+      score: webBuilderRecord.totalScore,
+      actionHash: '#games/web-builder',
+      description: '將文件宣告、地標（header/nav/main/footer）與圖文區塊積木拼裝成現代標準網頁，培養全域架構視野。',
     },
   ];
 
@@ -198,6 +206,33 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                     </div>
                   </div>
                 </div>
+
+                <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--border-default)' }} />
+
+                <button
+                  onClick={() => setIsAchievementsModalOpen(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 14px',
+                    backgroundColor: '#FEF3C7',
+                    border: '1px solid #FCD34D',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="點擊開啟成就與榮譽徽章館"
+                >
+                  <Award size={20} color="#D97706" />
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#92400E', fontWeight: 600 }}>榮譽徽章館</div>
+                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#78350F' }}>
+                      {achievements.unlockedCount} / {achievements.totalCount}
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -314,7 +349,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                     {isAvailable ? (
                       <a
                         href={game.actionHash}
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-nowrap"
                         style={{
                           width: '100%',
                           display: 'flex',
@@ -330,7 +365,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                     ) : (
                       <button
                         type="button"
-                        className="btn btn-outline"
+                        className="btn btn-outline btn-nowrap"
                         disabled
                         style={{
                           width: '100%',
@@ -352,6 +387,16 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
           </div>
         </div>
       </main>
+
+      {/* Trophies & Badges Modal */}
+      <GameAchievementsModal
+        isOpen={isAchievementsModalOpen}
+        onClose={() => {
+          setIsAchievementsModalOpen(false);
+          setAchievements(getDetailedAchievements(userId));
+        }}
+        userId={userId}
+      />
 
       <Footer />
     </div>

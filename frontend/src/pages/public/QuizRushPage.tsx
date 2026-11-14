@@ -11,6 +11,7 @@ import {
   Timer,
   Flame,
   BookOpen,
+  HelpCircle,
   Play,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
@@ -32,12 +33,15 @@ import {
 import {
   getUserGameRecord,
   saveLevelCompletion,
+  markGameSessionSettled,
   UserGameRecord,
 } from '../../utils/gameStorage';
 import {
   recordWrongAttempt,
   recordCorrectAttempt,
 } from '../../utils/wrongQuestionsStorage';
+import { GameBriefingModal } from '../../components/GameBriefingModal';
+import { GAME_BRIEFING_CONFIGS } from '../../data/gameBriefingConfigs';
 
 interface QuizRushPageProps {
   onOpenTeacherApply?: () => void;
@@ -59,6 +63,7 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
 
   // Game Status: 'config' | 'playing' | 'summary'
   const [gameState, setGameState] = useState<'config' | 'playing' | 'summary'>('config');
+  const [isBriefingOpen, setIsBriefingOpen] = useState(false);
 
   // Active Round State
   const [roundQuestions, setRoundQuestions] = useState<TheoryQuestionModel[]>([]);
@@ -79,6 +84,8 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
 
   // Idempotent processed question tracking for this round
   const processedQuestionsRef = useRef<Set<string>>(new Set());
+  const roundSessionIdRef = useRef<string>('');
+  const isRoundSettledRef = useRef<boolean>(false);
 
   // Sync storage on user switch
   useEffect(() => {
@@ -133,6 +140,8 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
     processedQuestionsRef.current = new Set();
 
     setGameState('playing');
+    roundSessionIdRef.current = `quiz-round-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    isRoundSettledRef.current = false;
 
     const sec = getSecondsForMode(selectedMode);
     startTimer(sec);
@@ -242,6 +251,8 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
 
   const finishRound = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    if (isRoundSettledRef.current) return;
+    isRoundSettledRef.current = true;
 
     const total = roundQuestions.length;
     const correct = answersLog.filter((a) => a.isCorrect).length;
@@ -257,6 +268,10 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
       levelId = 3;
     } else {
       levelId = 4;
+    }
+
+    if (roundSessionIdRef.current) {
+      markGameSessionSettled(userId, roundSessionIdRef.current);
     }
 
     const updatedRecord = saveLevelCompletion(
@@ -305,6 +320,25 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
                     Quiz Rush｜證照疾速快答
                   </h1>
                   <span className="badge badge-gold">P14-GAM-007</span>
+                  <button
+                    onClick={() => setIsBriefingOpen(true)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#FEF3C7',
+                      border: '1px solid #FCD34D',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#92400E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <HelpCircle size={14} />
+                    <span>玩法與計分說明</span>
+                  </button>
                 </div>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
                   全量 605 題官方有效題庫高壓實力試煉！連鎖 Combo 加分，錯題無縫同步錯題本。
@@ -783,11 +817,17 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
                 <div style={{ backgroundColor: 'var(--surface-base)', padding: '16px', borderRadius: 'var(--radius-sm)', textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>本局得分</div>
                   <div style={{ fontSize: '22px', fontWeight: 800, color: '#D97706' }}>{currentScore}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    歷史最佳：{gameRecord.totalScore} 分
+                  </div>
                 </div>
                 <div style={{ backgroundColor: 'var(--surface-base)', padding: '16px', borderRadius: 'var(--radius-sm)', textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>正確率</div>
                   <div style={{ fontSize: '22px', fontWeight: 800, color: accuracyPercent >= 70 ? '#10B981' : '#E11D48' }}>
                     {accuracyPercent}%
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    累積星星：{gameRecord.totalStars} 顆
                   </div>
                 </div>
                 <div style={{ backgroundColor: 'var(--surface-base)', padding: '16px', borderRadius: 'var(--radius-sm)', textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
@@ -863,6 +903,12 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
           )}
         </div>
       </main>
+
+      <GameBriefingModal
+        isOpen={isBriefingOpen}
+        onClose={() => setIsBriefingOpen(false)}
+        config={GAME_BRIEFING_CONFIGS['quiz-rush']}
+      />
 
       <Footer />
     </div>

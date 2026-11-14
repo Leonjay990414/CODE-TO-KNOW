@@ -24,6 +24,7 @@ export interface LevelProgress {
 }
 
 export interface UserGameRecord {
+  version?: number;
   userId: string;
   gameId: GameId;
   totalScore: number;
@@ -33,7 +34,25 @@ export interface UserGameRecord {
   lastPlayedAt: string;
 }
 
+export type GameSessionState =
+  | 'idle'
+  | 'in-progress'
+  | 'completed'
+  | 'abandoned'
+  | 'timed-out'
+  | 'error';
+
+export interface ActiveSessionData {
+  sessionId: string;
+  selectedLevelId?: number;
+  state: GameSessionState;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
 const STORAGE_PREFIX = 'ctk_game_progress';
+const SESSION_STORAGE_PREFIX = 'ctk_game_session';
+const SETTLED_STORAGE_PREFIX = 'ctk_game_settled';
 
 function buildStorageKey(userId: string, gameId: GameId): string {
   const safeUser = (userId || 'guest-anonymous').trim();
@@ -42,6 +61,7 @@ function buildStorageKey(userId: string, gameId: GameId): string {
 
 export function createInitialGameRecord(userId: string, gameId: GameId): UserGameRecord {
   return {
+    version: 1,
     userId: userId || 'guest-anonymous',
     gameId,
     totalScore: 0,
@@ -120,7 +140,7 @@ export function saveLevelCompletion(
     [levelId]: updatedLevel,
   };
 
-  // Recalculate totals
+  // Recalculate totals with finite clamping protection
   let totalScore = 0;
   let totalStars = 0;
   let completedLevelsCount = 0;
@@ -128,12 +148,15 @@ export function saveLevelCompletion(
   Object.values(newLevels).forEach((lvl) => {
     if (lvl.completed) {
       completedLevelsCount += 1;
-      totalStars += lvl.stars;
-      totalScore += lvl.highScore;
+      const safeStars = Math.max(0, Math.min(3, Number.isFinite(lvl.stars) ? Math.floor(lvl.stars) : 0));
+      const safeScore = Math.max(0, Math.min(100000, Number.isFinite(lvl.highScore) ? Math.floor(lvl.highScore) : 0));
+      totalStars += safeStars;
+      totalScore += safeScore;
     }
   });
 
   const updatedRecord: UserGameRecord = {
+    version: 1,
     userId: currentRecord.userId,
     gameId,
     totalScore,
@@ -169,6 +192,82 @@ export function resetGameProgress(userId: string, gameId: GameId): UserGameRecor
     console.error(`[GameStorage] Failed to clear game progress at ${key}:`, err);
   }
   return resetRecord;
+}
+
+/**
+ * Active Session Resilience Functions
+ */
+function buildSessionKey(userId: string, gameId: GameId): string {
+  const safeUser = (userId || 'guest-anonymous').trim();
+  return `${SESSION_STORAGE_PREFIX}:${safeUser}:${gameId}`;
+}
+
+function buildSettledKey(userId: string, sessionId: string): string {
+  const safeUser = (userId || 'guest-anonymous').trim();
+  const safeSession = (sessionId || 'anonymous-session').trim();
+  return `${SETTLED_STORAGE_PREFIX}:${safeUser}:${safeSession}`;
+}
+
+export function saveActiveSessionState(userId: string, gameId: GameId, data: ActiveSessionData): void {
+  const key = buildSessionKey(userId, gameId);
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, JSON.stringify(data));
+    }
+  } catch (err) {
+    console.error(`[GameStorage] Failed to save active session state to ${key}:`, err);
+  }
+}
+
+export function getActiveSessionState(userId: string, gameId: GameId): ActiveSessionData | null {
+  const key = buildSessionKey(userId, gameId);
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.sessionId === 'string' && typeof parsed.state === 'string') {
+        return parsed as ActiveSessionData;
+      }
+    }
+  } catch (err) {
+    console.warn(`[GameStorage] Failed to parse active session at ${key}:`, err);
+  }
+  return null;
+}
+
+export function clearActiveSessionState(userId: string, gameId: GameId): void {
+  const key = buildSessionKey(userId, gameId);
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(key);
+    }
+  } catch (err) {
+    console.error(`[GameStorage] Failed to clear active session at ${key}:`, err);
+  }
+}
+
+export function isGameSessionSettled(userId: string, sessionId: string): boolean {
+  const key = buildSettledKey(userId, sessionId);
+  try {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem(key) === 'settled';
+    }
+  } catch (err) {
+    console.warn(`[GameStorage] Failed to check settled status at ${key}:`, err);
+  }
+  return false;
+}
+
+export function markGameSessionSettled(userId: string, sessionId: string): void {
+  const key = buildSettledKey(userId, sessionId);
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, 'settled');
+    }
+  } catch (err) {
+    console.error(`[GameStorage] Failed to mark settled status at ${key}:`, err);
+  }
 }
 
 /**

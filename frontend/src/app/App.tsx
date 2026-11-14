@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import { HomePage } from '../pages/public/HomePage';
@@ -16,18 +16,62 @@ import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
 import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
 import { LegalNoticePage } from '../pages/public/LegalNoticePage';
 import { GameCenterPage } from '../pages/public/GameCenterPage';
-import { CodePuzzlePage } from '../pages/public/CodePuzzlePage';
-import { CSSDesignerPage } from '../pages/public/CSSDesignerPage';
-import { BugHunterPage } from '../pages/public/BugHunterPage';
-import { QuizRushPage } from '../pages/public/QuizRushPage';
 import { AuthModal } from '../components/AuthModal';
 import { TeacherApplyModal } from '../components/TeacherApplyModal';
 import { ProtectedRoute, INTENDED_ROUTE_STORAGE_KEY } from '../components/ProtectedRoute';
+import { useRouteSeo } from '../hooks/useRouteSeo';
+
+// Lazy load 5 game pages with code-splitting
+const CodePuzzlePage = lazy(() =>
+  import('../pages/public/CodePuzzlePage').then((m) => ({ default: m.CodePuzzlePage }))
+);
+const CSSDesignerPage = lazy(() =>
+  import('../pages/public/CSSDesignerPage').then((m) => ({ default: m.CSSDesignerPage }))
+);
+const BugHunterPage = lazy(() =>
+  import('../pages/public/BugHunterPage').then((m) => ({ default: m.BugHunterPage }))
+);
+const QuizRushPage = lazy(() =>
+  import('../pages/public/QuizRushPage').then((m) => ({ default: m.QuizRushPage }))
+);
+const WebBuilderPage = lazy(() =>
+  import('../pages/public/WebBuilderPage').then((m) => ({ default: m.WebBuilderPage }))
+);
+
+const GameLoadingFallback: React.FC = () => (
+  <div
+    style={{
+      minHeight: '60vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '12px',
+      color: '#64748B',
+      fontSize: '14px',
+    }}
+  >
+    <div
+      style={{
+        width: '32px',
+        height: '32px',
+        borderRadius: '50%',
+        border: '3px solid #E2E8F0',
+        borderTopColor: '#2563EB',
+        animation: 'spin 0.8s linear infinite',
+      }}
+    />
+    <span>遊戲載入中，請稍候...</span>
+  </div>
+);
 
 export const AppContent: React.FC = () => {
   const { route, navigate } = useNavigation();
   const { authModalOpen, authModalMode, openAuth, closeAuth, refreshUser } = useAuth();
   const [teacherModalOpen, setTeacherModalOpen] = useState(false);
+
+  // Sync dynamic SEO title and meta description
+  useRouteSeo(route.page);
 
   const handleOpenTeacherApply = () => {
     setTeacherModalOpen(true);
@@ -104,13 +148,35 @@ export const AppContent: React.FC = () => {
       case 'game-center':
         return <GameCenterPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'code-puzzle':
-        return <CodePuzzlePage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<GameLoadingFallback />}>
+            <CodePuzzlePage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'css-designer':
-        return <CSSDesignerPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<GameLoadingFallback />}>
+            <CSSDesignerPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'bug-hunter':
-        return <BugHunterPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<GameLoadingFallback />}>
+            <BugHunterPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'quiz-rush':
-        return <QuizRushPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<GameLoadingFallback />}>
+            <QuizRushPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
+      case 'web-builder':
+        return (
+          <Suspense fallback={<GameLoadingFallback />}>
+            <WebBuilderPage />
+          </Suspense>
+        );
       case 'home':
       default:
         return <HomePage onOpenTeacherApply={handleOpenTeacherApply} />;

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
+import { StatCard } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 
@@ -111,58 +112,43 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
 
         {/* Class Overview Statistics */}
         <div className="container" style={{ marginTop: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }} className="stats-row">
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>班級總受訓人數</span>
-                <Users size={16} color="var(--color-brand-deep-slate)" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-charcoal)' }}>
-                38 <span style={{ fontSize: '13px', fontWeight: 500 }}>人</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>
-                全數已註冊完成認證
-              </div>
-            </div>
+          <div className="stats-row">
+            <StatCard
+              label="班級總受訓人數"
+              value="38"
+              unit="人"
+              icon={Users}
+              iconColor="var(--color-brand-deep-slate)"
+              subText="全數已註冊完成認證"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>全班平均模擬考成績</span>
-                <Award size={16} color="var(--color-brand-gold)" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-deep-slate)' }}>
-                78.4 <span style={{ fontSize: '13px', fontWeight: 500 }}>分</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>
-                ↑ 較前次模考提升 +6.2 分
-              </div>
-            </div>
+            <StatCard
+              label="全班平均模擬考成績"
+              value="78.4"
+              unit="分"
+              icon={Award}
+              iconColor="var(--color-brand-gold)"
+              trendText="↑ 較前次模考提升 +6.2 分"
+              trendType="positive"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>預估丙級通過率</span>
-                <TrendingUp size={16} color="#2E7D32" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: '#2E7D32' }}>
-                89.5%
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                34 人處於安全達標區間
-              </div>
-            </div>
+            <StatCard
+              label="預估丙級通過率"
+              value="89.5%"
+              icon={TrendingUp}
+              iconColor="#2E7D32"
+              subText="34 人處於安全達標區間"
+            />
 
-            <div className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>需特別關懷補強</span>
-                <AlertCircle size={16} color="#C62828" />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: '#C62828' }}>
-                4 <span style={{ fontSize: '13px', fontWeight: 500 }}>人</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#C62828', marginTop: '4px' }}>
-                模擬考成績低於 60 分
-              </div>
-            </div>
+            <StatCard
+              label="需特別關懷補強"
+              value="4"
+              unit="人"
+              icon={AlertCircle}
+              iconColor="#C62828"
+              trendText="模擬考成績低於 60 分"
+              trendType="subtle"
+            />
           </div>
 
           {/* Student Roster Table & Error Hotspots */}

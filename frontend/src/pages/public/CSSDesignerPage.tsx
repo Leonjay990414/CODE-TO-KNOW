@@ -12,11 +12,14 @@ import {
   AlertCircle,
   Eye,
   Sliders,
+  HelpCircle,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { GameBriefingModal } from '../../components/GameBriefingModal';
+import { GAME_BRIEFING_CONFIGS } from '../../data/gameBriefingConfigs';
 import {
   CSS_DESIGNER_LEVELS,
   CSSDesignerLevel,
@@ -55,6 +58,7 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
   };
 
   const [userValues, setUserValues] = useState<Record<string, any>>(initValues);
+  const [isBriefingOpen, setIsBriefingOpen] = useState(false);
   const [hintsRevealed, setHintsRevealed] = useState<number>(0);
   const [validationResult, setValidationResult] = useState<{
     tested: boolean;
@@ -349,6 +353,25 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
                     CSS Designer｜樣式排版設計師
                   </h1>
                   <span className="badge badge-gold">P14-GAM-005</span>
+                  <button
+                    onClick={() => setIsBriefingOpen(true)}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#FEF3C7',
+                      border: '1px solid #FCD34D',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      color: '#92400E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <HelpCircle size={14} />
+                    <span>玩法與計分說明</span>
+                  </button>
                 </div>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
                   透過即時滑桿與參數調校，直觀理解色彩對比、盒模型 (Box Model) 與 Flexbox 現代佈局。
@@ -794,9 +817,16 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
                     </div>
                     {validationResult.isCorrect ? (
                       <div style={{ fontSize: '13px', color: '#047857' }}>
-                        獲得評級：{'★'.repeat(validationResult.starsEarned)} (
-                        {validationResult.starsEarned} 顆星)｜積分獎勵：+
-                        {validationResult.scoreEarned} 分
+                        <div>
+                          <strong>本次設計表現：</strong>
+                          獲得評級：{'★'.repeat(validationResult.starsEarned)} ({validationResult.starsEarned} 顆星)｜積分獎勵：+{validationResult.scoreEarned} 分
+                        </div>
+                        {gameRecord.levels[currentLevel.levelId] && (
+                          <div style={{ marginTop: '4px', fontSize: '12px', color: '#065F46' }}>
+                            <strong>歷史最佳紀錄：</strong>
+                            最高得分 {gameRecord.levels[currentLevel.levelId].highScore} 分｜最佳星級 {'★'.repeat(gameRecord.levels[currentLevel.levelId].stars)} ({gameRecord.levels[currentLevel.levelId].stars} 顆星)
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div style={{ fontSize: '13px', color: '#BE123C' }}>
@@ -861,6 +891,12 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
           </div>
         </div>
       </main>
+
+      <GameBriefingModal
+        isOpen={isBriefingOpen}
+        onClose={() => setIsBriefingOpen(false)}
+        config={GAME_BRIEFING_CONFIGS['css-designer']}
+      />
 
       <Footer />
     </div>

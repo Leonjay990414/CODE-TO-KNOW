@@ -541,13 +541,140 @@
 }
 
 /* ==========================================================================
-   Responsive Dashboard Grids
+   Responsive Dashboard & Workspace Grids
    ========================================================================== */
+.practical-detail-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.btn-nowrap {
+  white-space: nowrap;
+}
+
+.editor-dual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 620px;
+  border: 1px solid var(--border-default);
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: #FFFFFF;
+}
+
+.editor-mobile-switcher {
+  display: none;
+}
+
 @media (max-width: 1023px) {
   .student-grid,
   .teacher-grid,
   .exam-grid,
-  .theory-grid {
+  .theory-grid,
+  .practical-detail-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .editor-dual-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    min-height: 520px;
+  }
+
+  .editor-mobile-switcher {
+    display: flex !important;
+  }
+
+  .editor-dual-grid.show-editor-only .editor-pane-preview {
+    display: none !important;
+  }
+
+  .editor-dual-grid.show-preview-only .editor-pane-code {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   Interactive Cards & Focus States (web-design-guidelines)
+   ========================================================================== */
+.card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--color-brand-muted-slate);
+}
+
+.btn:focus-visible,
+.filter-pill:focus-visible,
+.interactive-card:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-brand-gold) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==========================================================================
+   Micro-interactions, Tactile Buttons & Scroll Animations (emil-design-eng)
+   ========================================================================== */
+.btn:active,
+button:active:not(:disabled) {
+  transform: scale(0.98);
+  transition: transform 0.05s ease;
+}
+
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.interactive-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.badge-sage {
+  background-color: var(--color-brand-sage-light);
+  color: var(--color-brand-sage);
+  border: 1px solid rgba(90, 125, 108, 0.3);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

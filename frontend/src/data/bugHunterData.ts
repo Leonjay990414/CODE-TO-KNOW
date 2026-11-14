@@ -413,7 +413,7 @@ submitBtn.addEventListener("click", function(event) {
         ],
       },
       {
-        lineNum: 9,
+        lineNum: 8,
         bugType: 'CSS 屬性英式拼寫錯誤 (colour)',
         originalText: '    colour: #2563EB;',
         expectedText: '    color: #2563EB;',
@@ -437,7 +437,7 @@ submitBtn.addEventListener("click", function(event) {
         ],
       },
       {
-        lineNum: 16,
+        lineNum: 14,
         bugType: 'DOM innerHTML 屬性大小寫錯誤',
         originalText: '    target.innerHtml = "您的得分為：" + val;',
         expectedText: '    target.innerHTML = "您的得分為：" + val;',

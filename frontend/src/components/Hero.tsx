@@ -86,7 +86,7 @@ export const Hero: React.FC = () => {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', marginBottom: 'var(--space-10)' }}>
               <a
                 href="#experience"
-                className="btn btn-primary btn-lg btn-mobile-full"
+                className="btn btn-primary btn-lg btn-mobile-full btn-nowrap"
                 onClick={(e) => {
                   e.preventDefault();
                   document.querySelector('#experience')?.scrollIntoView({ behavior: 'smooth' });
@@ -98,7 +98,7 @@ export const Hero: React.FC = () => {
 
               <a
                 href="#certifications"
-                className="btn btn-outline btn-lg btn-mobile-full"
+                className="btn btn-outline btn-lg btn-mobile-full btn-nowrap"
                 onClick={(e) => {
                   e.preventDefault();
                   goToCertifications();
@@ -111,7 +111,7 @@ export const Hero: React.FC = () => {
 
               <a
                 href="#story"
-                className="btn btn-ghost btn-lg btn-mobile-full"
+                className="btn btn-ghost btn-lg btn-mobile-full btn-nowrap"
                 onClick={(e) => {
                   e.preventDefault();
                   document.querySelector('#story')?.scrollIntoView({ behavior: 'smooth' });

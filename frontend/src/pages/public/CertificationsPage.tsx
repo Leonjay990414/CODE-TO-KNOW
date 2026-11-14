@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
+import { EmptyState } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { CERTIFICATIONS_DATA, Certification } from '../../data/certificationsData';
@@ -453,48 +454,14 @@ export const CertificationsPage: React.FC<CertificationsPageProps> = ({ onOpenTe
               </div>
             ) : (
               /* Empty Search Results State */
-              <div
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px dashed var(--border-strong)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--space-12) var(--space-6)',
-                  textAlign: 'center',
-                  maxWidth: '560px',
-                  margin: '0 auto',
-                }}
-              >
-                <div
-                  style={{
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--surface-sunken)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px auto',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  <Search size={24} />
-                </div>
-                <h3 className="text-h3" style={{ fontSize: '20px', marginBottom: '8px' }}>
-                  查無相符的證照檢定項目
-                </h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.6 }}>
-                  沒有找到與關鍵字「<strong>{searchQuery}</strong>」相符的證照。建議您放寬搜尋字詞，或清除分類篩選條件。
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={handleResetFilters}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <RotateCcw size={14} />
-                  <span>清除篩選並重設</span>
-                </button>
-              </div>
+              <EmptyState
+                icon={Search}
+                title="查無相符的證照檢定項目"
+                description={`沒有找到與關鍵字「${searchQuery}」相符的證照。建議您放寬搜尋字詞，或清除分類篩選條件。`}
+                actionLabel="清除篩選並重設"
+                onAction={handleResetFilters}
+                actionIcon={RotateCcw}
+              />
             )}
           </div>
         </section>
