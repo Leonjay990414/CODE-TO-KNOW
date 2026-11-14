@@ -545,7 +545,9 @@
    ========================================================================== */
 @media (max-width: 1023px) {
   .student-grid,
-  .teacher-grid {
+  .teacher-grid,
+  .exam-grid,
+  .theory-grid {
     grid-template-columns: 1fr !important;
   }
 }

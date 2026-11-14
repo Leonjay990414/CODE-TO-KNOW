@@ -59,7 +59,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
       href === '#progress' ||
       href === '#student' ||
       href === '#teacher' ||
-      href === '#sources'
+      href === '#sources' ||
+      href.startsWith('#games')
     ) {
       navigate(href);
       return;

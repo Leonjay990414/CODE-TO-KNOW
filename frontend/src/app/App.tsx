@@ -14,6 +14,12 @@ import { LearningProgressPage } from '../pages/public/LearningProgressPage';
 import { StudentDashboardPage } from '../pages/public/StudentDashboardPage';
 import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
 import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
+import { LegalNoticePage } from '../pages/public/LegalNoticePage';
+import { GameCenterPage } from '../pages/public/GameCenterPage';
+import { CodePuzzlePage } from '../pages/public/CodePuzzlePage';
+import { CSSDesignerPage } from '../pages/public/CSSDesignerPage';
+import { BugHunterPage } from '../pages/public/BugHunterPage';
+import { QuizRushPage } from '../pages/public/QuizRushPage';
 import { AuthModal } from '../components/AuthModal';
 import { TeacherApplyModal } from '../components/TeacherApplyModal';
 import { ProtectedRoute, INTENDED_ROUTE_STORAGE_KEY } from '../components/ProtectedRoute';
@@ -88,6 +94,23 @@ export const AppContent: React.FC = () => {
             <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />
           </ProtectedRoute>
         );
+      case 'legal':
+        return (
+          <LegalNoticePage
+            initialTab={route.legalTab || 'privacy'}
+            onOpenTeacherApply={handleOpenTeacherApply}
+          />
+        );
+      case 'game-center':
+        return <GameCenterPage onOpenTeacherApply={handleOpenTeacherApply} />;
+      case 'code-puzzle':
+        return <CodePuzzlePage onOpenTeacherApply={handleOpenTeacherApply} />;
+      case 'css-designer':
+        return <CSSDesignerPage onOpenTeacherApply={handleOpenTeacherApply} />;
+      case 'bug-hunter':
+        return <BugHunterPage onOpenTeacherApply={handleOpenTeacherApply} />;
+      case 'quiz-rush':
+        return <QuizRushPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'home':
       default:
         return <HomePage onOpenTeacherApply={handleOpenTeacherApply} />;

@@ -13,12 +13,19 @@ export type AppPage =
   | 'learning-progress'
   | 'student-dashboard'
   | 'teacher-dashboard'
-  | 'import-system';
+  | 'import-system'
+  | 'legal'
+  | 'game-center'
+  | 'code-puzzle'
+  | 'css-designer'
+  | 'bug-hunter'
+  | 'quiz-rush';
 
 export interface RouteState {
   page: AppPage;
   certId?: string;
   taskId?: number;
+  legalTab?: 'privacy' | 'terms' | 'ethics';
   hash: string;
 }
 
@@ -38,6 +45,12 @@ interface NavigationContextType {
   goToStudentDashboard: () => void;
   goToTeacherDashboard: () => void;
   goToImportSystem: () => void;
+  goToLegalNotice: (tab?: 'privacy' | 'terms' | 'ethics') => void;
+  goToGameCenter: () => void;
+  goToCodePuzzle: () => void;
+  goToCSSDesigner: () => void;
+  goToBugHunter: () => void;
+  goToQuizRush: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -47,6 +60,17 @@ export function parseHash(rawHash: string): RouteState {
 
   if (!hash || ['hero', 'story', 'experience', 'ai-learning', 'dual-audience'].includes(hash)) {
     return { page: 'home', hash: rawHash };
+  }
+
+  // Route: Legal notices (#privacy, #terms, #legal, #ethics)
+  if (hash === 'privacy' || hash === 'legal/privacy') {
+    return { page: 'legal', legalTab: 'privacy', hash: rawHash };
+  }
+  if (hash === 'terms' || hash === 'legal/terms' || hash === 'tos') {
+    return { page: 'legal', legalTab: 'terms', hash: rawHash };
+  }
+  if (hash === 'legal' || hash === 'ethics' || hash === 'legal/ethics' || hash === 'ai-ethics') {
+    return { page: 'legal', legalTab: 'ethics', hash: rawHash };
   }
 
   // Route: certifications/web-design-c/demo
@@ -103,6 +127,23 @@ export function parseHash(rawHash: string): RouteState {
       return { page: 'web-design-demo', certId: 'web-design-c', hash: rawHash };
     }
     return { page: 'certification-detail', certId, hash: rawHash };
+  }
+
+  // Route: interactive game center & code puzzle
+  if (hash === 'games' || hash === 'game-center' || hash === 'games-center') {
+    return { page: 'game-center', hash: rawHash };
+  }
+  if (hash === 'games/code-puzzle' || hash === 'code-puzzle') {
+    return { page: 'code-puzzle', hash: rawHash };
+  }
+  if (hash === 'games/css-designer' || hash === 'css-designer') {
+    return { page: 'css-designer', hash: rawHash };
+  }
+  if (hash === 'games/bug-hunter' || hash === 'bug-hunter') {
+    return { page: 'bug-hunter', hash: rawHash };
+  }
+  if (hash === 'games/quiz-rush' || hash === 'quiz-rush') {
+    return { page: 'quiz-rush', hash: rawHash };
   }
 
   // Route: certifications overview
@@ -193,6 +234,36 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     navigate('#sources');
   };
 
+  const goToLegalNotice = (tab: 'privacy' | 'terms' | 'ethics' = 'privacy') => {
+    if (tab === 'terms') {
+      navigate('#terms');
+    } else if (tab === 'ethics') {
+      navigate('#legal');
+    } else {
+      navigate('#privacy');
+    }
+  };
+
+  const goToGameCenter = () => {
+    navigate('#games');
+  };
+
+  const goToCodePuzzle = () => {
+    navigate('#games/code-puzzle');
+  };
+
+  const goToCSSDesigner = () => {
+    navigate('#games/css-designer');
+  };
+
+  const goToBugHunter = () => {
+    navigate('#games/bug-hunter');
+  };
+
+  const goToQuizRush = () => {
+    navigate('#games/quiz-rush');
+  };
+
   return (
     <NavigationContext.Provider
       value={{
@@ -211,6 +282,12 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         goToStudentDashboard,
         goToTeacherDashboard,
         goToImportSystem,
+        goToLegalNotice,
+        goToGameCenter,
+        goToCodePuzzle,
+        goToCSSDesigner,
+        goToBugHunter,
+        goToQuizRush,
       }}
     >
       {children}

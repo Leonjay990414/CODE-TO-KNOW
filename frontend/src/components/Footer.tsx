@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigation } from '../context/NavigationContext';
 
 export const Footer: React.FC = () => {
+  const { goToLegalNotice } = useNavigation();
+
   return (
     <footer style={{ backgroundColor: 'var(--color-brand-charcoal)', color: 'var(--color-brand-sand)', paddingTop: 'var(--space-16)', paddingBottom: 'var(--space-12)', borderTop: '1px solid rgba(82, 107, 123, 0.2)' }}>
       <div className="container">
@@ -39,11 +42,11 @@ export const Footer: React.FC = () => {
               平台核心
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <li><a href="#hero" style={{ color: 'var(--color-brand-sand)' }}>首頁總覽</a></li>
-              <li><a href="#story" style={{ color: 'var(--color-brand-sand)' }}>品牌教育理念</a></li>
-              <li><a href="#experience" style={{ color: 'var(--color-brand-sand)' }}>學習體驗系統</a></li>
-              <li><a href="#ai-learning" style={{ color: 'var(--color-brand-sand)' }}>AI 分階段引導</a></li>
-              <li><a href="#dual-audience" style={{ color: 'var(--color-brand-sand)' }}>師生雙端架構</a></li>
+              <li><a href="#hero" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>首頁總覽</a></li>
+              <li><a href="#story" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>品牌教育理念</a></li>
+              <li><a href="#experience" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>學習體驗系統</a></li>
+              <li><a href="#ai-learning" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>AI 分階段引導</a></li>
+              <li><a href="#dual-audience" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>師生雙端架構</a></li>
             </ul>
           </div>
 
@@ -84,16 +87,75 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} 碼上學 AI 智慧學習與教育科技平台 (CODE TO KNOW). All rights reserved.
           </div>
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <span>隱私權政策</span>
-            <span>服務條款</span>
-            <span>AI 使用倫理聲明</span>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <a
+              href="#privacy"
+              onClick={(e) => {
+                e.preventDefault();
+                goToLegalNotice('privacy');
+              }}
+              className="footer-legal-link"
+              style={{
+                color: 'var(--color-brand-sand)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                transition: 'color 0.15s ease, background-color 0.15s ease',
+              }}
+            >
+              隱私權政策
+            </a>
+            <a
+              href="#terms"
+              onClick={(e) => {
+                e.preventDefault();
+                goToLegalNotice('terms');
+              }}
+              className="footer-legal-link"
+              style={{
+                color: 'var(--color-brand-sand)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                transition: 'color 0.15s ease, background-color 0.15s ease',
+              }}
+            >
+              服務條款
+            </a>
+            <a
+              href="#legal"
+              onClick={(e) => {
+                e.preventDefault();
+                goToLegalNotice('ethics');
+              }}
+              className="footer-legal-link"
+              style={{
+                color: 'var(--color-brand-sand)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                transition: 'color 0.15s ease, background-color 0.15s ease',
+              }}
+            >
+              AI 使用倫理聲明
+            </a>
           </div>
         </div>
 
       </div>
 
       <style>{`
+        .footer-legal-link:hover {
+          color: #FFFFFF !important;
+          text-decoration: underline !important;
+        }
+        .footer-legal-link:focus-visible {
+          outline: 2px solid var(--color-brand-gold, #BDA77E);
+          outline-offset: 2px;
+        }
         @media (max-width: 840px) {
           .footer-grid {
             grid-template-columns: 1fr 1fr !important;

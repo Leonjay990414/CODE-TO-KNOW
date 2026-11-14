@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Code2,
   AlertTriangle,
@@ -8,24 +8,84 @@ import {
   Layers,
   FileCheck,
   FolderOpen,
+  BookOpen,
+  Video,
+  RotateCcw,
+  Check,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { OFFICIAL_PRACTICAL_TASKS, PracticalTaskDetail } from '../../data/practicalTasksData';
+import {
+  UNIFIED_PRACTICAL_CURRICULUM_MAP,
+  UnifiedTaskCurriculum,
+  CurriculumVersionData,
+  TaskStep,
+} from '../../data/unifiedPracticalCurriculumData';
+import {
+  getPracticalProgress,
+  toggleStepCompletion,
+  toggleChecklistItem,
+  resetPracticalProgress,
+  PracticalTaskProgress,
+} from '../../utils/learningStorage';
 
 interface PracticalLearningPageProps {
   onOpenTeacherApply?: () => void;
 }
 
 export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ onOpenTeacherApply }) => {
-  const { openAuth } = useAuth();
+  const { user, openAuth } = useAuth();
   const { goToHome, goToCertifications, goToCodeEditor } = useNavigation();
 
-  // Active Task Tab (1..4)
+  // Active Task Tab (1..5)
   const [activeTaskId, setActiveTaskId] = useState<number>(1);
-  const currentTask: PracticalTaskDetail = OFFICIAL_PRACTICAL_TASKS.find((t) => t.id === activeTaskId) || OFFICIAL_PRACTICAL_TASKS[0];
+  const currentTask: PracticalTaskDetail =
+    OFFICIAL_PRACTICAL_TASKS.find((t) => t.id === activeTaskId) || OFFICIAL_PRACTICAL_TASKS[0];
+
+  // Version selection for Task 5 ('A' | 'B')
+  const [selectedVersion, setSelectedVersion] = useState<'A' | 'B'>('A');
+  const [showAssetTable, setShowAssetTable] = useState<boolean>(false);
+  const [activeStepTab, setActiveStepTab] = useState<number>(1);
+
+  // User ID identifier (Demo/Guest fallback to 'guest-anonymous')
+  const userId = user?.id || 'guest-anonymous';
+
+  // Task 5 progress state
+  const [progress, setProgress] = useState<PracticalTaskProgress>(() => {
+    return getPracticalProgress(userId, activeTaskId, selectedVersion);
+  });
+
+  // Re-read progress whenever active task, version or user changes
+  useEffect(() => {
+    setProgress(getPracticalProgress(userId, activeTaskId, selectedVersion));
+    setActiveStepTab(1);
+  }, [userId, activeTaskId, selectedVersion]);
+
+  // Current curriculum version data for active task
+  const currentCurriculumConfig: UnifiedTaskCurriculum =
+    UNIFIED_PRACTICAL_CURRICULUM_MAP[activeTaskId] || UNIFIED_PRACTICAL_CURRICULUM_MAP[5];
+  const activeCurriculum: CurriculumVersionData =
+    selectedVersion === 'A' ? currentCurriculumConfig.versionA : currentCurriculumConfig.versionB;
+
+  const handleToggleStep = (stepNumber: number) => {
+    const updated = toggleStepCompletion(userId, activeTaskId, selectedVersion, stepNumber);
+    setProgress(updated);
+  };
+
+  const handleToggleChecklist = (itemText: string) => {
+    const updated = toggleChecklistItem(userId, activeTaskId, selectedVersion, itemText);
+    setProgress(updated);
+  };
+
+  const handleResetProgress = () => {
+    if (window.confirm(`確定要重設【${activeCurriculum.name}】的學習進度與查核表紀錄嗎？`)) {
+      const reset = resetPracticalProgress(userId, activeTaskId, selectedVersion);
+      setProgress(reset);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -46,7 +106,7 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span className="badge badge-slate">術科官方 4 大題組</span>
+                  <span className="badge badge-slate">術科官方 5 大題組</span>
                   <span className="badge badge-neutral">考場限時 120 分鐘 · 現場抽測 1 組</span>
                 </div>
                 <h1 className="text-h2" style={{ fontSize: '28px' }}>
@@ -73,7 +133,7 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
           <div className="demo-banner">
             <Sparkles size={16} />
             <span>
-              <strong>官方考綱核實保證：</strong>依據勞動部技能檢定中心 173003B12 規範，丙級術科實作試題共 5 大題組（題組一至題組五，現場抽測 1 組）。本系統提供 5 大題組全真規範、防呆檢核點與安全代碼沙盒。
+              <strong>官方考綱核實保證：</strong>依據勞動部技能檢定中心 173003B12 規範，丙級術科實作試題共 5 大題組（題組一至題組五，現場抽測 1 組）。題組五已完成 25 份官方素材精確索引，並提供 Version A (官方延伸版) 與 Version B (影片實戰版) 雙版本進度隔離追蹤。
             </span>
           </div>
         </div>
@@ -113,8 +173,10 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     建議時限 {task.estimatedMinutes} 分鐘
                   </div>
-                  <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: 600, color: task.status === 'available' ? '#2E7D32' : task.status === 'partially_completed' ? '#B8860B' : '#708090' }}>
-                    {task.status === 'available' ? '● 教材完整就緒' : task.status === 'partially_completed' ? '◐ 規格已就緒' : '○ 教材整理中'}
+                  <div style={{ fontSize: '11px', marginTop: '6px', fontWeight: 600, color: task.id === activeTaskId ? '#2E7D32' : '#B8860B' }}>
+                    {task.id === 5
+                      ? '◐ 教材整理中（雙版架構就緒）'
+                      : '◐ 官方步驟與素材已就緒'}
                   </div>
                 </button>
               );
@@ -174,16 +236,246 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                   </div>
                 </div>
 
-                {/* Required Assets */}
-                <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FolderOpen size={16} color="var(--color-brand-deep-slate)" />
-                  <span>試題隨附素材清單（位於素材題組資料夾）</span>
-                </h3>
-                <ul style={{ listStyleType: 'disc', paddingLeft: '20px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: '24px' }}>
-                  {currentTask.requiredAssets.map((asset, i) => (
-                    <li key={i}>{asset}</li>
-                  ))}
-                </ul>
+                {/* Unified All 5 Tasks: Dual-Version Switching & Stepped Curriculum */}
+                <div style={{ marginTop: '28px', borderTop: '1px solid var(--border-default)', paddingTop: '24px' }}>
+                  {/* Version Selector Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-brand-charcoal)' }}>
+                        選擇教材學習版本：
+                      </span>
+                      <div style={{ display: 'inline-flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-default)' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedVersion('A')}
+                          style={{
+                            padding: '6px 14px',
+                            fontSize: '13px',
+                            fontWeight: selectedVersion === 'A' ? 700 : 500,
+                            backgroundColor: selectedVersion === 'A' ? 'var(--color-brand-deep-slate)' : 'var(--surface-base)',
+                            color: selectedVersion === 'A' ? '#FFFFFF' : 'var(--text-primary)',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <BookOpen size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                          Version A 官方素材延伸版
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedVersion('B')}
+                          style={{
+                            padding: '6px 14px',
+                            fontSize: '13px',
+                            fontWeight: selectedVersion === 'B' ? 700 : 500,
+                            backgroundColor: selectedVersion === 'B' ? 'var(--color-brand-deep-slate)' : 'var(--surface-base)',
+                            color: selectedVersion === 'B' ? '#FFFFFF' : 'var(--text-primary)',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Video size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                          Version B 影片實戰解析版
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleResetProgress}
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--text-muted)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="清除本版本本機進度"
+                    >
+                      <RotateCcw size={12} />
+                      重設進度
+                    </button>
+                  </div>
+
+                  {/* Version Banner */}
+                  <div style={{ padding: '14px 18px', backgroundColor: selectedVersion === 'A' ? '#F4F7F9' : '#FFFDF5', borderRadius: '8px', border: selectedVersion === 'A' ? '1px solid #D9E2EA' : '1px solid #F1E5C8', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <strong style={{ fontSize: '14px', color: 'var(--color-brand-charcoal)' }}>
+                        {activeCurriculum.name}
+                      </strong>
+                      <span className={`badge ${activeCurriculum.isVerified ? 'badge-slate' : 'badge-gold'}`} style={{ fontSize: '10px' }}>
+                        {activeCurriculum.isVerified ? '官方素材全量核實' : '影片示範架構（待連網串流驗證）'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                      {activeCurriculum.sourceDescription}
+                    </p>
+                  </div>
+
+                  {/* Stepped Curriculum View */}
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px', color: 'var(--color-brand-charcoal)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>依序分步學習導引（共 {activeCurriculum.steps.length} 步驟，已完成 {progress.completedSteps.length} 步）</span>
+                  </h3>
+
+                  {/* Step Tabs Selector */}
+                  <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px' }}>
+                    {activeCurriculum.steps.map((st) => {
+                      const isDone = progress.completedSteps.includes(st.stepNumber);
+                      const isCurrent = activeStepTab === st.stepNumber;
+                      return (
+                        <button
+                          key={st.stepNumber}
+                          type="button"
+                          onClick={() => setActiveStepTab(st.stepNumber)}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: isCurrent ? 700 : 500,
+                            backgroundColor: isCurrent ? 'var(--color-brand-gold)' : isDone ? '#E8F5E9' : 'var(--surface-sunken)',
+                            color: isCurrent ? '#FFFFFF' : isDone ? '#2E7D32' : 'var(--text-primary)',
+                            border: '1px solid var(--border-default)',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          {isDone && <Check size={12} />}
+                          步驟 0{st.stepNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Active Step Detailed Content Card */}
+                  {(() => {
+                    const st: TaskStep = activeCurriculum.steps[activeStepTab - 1] || activeCurriculum.steps[0];
+                    if (!st) return null;
+                    const isDone = progress.completedSteps.includes(st.stepNumber);
+                    return (
+                      <div style={{ padding: '20px', borderRadius: '8px', backgroundColor: 'var(--surface-sunken)', border: '1px solid var(--border-default)', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>
+                              STEP {st.stepNumber} / {activeCurriculum.steps.length}
+                            </span>
+                            <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-brand-charcoal)', margin: '4px 0' }}>
+                              {st.title}
+                            </h4>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStep(st.stepNumber)}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              backgroundColor: isDone ? '#2E7D32' : 'var(--surface-base)',
+                              color: isDone ? '#FFFFFF' : 'var(--text-primary)',
+                              border: isDone ? 'none' : '1px solid var(--border-default)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <CheckCircle2 size={14} />
+                            {isDone ? '標記已完成' : '標記此步驟完成'}
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
+                          <div><strong>操作目的：</strong>{st.purpose}</div>
+                          <div><strong>HTML 標籤結構：</strong><code>{st.htmlExplanation}</code></div>
+                          <div><strong>CSS 規範與版面：</strong>{st.cssExplanation}</div>
+                          <div><strong>檔案路徑與命名：</strong><code>{st.pathUsage}</code></div>
+                          <div style={{ color: '#C62828' }}><strong>常見考場陷阱：</strong>{st.commonMistakes}</div>
+                          <div><strong>排查排錯要領：</strong>{st.troubleshooting}</div>
+                          <div style={{ color: '#2E7D32' }}><strong>步驟驗收合格標準：</strong>{st.verificationPoint}</div>
+                        </div>
+
+                        {st.associatedAssets && st.associatedAssets.length > 0 && (
+                          <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed var(--border-default)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>本步驟使用素材：</span>
+                            {st.associatedAssets.map((asset) => (
+                              <span key={asset} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--surface-base)', border: '1px solid var(--border-default)', fontFamily: 'monospace' }}>
+                                {asset}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Official Material Asset Index Collapsible Section */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowAssetTable(!showAssetTable)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-default)',
+                        backgroundColor: 'var(--surface-base)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        color: 'var(--color-brand-charcoal)',
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FolderOpen size={16} color="var(--color-brand-deep-slate)" />
+                        官方 {currentCurriculumConfig.totalAssetsCount} 份原始素材詳細索引清冊（已核實）
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--color-brand-gold)' }}>
+                        {showAssetTable ? '收合清單 ▲' : `展開檢視 (${currentCurriculumConfig.totalAssetsCount} 個檔案) ▼`}
+                      </span>
+                    </button>
+
+                    {showAssetTable && (
+                      <div style={{ marginTop: '12px', overflowX: 'auto', border: '1px solid var(--border-default)', borderRadius: '6px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: 'var(--surface-sunken)', borderBottom: '1px solid var(--border-default)' }}>
+                              <th style={{ padding: '8px 12px' }}>檔名</th>
+                              <th style={{ padding: '8px 12px' }}>類型</th>
+                              <th style={{ padding: '8px 12px' }}>大小</th>
+                              <th style={{ padding: '8px 12px' }}>主要用途與考點</th>
+                              <th style={{ padding: '8px 12px' }}>對應步驟</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentCurriculumConfig.assetsIndex.map((asset) => (
+                              <tr key={asset.filename} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600 }}>{asset.filename}</td>
+                                <td style={{ padding: '8px 12px' }}>
+                                  <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: asset.category === 'music' ? '#E1F5FE' : asset.category === 'menu_button' ? '#FFF8E1' : '#F5F5F5' }}>
+                                    {asset.category}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{(asset.bytesLength / 1024).toFixed(1)} KB</td>
+                                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{asset.purpose}</td>
+                                <td style={{ padding: '8px 12px', fontWeight: 600 }}>步驟 {asset.associatedStep}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* CTA Jump to Editor */}
                 <div style={{ padding: '16px 20px', backgroundColor: '#FAF9F5', border: '1px solid #D9D2C4', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -234,23 +526,51 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                 </div>
               </div>
 
-              {/* Scoring Checklist */}
+              {/* Scoring Checklist with LocalStorage interactive toggle for Task 5 */}
               <div className="card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-brand-deep-slate)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileCheck size={18} color="var(--color-brand-gold)" />
-                  <span>高分通過關鍵查驗表 (Checklist)</span>
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {currentTask.scoringChecklist.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', lineHeight: 1.6, color: 'var(--text-primary)' }}>
-                      <CheckCircle2 size={16} color="var(--color-brand-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <span>{item}</span>
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-brand-deep-slate)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileCheck size={18} color="var(--color-brand-gold)" />
+                    <span>高分通過關鍵查驗表</span>
+                  </h3>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    完成 {progress.completedChecklist.length} / {activeCurriculum.selfChecklist.length}
+                  </span>
                 </div>
 
-                <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  <strong>考場提醒：</strong>{currentTask.officialReferenceTips}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {activeCurriculum.selfChecklist.map((item, i) => {
+                    const isChecked = progress.completedChecklist.includes(item);
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => handleToggleChecklist(item)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '8px',
+                          fontSize: '13px',
+                          lineHeight: 1.6,
+                          color: isChecked ? '#2E7D32' : 'var(--text-primary)',
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: isChecked ? '#E8F5E9' : 'transparent',
+                          transition: 'background-color 0.15s ease',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}} // handled by parent onClick
+                          style={{ marginTop: '4px', cursor: 'pointer' }}
+                        />
+                        <span style={{ textDecoration: isChecked ? 'line-through' : 'none' }}>
+                          {item}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </aside>

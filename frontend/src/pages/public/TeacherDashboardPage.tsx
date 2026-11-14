@@ -104,7 +104,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
           <div className="demo-banner">
             <Sparkles size={16} />
             <span>
-              <strong>教師管理示範模式：</strong>教師端主控台提供全班考試合格率預測、易錯題目熱點分析與學員沙盒代碼檢視。假日後端資料庫整合後，將能真實指派作業並審核班級申請。
+              <strong>教師管理示範模式：</strong>教師端主控台提供全班考試合格率預測、易錯題目熱點分析與學員沙盒代碼檢視。於後續後端資料庫整合完成後，將能真實指派作業並審核班級申請。
             </span>
           </div>
         </div>

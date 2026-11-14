@@ -33,8 +33,10 @@ export interface TheoryQuestion {
   aiHints: AIScaffoldingHint;
 }
 
-export const OFFICIAL_THEORY_TOTAL_QUESTIONS = 611;
-export const THEORY_QUESTIONS_NOTE = '依勞動部 173003A17 官方考綱，正式學科題庫約 611 題。本示範模組提供高頻核心題示範。';
+export const OFFICIAL_THEORY_TOTAL_QUESTIONS = 605;
+export const OFFICIAL_THEORY_HISTORICAL_MAX = 611;
+export const THEORY_QUESTIONS_NOTE =
+  '依勞動部 173003A17 官方最新公告考綱（V115100817），扣除歷史修訂刪除之 6 題後，官方實體有效試題共計 605 題。全量題庫已離線解析核對就緒，提供逐題練習、題型分類、真題頁碼對照與錯題本追蹤。';
 
 export const SAMPLE_THEORY_QUESTIONS: TheoryQuestion[] = [
   {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   Clock,
@@ -13,14 +13,26 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { getWrongQuestionsStats, getWrongQuestionsList, WrongQuestionItem } from '../../utils/wrongQuestionsStorage';
 
 interface LearningProgressPageProps {
   onOpenTeacherApply?: () => void;
 }
 
 export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOpenTeacherApply }) => {
-  const { openAuth } = useAuth();
+  const { user, openAuth } = useAuth();
   const { goToHome, goToCertifications, goToTheoryPractice, goToMockExam } = useNavigation();
+
+  const userId = user?.id || 'guest-anonymous';
+  const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
+  const [unresolvedItems, setUnresolvedItems] = useState<WrongQuestionItem[]>(() =>
+    getWrongQuestionsList(userId, true)
+  );
+
+  useEffect(() => {
+    setWrongStats(getWrongQuestionsStats(userId));
+    setUnresolvedItems(getWrongQuestionsList(userId, true));
+  }, [userId]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -67,7 +79,7 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
           <div className="demo-banner">
             <Sparkles size={16} />
             <span>
-              <strong>展示用數據模式：</strong>目前畫面呈現典型考生之學習曲線示範數據。假日完成 PostgreSQL / Prisma 與 UserProgress 資料庫整合後，將自動同步您個人的真實刷題與模擬考歷程。
+              <strong>展示用數據模式：</strong>目前畫面呈現典型考生之學習曲線示範數據。於後續完成正式資料庫整合後，將自動同步您個人的真實刷題與模擬考歷程。
             </span>
           </div>
         </div>
@@ -120,10 +132,10 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
                 <CheckCircle2 size={16} color="var(--color-brand-gold)" />
               </div>
               <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-brand-charcoal)' }}>
-                3 <span style={{ fontSize: '13px', fontWeight: 500 }}>/ 4 題組</span>
+                3 <span style={{ fontSize: '13px', fontWeight: 500 }}>/ 5 題組</span>
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                題組一至三已完成沙盒檢核
+                官方題組一至五規格已全量就緒
               </div>
             </div>
           </div>
@@ -215,31 +227,52 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
                 </button>
               </div>
 
-              {/* Wrong Questions Notebook */}
+              {/* Real LocalStorage Wrong Questions Notebook Stats */}
               <div className="card" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                     <BookmarkCheck size={16} color="var(--color-brand-deep-slate)" />
-                    <span>錯題收藏本 (5 題)</span>
+                    <span>本機錯題本 ({wrongStats.unresolvedCount} 題待攻克)</span>
                   </h3>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>高頻複習</span>
+                  <button
+                    type="button"
+                    onClick={() => goToTheoryPractice('web-design-c')}
+                    style={{ fontSize: '12px', color: 'var(--color-brand-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    前往複習 →
+                  </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ background: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '4px', fontSize: '12px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
-                      #058 box-sizing: border-box 計算
-                    </div>
-                    <div style={{ color: 'var(--text-muted)' }}>CSS 盒模型 · 錯誤次數：2 次</div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  <div style={{ flex: 1, padding: '10px', backgroundColor: 'var(--surface-sunken)', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>累計收錄</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700 }}>{wrongStats.totalRecorded} 題</div>
                   </div>
-
-                  <div style={{ background: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '4px', fontSize: '12px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
-                      #305 1024px 水平置中語法
-                    </div>
-                    <div style={{ color: 'var(--text-muted)' }}>CSS 排版 · 錯誤次數：1 次</div>
+                  <div style={{ flex: 1, padding: '10px', backgroundColor: 'var(--surface-sunken)', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#2E7D32' }}>已成功攻克</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#2E7D32' }}>{wrongStats.resolvedCount} 題</div>
                   </div>
                 </div>
+
+                {unresolvedItems.length === 0 ? (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px' }}>
+                    目前無未攻克錯題，練習中答錯將自動收錄於此。
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {unresolvedItems.slice(0, 3).map((item) => (
+                      <div key={item.questionId} style={{ background: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '4px', fontSize: '12px' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.question}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '11px' }}>
+                          <span>{item.topic}</span>
+                          <span style={{ color: '#C62828' }}>錯誤 {item.wrongCount} 次</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </aside>
           </div>

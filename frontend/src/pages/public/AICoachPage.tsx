@@ -148,12 +148,18 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
           </div>
         </section>
 
-        {/* Philosophy Banner */}
+        {/* Philosophy & Transparency Banner */}
         <div className="container" style={{ marginTop: '20px' }}>
-          <div className="demo-banner">
-            <Sparkles size={16} />
-            <span>
-              <strong>教育核心精神：</strong>AI 不應取代學生的獨立思考。CODE TO KNOW AI 學習教練依循「觀念聚焦 → 思考破題 → 邊界提點 → 完整解構」四階鷹架，在適當層級給予提點，陪伴你親自寫出正確解法。
+          <div className="demo-banner" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={16} />
+              <strong>教育核心精神：AI 不應取代學生的獨立思考</strong>
+            </div>
+            <span style={{ fontSize: '13px', lineHeight: 1.6 }}>
+              CODE TO KNOW AI 學習教練依循「觀念聚焦 → 思考破題 → 邊界提點 → 完整解構」四階鷹架，陪伴你親自寫出正確解法。
+              <span style={{ display: 'block', marginTop: '4px', color: 'var(--color-brand-deep-slate)', fontWeight: 600 }}>
+                〔功能透明度告知〕本頁目前採用本地題庫與四階引導規則展示教學邏輯（展示模式），尚未串接即時商業 LLM API。
+              </span>
             </span>
           </div>
         </div>

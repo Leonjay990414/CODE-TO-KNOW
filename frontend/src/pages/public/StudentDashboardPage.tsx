@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User as UserIcon,
   Award,
@@ -8,11 +8,13 @@ import {
   FileCheck,
   Sparkles,
   Bell,
+  Gamepad2,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { getWrongQuestionsStats } from '../../utils/wrongQuestionsStorage';
 
 interface StudentDashboardPageProps {
   onOpenTeacherApply?: () => void;
@@ -20,7 +22,14 @@ interface StudentDashboardPageProps {
 
 export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
-  const { goToHome, goToTheoryPractice, goToPracticalLearning, goToMockExam, goToLearningProgress } = useNavigation();
+  const { goToHome, goToTheoryPractice, goToPracticalLearning, goToMockExam, goToLearningProgress, goToGameCenter } = useNavigation();
+
+  const userId = user?.id || 'guest-anonymous';
+  const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
+
+  useEffect(() => {
+    setWrongStats(getWrongQuestionsStats(userId));
+  }, [userId]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -86,7 +95,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
           <div className="demo-banner">
             <Sparkles size={16} />
             <span>
-              <strong>學生中心示範模式：</strong>在此管理您目前準備中的技能檢定、各項作業評分與模擬考歷程。假日完成資料庫整合後，將自動連結您的個人專屬進度。
+              <strong>學生中心示範模式：</strong>在此管理您目前準備中的技能檢定、各項作業評分與模擬考歷程。於後續完成正式資料庫整合後，將自動同步您的個人專屬進度。
             </span>
           </div>
         </div>
@@ -206,8 +215,32 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   >
                     <Award size={20} color="var(--color-brand-deep-slate)" />
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 700 }}>錯題本與分析</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>高頻失分點追蹤</div>
+                      <div style={{ fontSize: '14px', fontWeight: 700 }}>錯題本與弱點複習</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        待複習 {wrongStats.unresolvedCount} 題 ｜ 已攻克 {wrongStats.resolvedCount} 題
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={goToGameCenter}
+                    style={{
+                      padding: '16px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-default)',
+                      backgroundColor: 'var(--surface-sunken)',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                    }}
+                  >
+                    <Gamepad2 size={20} color="var(--color-brand-gold)" />
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700 }}>互動遊戲與 Code Puzzle</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>寓教於樂邏輯挑戰</div>
                     </div>
                   </button>
                 </div>
