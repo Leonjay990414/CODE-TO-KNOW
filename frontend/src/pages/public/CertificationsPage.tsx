@@ -225,7 +225,7 @@ export const CertificationsPage: React.FC<CertificationsPageProps> = ({ onOpenTe
                 {filteredCertifications.map((cert) => {
                   if (cert.isComingSoon) {
                     return (
-                      <div key={cert.id} className="cert-card is-coming-soon">
+                      <div key={cert.id} className="cert-card is-coming-soon stagger-item">
                         <div>
                           {/* Top Badges */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -311,7 +311,7 @@ export const CertificationsPage: React.FC<CertificationsPageProps> = ({ onOpenTe
 
                   // Active Demonstration Certification (Web Design C)
                   return (
-                    <div key={cert.id} className="cert-card featured">
+                    <div key={cert.id} className="cert-card featured stagger-item">
                       <div>
                         {/* Top Badges */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

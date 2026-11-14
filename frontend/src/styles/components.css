@@ -637,18 +637,148 @@ textarea:focus-visible {
 }
 
 /* ==========================================================================
-   Micro-interactions, Tactile Buttons & Scroll Animations (emil-design-eng)
+   Micro-interactions, Tactile Buttons & Dynamic Experience (Tokens Driven)
    ========================================================================== */
-.btn:active,
-button:active:not(:disabled) {
-  transform: scale(0.98);
-  transition: transform 0.05s ease;
+.btn {
+  transition: transform var(--dur-fast) var(--ease-standard),
+              background-color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
 }
 
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled),
+button:active:not(:disabled) {
+  transform: scale(var(--motion-scale-press));
+  transition: transform 50ms ease-out;
+}
+
+.btn:disabled,
+button:disabled {
+  transform: none !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Card hover dynamics */
+.card,
+.interactive-card {
+  transition: transform var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-brand-slate);
+  }
+}
+
+.interactive-card:active {
+  transform: translateY(-1px) scale(0.99);
+  transition: transform 50ms ease-out;
+}
+
+/* Modal and Drawer transition classes */
+.modal-overlay {
+  animation: modalOverlayFadeIn var(--dur-base) var(--ease-enter) forwards;
+}
+
+.modal-content {
+  animation: modalScaleUp var(--dur-base) var(--ease-spring) forwards;
+}
+
+@keyframes modalOverlayFadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+@keyframes modalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(var(--motion-scale-modal-enter)) translateY(var(--motion-displacement-sm));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile bottom sheet modal dynamics */
+@media (max-width: 639px) {
+  .modal-bottom-sheet {
+    align-self: flex-end !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    animation: modalSlideUp var(--dur-base) var(--ease-enter) forwards !important;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form input focus transitions */
+input, select, textarea {
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-brand-gold) !important;
+  box-shadow: 0 0 0 3px rgba(189, 167, 126, 0.2) !important;
+}
+
+/* Toast message transition */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--z-index-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  animation: toastSlideIn var(--dur-base) var(--ease-enter) forwards;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-displacement-md)) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Section scroll reveal */
 .fade-in-section {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(var(--motion-displacement-md));
+  transition: opacity var(--dur-slow) var(--ease-enter), transform var(--dur-slow) var(--ease-enter);
   will-change: opacity, transform;
 }
 
@@ -657,9 +787,38 @@ button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.interactive-card:active {
-  transform: translateY(0) scale(0.99);
+/* Stagger item entrance */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(var(--motion-displacement-sm));
+  animation: staggerFadeIn var(--dur-base) var(--ease-enter) forwards;
 }
+
+.stagger-item:nth-child(1) { animation-delay: 40ms; }
+.stagger-item:nth-child(2) { animation-delay: 80ms; }
+.stagger-item:nth-child(3) { animation-delay: 120ms; }
+.stagger-item:nth-child(4) { animation-delay: 160ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 240ms; }
+.stagger-item:nth-child(7) { animation-delay: 280ms; }
+.stagger-item:nth-child(8) { animation-delay: 320ms; }
+
+@keyframes staggerFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse dots for AI thinking */
+@keyframes pulseDot {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.1); }
+}
+
+.pulse-dot-1 { animation: pulseDot 1.4s infinite ease-in-out; }
+.pulse-dot-2 { animation: pulseDot 1.4s infinite ease-in-out 0.2s; }
+.pulse-dot-3 { animation: pulseDot 1.4s infinite ease-in-out 0.4s; }
 
 .badge-sage {
   background-color: var(--color-brand-sage-light);
@@ -667,14 +826,20 @@ button:active:not(:disabled) {
   border: 1px solid rgba(90, 125, 108, 0.3);
 }
 
-/* Reduced motion preference */
+/* Reduced motion preference (Strict WCAG AAA & Zero Disorientation) */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+    transform: none !important;
+  }
+  .fade-in-section,
+  .stagger-item {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

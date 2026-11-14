@@ -266,6 +266,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
               return (
                 <div
                   key={game.id}
+                  className="interactive-card stagger-item"
                   style={{
                     backgroundColor: 'var(--surface-sunken)',
                     borderRadius: 'var(--radius-md)',

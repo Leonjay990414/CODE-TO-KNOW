@@ -40,8 +40,8 @@ jobs:
           npm --prefix frontend ci
 
       - name: 4. TypeScript Type Check
-        run: |
-          npx --prefix frontend tsc --noEmit
+        working-directory: frontend
+        run: npx tsc --noEmit
 
       - name: 5. Build Demo Mode Static Distribution
         env:

@@ -64,7 +64,7 @@ export const Hero: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'var(--space-12)', alignItems: 'center' }} className="hero-grid">
 
           {/* Left Column: Brand Copy & CTAs */}
-          <div>
+          <div className="fade-in-section is-visible">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-4)' }}>
               <span className="badge badge-gold">
                 <Sparkles size={12} color="#7C663D" />

@@ -286,6 +286,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
 
                       {/* Bubble */}
                       <div
+                        className="fade-in-section is-visible"
                         style={{
                           maxWidth: '75%',
                           padding: '14px 18px',
