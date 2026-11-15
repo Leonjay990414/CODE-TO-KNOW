@@ -13,6 +13,7 @@ import { AICoachPage } from '../pages/public/AICoachPage';
 import { LearningProgressPage } from '../pages/public/LearningProgressPage';
 import { StudentDashboardPage } from '../pages/public/StudentDashboardPage';
 import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
+import { AdminDashboardPage } from '../pages/public/AdminDashboardPage';
 import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
 import { LegalNoticePage } from '../pages/public/LegalNoticePage';
 import { GameCenterPage } from '../pages/public/GameCenterPage';
@@ -126,6 +127,16 @@ export const AppContent: React.FC = () => {
             onOpenTeacherApply={handleOpenTeacherApply}
           >
             <TeacherDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
+      case 'admin-dashboard':
+        return (
+          <ProtectedRoute
+            requiredRoles={['ADMIN']}
+            pageTitle="平台管理員與系統營運後台 (Admin Console)"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <AdminDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
           </ProtectedRoute>
         );
       case 'import-system':

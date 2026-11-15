@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Trophy,
   X,
@@ -30,6 +30,73 @@ export const GameAchievementsModal: React.FC<GameAchievementsModalProps> = ({
   userId,
 }) => {
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
+
+      const timer = setTimeout(() => {
+        if (!modalRef.current) return;
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          focusables[0].focus();
+        }
+      }, 50);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          handleClose();
+          return;
+        }
+
+        if (e.key === 'Tab') {
+          if (!modalRef.current) return;
+          const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusables.length === 0) return;
+
+          const firstElement = focusables[0];
+          const lastElement = focusables[focusables.length - 1];
+
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement.focus();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    onClose();
+    if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+      setTimeout(() => {
+        triggerElementRef.current?.focus();
+      }, 50);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -85,9 +152,13 @@ export const GameAchievementsModal: React.FC<GameAchievementsModalProps> = ({
         zIndex: 1050,
         padding: '16px',
       }}
-      onClick={onClose}
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="achievements-modal-title"
     >
       <div
+        ref={modalRef}
         style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '16px',
@@ -124,11 +195,12 @@ export const GameAchievementsModal: React.FC<GameAchievementsModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
+              aria-hidden="true"
             >
               <Trophy size={22} />
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              <h2 id="achievements-modal-title" style={{ fontSize: '18px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                 遊戲成就與榮譽徽章館
               </h2>
               <p style={{ fontSize: '12px', color: '#64748B', margin: '2px 0 0' }}>
@@ -138,7 +210,8 @@ export const GameAchievementsModal: React.FC<GameAchievementsModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
+            aria-label="關閉成就中心"
             style={{
               padding: '6px',
               backgroundColor: 'transparent',

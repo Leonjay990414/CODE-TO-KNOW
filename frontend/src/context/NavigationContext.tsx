@@ -13,6 +13,7 @@ export type AppPage =
   | 'learning-progress'
   | 'student-dashboard'
   | 'teacher-dashboard'
+  | 'admin-dashboard'
   | 'import-system'
   | 'legal'
   | 'game-center'
@@ -45,6 +46,7 @@ interface NavigationContextType {
   goToLearningProgress: () => void;
   goToStudentDashboard: () => void;
   goToTeacherDashboard: () => void;
+  goToAdminDashboard: () => void;
   goToImportSystem: () => void;
   goToLegalNotice: (tab?: 'privacy' | 'terms' | 'ethics') => void;
   goToGameCenter: () => void;
@@ -120,6 +122,11 @@ export function parseHash(rawHash: string): RouteState {
   // Route: teacher center
   if (hash === 'teacher' || hash === 'teacher-dashboard') {
     return { page: 'teacher-dashboard', hash: rawHash };
+  }
+
+  // Route: admin center
+  if (hash === 'admin' || hash === 'admin-dashboard') {
+    return { page: 'admin-dashboard', hash: rawHash };
   }
 
   // Route: certifications/:id
@@ -235,6 +242,10 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     navigate('#teacher');
   };
 
+  const goToAdminDashboard = () => {
+    navigate('#admin');
+  };
+
   const goToImportSystem = () => {
     navigate('#sources');
   };
@@ -290,6 +301,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         goToLearningProgress,
         goToStudentDashboard,
         goToTeacherDashboard,
+        goToAdminDashboard,
         goToImportSystem,
         goToLegalNotice,
         goToGameCenter,

@@ -9,12 +9,19 @@ import {
   Sparkles,
   Bell,
   Gamepad2,
+  Users,
+  Bookmark,
+  Edit3,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
+import { StudentClassJoinModal, getEnrolledClasses, EnrolledClass } from '../../components/StudentClassJoinModal';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { getWrongQuestionsStats } from '../../utils/wrongQuestionsStorage';
+import { getMockExamHistory, MockExamSession } from '../../utils/mockExamStorage';
+import { getPracticalProgress } from '../../utils/learningStorage';
+import { getQuestionBookmarks, getAllQuestionNotes } from '../../utils/studentStudyToolsStorage';
 
 interface StudentDashboardPageProps {
   onOpenTeacherApply?: () => void;
@@ -26,10 +33,30 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
 
   const userId = user?.id || 'guest-anonymous';
   const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
+  const [mockExamHistory, setMockExamHistory] = useState<MockExamSession[]>(() => getMockExamHistory(userId));
+  const [enrolledClasses, setEnrolledClasses] = useState<EnrolledClass[]>(() => getEnrolledClasses(userId));
+  const [bookmarksCount, setBookmarksCount] = useState<number>(() => getQuestionBookmarks(userId).size);
+  const [notesCount, setNotesCount] = useState<number>(() => Object.keys(getAllQuestionNotes(userId)).length);
+  const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
+
+  // 計算已進行實作題組數量
+  const practicalStartedCount = [1, 2, 3, 4, 5].filter((taskId) => {
+    const pA = getPracticalProgress(userId, taskId, 'A');
+    const pB = getPracticalProgress(userId, taskId, 'B');
+    return (pA.completedSteps && pA.completedSteps.length > 0) || (pB.completedSteps && pB.completedSteps.length > 0);
+  }).length;
+
+  const refreshDashboardData = () => {
+    setWrongStats(getWrongQuestionsStats(userId));
+    setMockExamHistory(getMockExamHistory(userId));
+    setEnrolledClasses(getEnrolledClasses(userId));
+    setBookmarksCount(getQuestionBookmarks(userId).size);
+    setNotesCount(Object.keys(getAllQuestionNotes(userId)).length);
+  };
 
   useEffect(() => {
-    setWrongStats(getWrongQuestionsStats(userId));
-  }, [userId]);
+    refreshDashboardData();
+  }, [userId, isJoinClassOpen]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -78,6 +105,15 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setIsJoinClassOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Users size={14} />
+                  <span>我的班級／加入班級</span>
+                </button>
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
@@ -172,7 +208,9 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <Code2 size={20} color="var(--color-brand-gold)" />
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700 }}>術科題組實作</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>已完成 3 / 5 題組</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        已演練 {practicalStartedCount} / 5 題組
+                      </div>
                     </div>
                   </button>
 
@@ -224,6 +262,33 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
 
                   <button
                     type="button"
+                    onClick={() => goToTheoryPractice('web-design-c')}
+                    style={{
+                      padding: '16px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-default)',
+                      backgroundColor: 'var(--surface-sunken)',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                    }}
+                  >
+                    <Bookmark size={20} color="var(--color-brand-gold)" />
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>收藏題目與學習筆記</span>
+                        <Edit3 size={12} color="var(--text-muted)" />
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        已收藏 {bookmarksCount} 題 ｜ 已記錄 {notesCount} 則筆記
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={goToGameCenter}
                     style={{
                       padding: '16px',
@@ -248,56 +313,134 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
 
               {/* Mock Exam History Table */}
               <div className="card" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
-                  近期全真模擬考成績紀錄
-                </h3>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-default)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                        <th style={{ padding: '10px 8px' }}>測驗日期</th>
-                        <th style={{ padding: '10px 8px' }}>測驗科目</th>
-                        <th style={{ padding: '10px 8px' }}>耗時</th>
-                        <th style={{ padding: '10px 8px' }}>得分</th>
-                        <th style={{ padding: '10px 8px' }}>判定結果</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '12px 8px' }}>2026/11/04</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 600 }}>17300 學科模擬試卷 A</td>
-                        <td style={{ padding: '12px 8px' }}>38 分鐘</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 700, color: '#2E7D32' }}>88 分</td>
-                        <td style={{ padding: '12px 8px' }}>
-                          <span style={{ color: '#2E7D32', fontWeight: 700 }}>✓ 及格</span>
-                        </td>
-                      </tr>
-                      <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '12px 8px' }}>2026/10/28</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 600 }}>17300 學科模擬試卷 B</td>
-                        <td style={{ padding: '12px 8px' }}>42 分鐘</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 700, color: '#2E7D32' }}>75 分</td>
-                        <td style={{ padding: '12px 8px' }}>
-                          <span style={{ color: '#2E7D32', fontWeight: 700 }}>✓ 及格</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '12px 8px' }}>2026/10/15</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 600 }}>17300 學科前測診斷</td>
-                        <td style={{ padding: '12px 8px' }}>50 分鐘</td>
-                        <td style={{ padding: '12px 8px', fontWeight: 700, color: '#C62828' }}>52 分</td>
-                        <td style={{ padding: '12px 8px' }}>
-                          <span style={{ color: '#C62828', fontWeight: 700 }}>✕ 未及格</span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>
+                    近期全真模擬考成績紀錄
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-xs"
+                    onClick={() => goToMockExam('web-design-c')}
+                  >
+                    參加模擬測驗
+                  </button>
                 </div>
+
+                {mockExamHistory.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '36px 16px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)' }}>
+                    <FileCheck size={36} color="var(--color-brand-gold)" style={{ margin: '0 auto 10px', opacity: 0.7 }} />
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-brand-charcoal)', marginBottom: '6px' }}>
+                      尚無全真模擬考成績紀錄
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '380px', margin: '0 auto 16px', lineHeight: 1.6 }}>
+                      隨機抽取 80 題官方試題，60 分鐘真實倒數計時與及格判定，立即驗收您的學科實力！
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => goToMockExam('web-design-c')}
+                    >
+                      立即開始全真模擬測驗
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-default)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                          <th style={{ padding: '10px 8px' }}>測驗日期</th>
+                          <th style={{ padding: '10px 8px' }}>測驗科目</th>
+                          <th style={{ padding: '10px 8px' }}>耗時</th>
+                          <th style={{ padding: '10px 8px' }}>得分</th>
+                          <th style={{ padding: '10px 8px' }}>判定結果</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mockExamHistory.slice(0, 5).map((exam) => {
+                          const dateStr = exam.submittedAt
+                            ? new Date(exam.submittedAt).toLocaleDateString('zh-TW')
+                            : (exam.startedAt ? new Date(exam.startedAt).toLocaleDateString('zh-TW') : '-');
+                          const durationStr = exam.durationMinutes ? `${exam.durationMinutes} 分鐘` : '60 分鐘';
+                          const scoreVal = exam.score ?? 0;
+                          const isPassed = exam.isPassed ?? (scoreVal >= 60);
+
+                          return (
+                            <tr key={exam.sessionId} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                              <td style={{ padding: '12px 8px' }}>{dateStr}</td>
+                              <td style={{ padding: '12px 8px', fontWeight: 600 }}>
+                                {exam.mode === 'official_100' ? '17300 網頁設計丙級 (100題)' : '17300 網頁設計丙級 (80題全真)'}
+                              </td>
+                              <td style={{ padding: '12px 8px' }}>{durationStr}</td>
+                              <td style={{ padding: '12px 8px', fontWeight: 700, color: isPassed ? '#2E7D32' : '#C62828' }}>
+                                {scoreVal} 分
+                              </td>
+                              <td style={{ padding: '12px 8px' }}>
+                                <span style={{ color: isPassed ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                  {isPassed ? '✓ 及格' : '✕ 未及格'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Right Column: Teacher Notifications & Next Recommended Actions */}
             <aside>
+              {/* Enrolled Classes Card */}
+              <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={16} color="var(--color-brand-deep-slate)" />
+                    <span>已加入班級 ({enrolledClasses.length})</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsJoinClassOpen(true)}
+                    style={{ color: 'var(--color-brand-gold)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                  >
+                    管理 / 加入 →
+                  </button>
+                </div>
+
+                {enrolledClasses.length === 0 ? (
+                  <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '14px', borderRadius: '4px', fontSize: '12px', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                    尚未加入任何教學班級。點擊「管理 / 加入」輸入教師提供的 6 位代碼即可綁定班級並接收專屬公告。
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {enrolledClasses.map((cls) => (
+                      <div
+                        key={cls.id}
+                        style={{
+                          backgroundColor: 'var(--surface-sunken)',
+                          padding: '12px 14px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-brand-deep-slate)' }}>
+                            {cls.name}
+                          </span>
+                          <span className="badge badge-slate" style={{ fontSize: '10px' }}>
+                            {cls.code}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>指導教師：{cls.teacherName || '任課教師'}</span>
+                          <span>{cls.semester || '本學期'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Teacher Messages Card */}
               <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -347,6 +490,12 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
             </aside>
           </div>
         </div>
+
+        <StudentClassJoinModal
+          isOpen={isJoinClassOpen}
+          onClose={() => setIsJoinClassOpen(false)}
+          userId={userId}
+        />
       </main>
 
       <Footer />

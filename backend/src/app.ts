@@ -8,6 +8,7 @@ import { generalRateLimiter } from './middleware/rate-limiter.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { teacherRoutes } from './modules/teachers/teacher.routes.js';
 import { adminRoutes } from './modules/admin/admin.routes.js';
+import { classroomRoutes } from './modules/classrooms/classroom.routes.js';
 import { prisma } from './config/database.js';
 import { NotFoundError } from './utils/errors.js';
 
@@ -73,6 +74,7 @@ export function createApp(): Express {
   app.use('/api/auth', authRoutes);
   app.use('/api/teachers', teacherRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/classrooms', classroomRoutes);
 
   // 404 Handler
   app.use((_req: Request, _res: Response, next) => {

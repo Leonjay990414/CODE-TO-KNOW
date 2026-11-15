@@ -36,23 +36,69 @@ export const GameBriefingModal: React.FC<GameBriefingModalProps> = ({
   onClose,
   config,
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
   const actionButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
 
-    // Focus primary action button when modal opens
-    actionButtonRef.current?.focus();
+      // Focus primary action button when modal opens
+      const timer = setTimeout(() => {
+        actionButtonRef.current?.focus();
+      }, 50);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          handleClose();
+          return;
+        }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+        if (e.key === 'Tab') {
+          if (!modalRef.current) return;
+          const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusables.length === 0) return;
+
+          const firstElement = focusables[0];
+          const lastElement = focusables[focusables.length - 1];
+
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement.focus();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    onClose();
+    if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+      setTimeout(() => {
+        triggerElementRef.current?.focus();
+      }, 50);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -71,9 +117,13 @@ export const GameBriefingModal: React.FC<GameBriefingModalProps> = ({
         zIndex: 1100,
         padding: '16px',
       }}
-      onClick={onClose}
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="briefing-modal-title"
     >
       <div
+        ref={modalRef}
         style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '16px',
@@ -110,11 +160,12 @@ export const GameBriefingModal: React.FC<GameBriefingModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
+              aria-hidden="true"
             >
               <HelpCircle size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              <h2 id="briefing-modal-title" style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                 {config.gameTitle}｜新手導引與計分規則
               </h2>
               <div style={{ fontSize: '12px', color: '#64748B' }}>{config.gameSubtitle}</div>
@@ -122,7 +173,7 @@ export const GameBriefingModal: React.FC<GameBriefingModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="關閉說明視窗"
             style={{
               padding: '6px',
@@ -231,7 +282,7 @@ export const GameBriefingModal: React.FC<GameBriefingModalProps> = ({
         >
           <button
             ref={actionButtonRef}
-            onClick={onClose}
+            onClick={handleClose}
             className="btn-nowrap"
             style={{
               padding: '8px 20px',

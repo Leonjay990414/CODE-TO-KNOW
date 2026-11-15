@@ -581,12 +581,18 @@
   .teacher-grid,
   .exam-grid,
   .theory-grid,
-  .practical-detail-grid {
+  .practical-detail-grid,
+  .coach-grid {
     grid-template-columns: 1fr !important;
   }
 }
 
 @media (max-width: 767px) {
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
   .stats-row {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px;

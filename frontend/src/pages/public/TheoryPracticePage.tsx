@@ -13,6 +13,8 @@ import {
   Trash2,
   RotateCcw,
   Play,
+  Edit3,
+  Save,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -38,6 +40,14 @@ import {
   drawReviewQuestions,
   WrongQuestionItem,
 } from '../../utils/wrongQuestionsStorage';
+import {
+  getQuestionBookmarks,
+  toggleQuestionBookmark,
+  getQuestionNote,
+  saveQuestionNote,
+  deleteQuestionNote,
+  recordRecentView,
+} from '../../utils/studentStudyToolsStorage';
 
 interface TheoryPracticePageProps {
   onOpenTeacherApply?: () => void;
@@ -45,7 +55,7 @@ interface TheoryPracticePageProps {
 
 export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
-  const { goToHome, goToCertifications, goToMockExam } = useNavigation();
+  const { goToHome, goToStudentDashboard, goToCertifications, goToMockExam } = useNavigation();
 
   const userId = user?.id || 'guest-anonymous';
 
@@ -58,7 +68,10 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
   const [jumpInput, setJumpInput] = useState<string>('');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [submittedQuestions, setSubmittedQuestions] = useState<Record<string, boolean>>({});
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(() => getQuestionBookmarks(userId));
+  const [noteText, setNoteText] = useState<string>('');
+  const [isNoteEditorOpen, setIsNoteEditorOpen] = useState<boolean>(false);
+  const [noteSavedMessage, setNoteSavedMessage] = useState<string>('');
   const [expandedAiStep, setExpandedAiStep] = useState<number>(0); // 0 = closed, 1..4 = active
 
   // Wrong questions filter & sorting state
@@ -102,13 +115,33 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
     refreshWrongData();
   }, [userId, wrongFilterStatus, wrongFilterSection, wrongSortBy, wrongSortOrder]);
 
-  // Filter questions based on official section
+  useEffect(() => {
+    setBookmarkedIds(getQuestionBookmarks(userId));
+    recordRecentView(userId, {
+      id: 'theory-practice-cert-web-design-c',
+      title: '17300 網頁設計丙級 · 學科理論題庫',
+      type: 'theory',
+      path: '#theory',
+    });
+  }, [userId]);
+
+  // Filter questions based on official section or bookmarks
   const filteredQuestions: TheoryQuestionModel[] = selectedSection === 'all'
     ? ALL_OFFICIAL_THEORY_QUESTIONS
+    : selectedSection === 'bookmarked'
+    ? ALL_OFFICIAL_THEORY_QUESTIONS.filter((q) => bookmarkedIds.has(q.id))
     : ALL_OFFICIAL_THEORY_QUESTIONS.filter((q) => q.officialSection === selectedSection);
 
   const safeIdx = Math.min(currentIdx, Math.max(0, filteredQuestions.length - 1));
   const currentQ: TheoryQuestionModel = filteredQuestions[safeIdx] || ALL_OFFICIAL_THEORY_QUESTIONS[0];
+
+  useEffect(() => {
+    if (currentQ?.id) {
+      setNoteText(getQuestionNote(userId, currentQ.id));
+      setNoteSavedMessage('');
+      setIsNoteEditorOpen(false);
+    }
+  }, [currentQ?.id, userId]);
 
   const handleSelectOption = (key: 'A' | 'B' | 'C' | 'D') => {
     if (submittedQuestions[currentQ.id]) return; // already submitted
@@ -152,13 +185,27 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
   };
 
   const toggleBookmark = (id: string) => {
+    const isAdded = toggleQuestionBookmark(userId, id);
     const next = new Set(bookmarkedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
+    if (isAdded) {
       next.add(id);
+    } else {
+      next.delete(id);
     }
     setBookmarkedIds(next);
+  };
+
+  const handleSaveNote = () => {
+    saveQuestionNote(userId, currentQ.id, noteText);
+    setNoteSavedMessage('筆記已儲存');
+    setTimeout(() => setNoteSavedMessage(''), 2500);
+  };
+
+  const handleDeleteNote = () => {
+    deleteQuestionNote(userId, currentQ.id);
+    setNoteText('');
+    setNoteSavedMessage('筆記已刪除');
+    setTimeout(() => setNoteSavedMessage(''), 2500);
   };
 
   const handlePrev = () => {
@@ -305,6 +352,8 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
           <div className="container">
             <nav className="breadcrumb-nav" aria-label="導覽路徑" style={{ marginBottom: '12px' }}>
               <a href="#hero" onClick={(e) => { e.preventDefault(); goToHome(); }}>首頁</a>
+              <span>/</span>
+              <a href="#student" onClick={(e) => { e.preventDefault(); goToStudentDashboard(); }}>學生中心</a>
               <span>/</span>
               <a href="#certifications" onClick={(e) => { e.preventDefault(); goToCertifications(); }}>證照中心</a>
               <span>/</span>
@@ -962,6 +1011,36 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                         </button>
                       );
                     })}
+
+                    {/* Bookmarked questions filter button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedSection('bookmarked');
+                        setCurrentIdx(0);
+                        setExpandedAiStep(0);
+                      }}
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: selectedSection === 'bookmarked' ? '1px solid var(--color-brand-gold)' : '1px solid var(--border-subtle)',
+                        backgroundColor: selectedSection === 'bookmarked' ? 'rgba(189, 167, 126, 0.12)' : 'transparent',
+                        color: selectedSection === 'bookmarked' ? 'var(--color-brand-deep-slate)' : 'var(--text-primary)',
+                        fontWeight: selectedSection === 'bookmarked' ? 700 : 500,
+                        fontSize: '13px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Bookmark size={14} color="var(--color-brand-gold)" />
+                        <span>我的收藏題目</span>
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({bookmarkedIds.size})</span>
+                    </button>
                   </div>
 
                   <div style={{ marginTop: '16px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5, borderTop: '1px dashed var(--border-subtle)', paddingTop: '12px' }}>
@@ -972,43 +1051,82 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
 
               {/* Right Column: Question Card & Answering Area */}
               <div>
-                <div className="card" style={{ padding: '32px' }}>
-                  {/* Question Header Meta */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <span className="badge badge-slate" style={{ fontSize: '12px' }}>
-                        第 {safeIdx + 1} 題（官方編號 #{currentQ.officialNumber}）
-                      </span>
-                      <SourceBadge
-                        sourceType="official_verified"
-                        sourceName="勞動部 173003A17"
-                        sourceVersion="V115100817 現行版"
-                        sourcePage={currentQ.officialPage}
-                      />
-                      <span className="badge badge-subtle" style={{ fontSize: '11px' }}>
-                        {currentQ.category}
-                      </span>
-                    </div>
-
+                {filteredQuestions.length === 0 ? (
+                  <div className="card" style={{ padding: '48px 32px', textAlign: 'center' }}>
+                    <Bookmark size={40} color="var(--color-brand-gold)" style={{ margin: '0 auto 16px', opacity: 0.6 }} />
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-brand-charcoal)' }}>
+                      尚無收藏題目
+                    </h3>
+                    <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '420px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+                      在章節練習時點擊題目右上方的「收藏此題」，即可將重要或需反覆研讀的考題收錄於此。
+                    </p>
                     <button
                       type="button"
-                      onClick={() => toggleBookmark(currentQ.id)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        background: 'none',
-                        border: 'none',
-                        color: isBookmarked ? 'var(--color-brand-gold)' : 'var(--text-muted)',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                      }}
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setSelectedSection('all')}
                     >
-                      {isBookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-                      <span>{isBookmarked ? '已收藏' : '收藏此題'}</span>
+                      前往所有官方題庫
                     </button>
                   </div>
+                ) : (
+                  <div className="card" style={{ padding: '32px' }}>
+                    {/* Question Header Meta */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="badge badge-slate" style={{ fontSize: '12px' }}>
+                          第 {safeIdx + 1} 題（官方編號 #{currentQ.officialNumber}）
+                        </span>
+                        <SourceBadge
+                          sourceType="official_verified"
+                          sourceName="勞動部 173003A17"
+                          sourceVersion="V115100817 現行版"
+                          sourcePage={currentQ.officialPage}
+                        />
+                        <span className="badge badge-subtle" style={{ fontSize: '11px' }}>
+                          {currentQ.category}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setIsNoteEditorOpen(!isNoteEditorOpen)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'none',
+                            border: 'none',
+                            color: noteText ? 'var(--color-brand-deep-slate)' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Edit3 size={16} />
+                          <span>{noteText ? '已記筆記' : '寫筆記'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleBookmark(currentQ.id)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'none',
+                            border: 'none',
+                            color: isBookmarked ? 'var(--color-brand-gold)' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {isBookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                          <span>{isBookmarked ? '已收藏' : '收藏此題'}</span>
+                        </button>
+                      </div>
+                    </div>
 
                   {/* Question Stem */}
                   <h2 style={{ fontSize: '18px', lineHeight: 1.7, marginBottom: '20px', color: 'var(--color-brand-charcoal)', fontWeight: 600 }}>
@@ -1209,6 +1327,101 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                     </div>
                   )}
 
+                  {/* Personal Study Notes Section */}
+                  <div style={{ marginTop: '20px', borderTop: '1px dashed var(--border-subtle)', paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setIsNoteEditorOpen(!isNoteEditorOpen)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: 'none',
+                          border: 'none',
+                          color: noteText ? 'var(--color-brand-deep-slate)' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          padding: 0,
+                        }}
+                      >
+                        <Edit3 size={15} color="var(--color-brand-gold)" />
+                        <span>個人學習筆記 {noteText ? '(已有筆記)' : '(點擊撰寫)'}</span>
+                      </button>
+                      {noteSavedMessage && (
+                        <span style={{ fontSize: '12px', color: '#2E7D32', fontWeight: 600 }}>
+                          ✓ {noteSavedMessage}
+                        </span>
+                      )}
+                    </div>
+
+                    {isNoteEditorOpen && (
+                      <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '12px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+                        <textarea
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          placeholder="記錄本題的個人思考眉角、記憶訣竅或易混淆觀念..."
+                          rows={3}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            borderRadius: '4px',
+                            border: '1px solid var(--border-default)',
+                            backgroundColor: 'var(--surface-base)',
+                            color: 'var(--text-primary)',
+                            fontSize: '13px',
+                            lineHeight: 1.6,
+                            resize: 'vertical',
+                            marginBottom: '10px',
+                          }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                          {noteText && (
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-xs"
+                              onClick={handleDeleteNote}
+                              style={{ color: '#C62828', borderColor: 'rgba(198, 40, 40, 0.3)' }}
+                            >
+                              <Trash2 size={13} />
+                              <span>刪除筆記</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-xs"
+                            onClick={handleSaveNote}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Save size={13} />
+                            <span>儲存筆記</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isNoteEditorOpen && noteText && (
+                      <div
+                        onClick={() => setIsNoteEditorOpen(true)}
+                        style={{
+                          backgroundColor: 'rgba(189, 167, 126, 0.08)',
+                          borderLeft: '3px solid var(--color-brand-gold)',
+                          padding: '10px 14px',
+                          borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
+                          fontSize: '13px',
+                          lineHeight: 1.6,
+                          color: 'var(--color-brand-deep-slate)',
+                          cursor: 'pointer',
+                        }}
+                        title="點擊展開編輯筆記"
+                      >
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '2px' }}>我的筆記（點擊可修改）：</div>
+                        {noteText}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Question Navigation Prev / Next */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--border-subtle)' }}>
                     <button
@@ -1283,6 +1496,7 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                     </button>
                   </div>
                 </div>
+                )}
               </div>
             </div>
           )}

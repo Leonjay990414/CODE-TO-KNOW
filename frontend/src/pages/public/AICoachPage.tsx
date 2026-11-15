@@ -62,6 +62,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
   const [selectedScenario, setSelectedScenario] = useState<CoachScenario>(COACH_SCENARIOS[0]);
   const [currentStage, setCurrentStage] = useState<number>(1);
   const [customQuery, setCustomQuery] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; text: string; stage?: number }>>([
     { role: 'user', text: COACH_SCENARIOS[0].studentQuery },
     { role: 'ai', text: COACH_SCENARIOS[0].stage1, stage: 1 },
@@ -91,19 +92,24 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
 
   const handleSendCustomQuery = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customQuery.trim()) return;
+    if (!customQuery.trim() || isGenerating) return;
 
-    const userText = customQuery;
+    const userText = customQuery.trim();
     setCustomQuery('');
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', text: userText },
-      {
-        role: 'ai',
-        text: `【觀念引導示範】：針對「${userText}」，先停下來回想核心概念：在 HTML5 語意化與 CSS 盒模型標準中，這個問題涉及到哪一條基礎原則？試著檢查標籤屬性、盒模型邊界或父子階層關係。`,
-        stage: 1,
-      },
-    ]);
+    setMessages((prev) => [...prev, { role: 'user', text: userText }]);
+    setIsGenerating(true);
+
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text: `【觀念引導提示 · 離線模式】：針對問題「${userText}」，先停下來回想核心概念：在 HTML5 語意化或 CSS 盒模型標準中，這個問題涉及到哪一條基礎原則？試著檢查標籤屬性、盒模型邊界或父子階層關係。`,
+          stage: 1,
+        },
+      ]);
+      setIsGenerating(false);
+    }, 350);
   };
 
   return (
@@ -311,6 +317,41 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                     </div>
                   );
                 })}
+                {isGenerating && (
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--color-brand-deep-slate)',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Sparkles size={18} color="#BDA77E" />
+                    </div>
+                    <div
+                      style={{
+                        padding: '12px 18px',
+                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: 'var(--surface-sunken)',
+                        color: 'var(--text-secondary)',
+                        fontSize: '13px',
+                        border: '1px solid var(--border-subtle)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span className="spinner" style={{ width: '14px', height: '14px' }} />
+                      <span>AI 教練正在梳理觀念引導步驟...</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Input Form for custom question */}

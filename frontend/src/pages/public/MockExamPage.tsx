@@ -183,6 +183,8 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
             <nav className="breadcrumb-nav" aria-label="導覽路徑" style={{ marginBottom: '8px' }}>
               <a href="#hero" onClick={(e) => { e.preventDefault(); goToHome(); }}>首頁</a>
               <span>/</span>
+              <a href="#student" onClick={(e) => { e.preventDefault(); goToStudentDashboard(); }}>學生中心</a>
+              <span>/</span>
               <a href="#certifications" onClick={(e) => { e.preventDefault(); goToCertifications(); }}>證照中心</a>
               <span>/</span>
               <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>17300 網頁設計丙級 · 全真模擬測驗</span>

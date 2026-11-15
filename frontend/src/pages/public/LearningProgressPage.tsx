@@ -22,7 +22,7 @@ interface LearningProgressPageProps {
 
 export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
-  const { goToHome, goToCertifications, goToTheoryPractice, goToMockExam } = useNavigation();
+  const { goToHome, goToStudentDashboard, goToCertifications, goToTheoryPractice, goToMockExam } = useNavigation();
 
   const userId = user?.id || 'guest-anonymous';
   const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
@@ -46,6 +46,8 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
             <nav className="breadcrumb-nav" aria-label="導覽路徑" style={{ marginBottom: '12px' }}>
               <a href="#hero" onClick={(e) => { e.preventDefault(); goToHome(); }}>首頁</a>
               <span>/</span>
+              <a href="#student" onClick={(e) => { e.preventDefault(); goToStudentDashboard(); }}>學生中心</a>
+              <span>/</span>
               <a href="#certifications" onClick={(e) => { e.preventDefault(); goToCertifications(); }}>證照中心</a>
               <span>/</span>
               <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>個人學習歷程與數據儀表板</span>
@@ -63,6 +65,13 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={goToStudentDashboard}
+                >
+                  返回學生中心
+                </button>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"

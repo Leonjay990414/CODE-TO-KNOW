@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, User as UserIcon, LogOut, School } from 'lucide-react';
+import { Menu, X, ArrowRight, User as UserIcon, LogOut, School, ShieldAlert } from 'lucide-react';
 import { useAuth, AuthModalMode } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
 
@@ -34,6 +34,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Accessibility: Close mobile menu on Escape key
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { label: '首頁', href: '#hero' },
     { label: '證照中心', href: '#certifications' },
@@ -59,6 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
       href === '#progress' ||
       href === '#student' ||
       href === '#teacher' ||
+      href === '#admin' ||
       href === '#sources' ||
       href.startsWith('#games')
     ) {
@@ -210,6 +224,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                   </button>
                 )}
 
+                {user.roles.includes('ADMIN') && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => navigate('#admin')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '0 10px', height: '30px', borderColor: 'var(--color-brand-gold)' }}
+                  >
+                    <ShieldAlert size={13} />
+                    <span>管理後台</span>
+                  </button>
+                )}
+
                 {!user.roles.includes('TEACHER') && !user.roles.includes('ADMIN') && (
                   <button
                     type="button"
@@ -285,6 +311,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
             className="mobile-only-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? '關閉選單' : '開啟導覽選單'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-drawer"
             style={{
               display: 'none',
               alignItems: 'center',
@@ -303,6 +331,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div
+          id="mobile-navigation-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="行動版導覽選單"
           style={{
             position: 'fixed',
             top: '72px',
@@ -377,6 +409,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                     >
                       <School size={15} />
                       <span>進入教師管理中心</span>
+                    </button>
+                  )}
+
+                  {user.roles.includes('ADMIN') && (
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => { setMobileMenuOpen(false); navigate('#admin'); }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', borderColor: 'var(--color-brand-gold)' }}
+                    >
+                      <ShieldAlert size={15} />
+                      <span>進入平台管理後台</span>
                     </button>
                   )}
 
@@ -532,6 +576,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           }
           .mobile-only-toggle {
             display: flex !important;
+          }
+        }
+        @media (min-width: 1024px) and (max-width: 1199px) {
+          .desktop-only-nav {
+            gap: 16px !important;
+          }
+          .nav-link-item {
+            font-size: 13px !important;
+          }
+          .desktop-only-cta {
+            gap: 8px !important;
+          }
+          .desktop-only-cta button {
+            padding: 5px 8px !important;
           }
         }
         .nav-link-item:hover {
