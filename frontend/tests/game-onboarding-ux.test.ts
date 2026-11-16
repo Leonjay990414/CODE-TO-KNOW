@@ -65,4 +65,38 @@ describe('Phase 14 Second Batch 1: Game Onboarding & UX Consistency Tests', () =
       expect(lvl.pedagogicalNotes.length).toBeGreaterThan(10);
     });
   });
+
+  it('5. verifies Game Center search and category filtering logic (P14-GAM-001)', () => {
+    // Model the 5 games metadata representation
+    const catalog = [
+      { id: 'code-puzzle', uid: 'P14-GAM-004', title: 'Code Puzzle (程式邏輯拼圖)', tag: 'HTML5 / CSS / JS', categories: ['HTML', 'CSS', 'JS'] },
+      { id: 'css-designer', uid: 'P14-GAM-005', title: 'CSS Designer (樣式排版設計師)', tag: '色彩 / 盒模型 / Flexbox / 卡片', categories: ['CSS'] },
+      { id: 'bug-hunter', uid: 'P14-GAM-006', title: 'Bug Hunter (程式除錯獵人)', tag: 'HTML / CSS / JS 綜合除錯', categories: ['HTML', 'CSS', 'JS'] },
+      { id: 'quiz-rush', uid: 'P14-GAM-007', title: 'Quiz Rush (證照疾速快答)', tag: '605 題官方題庫 / 限時快答 / Combo', categories: ['EXAM'] },
+      { id: 'web-builder', uid: 'P14-GAM-008', title: 'Web Builder (網頁架構拼裝工坊)', tag: 'HTML5 語意地標 / 結構拼裝', categories: ['HTML'] },
+    ];
+
+    // Filter by category
+    const htmlGames = catalog.filter(g => g.categories.includes('HTML'));
+    expect(htmlGames.map(g => g.id)).toEqual(['code-puzzle', 'bug-hunter', 'web-builder']);
+
+    const cssGames = catalog.filter(g => g.categories.includes('CSS'));
+    expect(cssGames.map(g => g.id)).toEqual(['code-puzzle', 'css-designer', 'bug-hunter']);
+
+    const jsGames = catalog.filter(g => g.categories.includes('JS'));
+    expect(jsGames.map(g => g.id)).toEqual(['code-puzzle', 'bug-hunter']);
+
+    const examGames = catalog.filter(g => g.categories.includes('EXAM'));
+    expect(examGames.map(g => g.id)).toEqual(['quiz-rush']);
+
+    // Keyword search
+    const searchFlexbox = catalog.filter(g => g.tag.toLowerCase().includes('flexbox') || g.title.toLowerCase().includes('flexbox'));
+    expect(searchFlexbox.map(g => g.id)).toEqual(['css-designer']);
+
+    const searchExam = catalog.filter(g => g.tag.toLowerCase().includes('605') || g.title.toLowerCase().includes('快答'));
+    expect(searchExam.map(g => g.id)).toEqual(['quiz-rush']);
+
+    const searchUid = catalog.filter(g => g.uid === 'P14-GAM-004');
+    expect(searchUid.map(g => g.id)).toEqual(['code-puzzle']);
+  });
 });

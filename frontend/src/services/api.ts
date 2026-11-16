@@ -4,11 +4,48 @@
  * Supports static GitHub Pages Preview Demo Mode via VITE_DEMO_MODE=true.
  */
 
-export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+export interface ApiConfigOptions {
+  isDemo?: boolean;
+  isProd?: boolean;
+  envApiUrl?: string;
+}
 
-const API_BASE_URL = isDemoMode
-  ? ''
-  : (import.meta.env.VITE_API_URL || 'http://localhost:4000/api');
+export function resolveApiConfiguration(options?: ApiConfigOptions) {
+  const isDemo = options?.isDemo ?? (import.meta.env.VITE_DEMO_MODE === 'true');
+  const isProd = options?.isProd ?? Boolean(import.meta.env.PROD);
+  const rawUrl = (options?.envApiUrl ?? import.meta.env.VITE_API_URL ?? '').trim();
+
+  const isMissing = isProd && !isDemo && !rawUrl;
+  const baseUrl = isDemo
+    ? ''
+    : rawUrl
+      ? rawUrl
+      : isProd
+        ? ''
+        : 'http://localhost:4000/api';
+
+  const mode = isDemo ? 'demo' : isProd ? 'production' : 'development';
+
+  return {
+    mode: mode as 'demo' | 'production' | 'development',
+    baseUrl,
+    isDemoMode: isDemo,
+    isProduction: isProd,
+    isProductionApiMissing: isMissing,
+    configured: isDemo || (!isMissing && !!baseUrl),
+  };
+}
+
+const currentConfig = resolveApiConfiguration();
+
+export const isDemoMode = currentConfig.isDemoMode;
+export const isProduction = currentConfig.isProduction;
+export const isProductionApiMissing = currentConfig.isProductionApiMissing;
+export const API_BASE_URL: string = currentConfig.baseUrl;
+
+export function getApiConfigurationStatus() {
+  return resolveApiConfiguration();
+}
 
 export const DEMO_STORAGE_KEY = 'ctk_demo_user';
 export const DEMO_TEACHER_APP_STORAGE_KEY = 'ctk_demo_teacher_app';
@@ -68,6 +105,10 @@ export async function getCsrfToken(): Promise<string> {
     return 'demo-csrf-token';
   }
 
+  if (isProductionApiMissing || !API_BASE_URL) {
+    return '';
+  }
+
   if (cachedCsrfToken) {
     return cachedCsrfToken;
   }
@@ -110,6 +151,17 @@ async function request<T = unknown>(
       error: {
         code: 'DEMO_MODE_NOTICE',
         message: '展示模式已啟用，所有操作皆為前端純靜態模擬，不發送外部網路請求。',
+      },
+    };
+  }
+
+  if (isProductionApiMissing) {
+    return {
+      success: false,
+      error: {
+        code: 'PRODUCTION_API_NOT_CONFIGURED',
+        message:
+          '正式環境尚未設定後端 API 伺服器位址 (VITE_API_URL)。若為預覽站台，請開啟展示模式 (VITE_DEMO_MODE=true) 或聯絡系統管理員配置 API 端點。',
       },
     };
   }
@@ -636,8 +688,21 @@ export const adminApi = {
       };
     }
 
+    if (isProductionApiMissing || !API_BASE_URL) {
+      return {
+        success: false,
+        error: {
+          code: 'PRODUCTION_API_NOT_CONFIGURED',
+          message: '正式環境尚未設定後端 API 伺服器位址，無法執行系統健康檢查',
+        },
+      };
+    }
+
     try {
-      const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/health`, {
+      const healthEndpoint = API_BASE_URL.endsWith('/api')
+        ? `${API_BASE_URL.slice(0, -4)}/api/health`
+        : `${API_BASE_URL}/health`;
+      const res = await fetch(healthEndpoint, {
         method: 'GET',
       });
       const data: SystemHealthData = await res.json();

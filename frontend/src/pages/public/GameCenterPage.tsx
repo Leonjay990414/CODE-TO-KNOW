@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   Sparkles,
   Award,
+  Search,
+  X,
+  Filter,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -24,6 +27,8 @@ import { getDetailedAchievements } from '../../utils/gameAchievementEngine';
 interface GameCenterPageProps {
   onOpenTeacherApply?: () => void;
 }
+
+export type GameCategory = 'ALL' | 'HTML' | 'CSS' | 'JS' | 'EXAM';
 
 export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
@@ -39,6 +44,9 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
   const [quizRecord, setQuizRecord] = useState(() => getUserGameRecord(userId, 'quiz-rush'));
   const [webBuilderRecord, setWebBuilderRecord] = useState(() => getUserGameRecord(userId, 'web-builder'));
 
+  const [selectedCategory, setSelectedCategory] = useState<GameCategory>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
   useEffect(() => {
     setStats(getOverallGameStats(userId));
     setAchievements(getDetailedAchievements(userId));
@@ -49,7 +57,23 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
     setWebBuilderRecord(getUserGameRecord(userId, 'web-builder'));
   }, [userId]);
 
-  const gamesList = [
+  const gamesList: Array<{
+    id: string;
+    uid: string;
+    title: string;
+    subtitle: string;
+    icon: React.ReactNode;
+    status: 'AVAILABLE' | 'COMING_SOON';
+    statusText: string;
+    tag: string;
+    categories: GameCategory[];
+    levelsCount: number;
+    completedLevels: number;
+    stars: number;
+    score: number;
+    actionHash: string;
+    description: string;
+  }> = [
     {
       id: 'code-puzzle',
       uid: 'P14-GAM-004',
@@ -59,6 +83,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       status: 'AVAILABLE',
       statusText: '已開放遊玩',
       tag: 'HTML5 / CSS / JS',
+      categories: ['HTML', 'CSS', 'JS'],
       levelsCount: 4,
       completedLevels: puzzleRecord.completedLevelsCount,
       stars: puzzleRecord.totalStars,
@@ -75,6 +100,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       status: 'AVAILABLE',
       statusText: '已開放遊玩',
       tag: '色彩 / 盒模型 / Flexbox / 卡片',
+      categories: ['CSS'],
       levelsCount: 4,
       completedLevels: cssRecord.completedLevelsCount,
       stars: cssRecord.totalStars,
@@ -91,6 +117,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       status: 'AVAILABLE',
       statusText: '已開放遊玩',
       tag: 'HTML / CSS / JS 綜合除錯',
+      categories: ['HTML', 'CSS', 'JS'],
       levelsCount: 4,
       completedLevels: bugRecord.completedLevelsCount,
       stars: bugRecord.totalStars,
@@ -107,6 +134,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       status: 'AVAILABLE',
       statusText: '已開放遊玩',
       tag: '605 題官方題庫 / 限時快答 / Combo',
+      categories: ['EXAM'],
       levelsCount: 4,
       completedLevels: quizRecord.completedLevelsCount,
       stars: quizRecord.totalStars,
@@ -123,6 +151,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       status: 'AVAILABLE',
       statusText: '已開放遊玩',
       tag: 'HTML5 語意地標 / 結構拼裝',
+      categories: ['HTML'],
       levelsCount: 4,
       completedLevels: webBuilderRecord.completedLevelsCount,
       stars: webBuilderRecord.totalStars,
@@ -131,6 +160,27 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
       description: '將文件宣告、地標（header/nav/main/footer）與圖文區塊積木拼裝成現代標準網頁，培養全域架構視野。',
     },
   ];
+
+  const categoryTabs: { key: GameCategory; label: string; count: number }[] = [
+    { key: 'ALL', label: '全部遊戲', count: gamesList.length },
+    { key: 'HTML', label: 'HTML 結構', count: gamesList.filter((g) => g.categories.includes('HTML')).length },
+    { key: 'CSS', label: 'CSS 樣式', count: gamesList.filter((g) => g.categories.includes('CSS')).length },
+    { key: 'JS', label: 'JavaScript', count: gamesList.filter((g) => g.categories.includes('JS')).length },
+    { key: 'EXAM', label: '證照快答', count: gamesList.filter((g) => g.categories.includes('EXAM')).length },
+  ];
+
+  const filteredGames = gamesList.filter((game) => {
+    const matchesCategory = selectedCategory === 'ALL' || game.categories.includes(selectedCategory);
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      game.title.toLowerCase().includes(q) ||
+      game.subtitle.toLowerCase().includes(q) ||
+      game.description.toLowerCase().includes(q) ||
+      game.tag.toLowerCase().includes(q) ||
+      game.uid.toLowerCase().includes(q);
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -258,9 +308,164 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
             </div>
           </div>
 
+          {/* Search & Filter Controls (P14-GAM-001) */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              marginBottom: '24px',
+              padding: '16px 20px',
+              backgroundColor: 'var(--surface-sunken)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-default)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              {/* Keyword Search Input */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: 'var(--surface-base)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '8px 12px',
+                  flex: '1 1 280px',
+                  maxWidth: '460px',
+                  position: 'relative',
+                }}
+              >
+                <Search size={18} color="var(--text-muted)" style={{ marginRight: '8px', flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="搜尋遊戲名稱、技術關鍵字 (例：Flexbox, 題庫, 拼圖)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    width: '100%',
+                    fontSize: '13px',
+                    color: 'var(--text-primary)',
+                  }}
+                  aria-label="搜尋遊戲"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'var(--text-muted)',
+                    }}
+                    title="清除關鍵字"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* Match Counter */}
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Filter size={14} />
+                <span>顯示 {filteredGames.length} / {gamesList.length} 款遊戲</span>
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap',
+              }}
+            >
+              {categoryTabs.map((tab) => {
+                const isActive = selectedCategory === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setSelectedCategory(tab.key)}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '12px',
+                      fontWeight: isActive ? 600 : 500,
+                      borderRadius: '20px',
+                      border: isActive ? '1px solid var(--color-brand-gold)' : '1px solid var(--border-default)',
+                      backgroundColor: isActive ? 'rgba(189, 167, 126, 0.15)' : 'var(--surface-base)',
+                      color: isActive ? 'var(--color-brand-gold)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>{tab.label}</span>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        backgroundColor: isActive ? 'var(--color-brand-gold)' : 'var(--surface-sunken)',
+                        color: isActive ? '#fff' : 'var(--text-muted)',
+                      }}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* 5 Games Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-            {gamesList.map((game) => {
+            {filteredGames.length === 0 ? (
+              <div
+                style={{
+                  gridColumn: '1 / -1',
+                  textAlign: 'center',
+                  padding: '48px 24px',
+                  backgroundColor: 'var(--surface-sunken)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px dashed var(--border-default)',
+                }}
+              >
+                <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  查無符合條件的遊戲
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  試著調整搜尋關鍵字或選擇不同的技術分類
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('ALL');
+                  }}
+                  className="btn btn-outline btn-sm"
+                >
+                  重設搜尋條件
+                </button>
+              </div>
+            ) : (
+              filteredGames.map((game) => {
               const isAvailable = game.status === 'AVAILABLE';
 
               return (
@@ -384,7 +589,8 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                   </div>
                 </div>
               );
-            })}
+            })
+          )}
           </div>
         </div>
       </main>

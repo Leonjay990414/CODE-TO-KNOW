@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, User as UserIcon, LogOut, School, ShieldAlert } from 'lucide-react';
+import { Menu, X, ArrowRight, User as UserIcon, LogOut, School, ShieldAlert, Bell } from 'lucide-react';
 import { useAuth, AuthModalMode } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
+import { NotificationCenterModal } from './NotificationCenterModal';
+import { getUnreadCount } from '../utils/notificationStorage';
 
 interface NavbarProps {
   onOpenAuth?: (mode: AuthModalMode) => void;
@@ -13,6 +15,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, openAuth: contextOpenAuth, logout, isDemoMode, loginAsDemo } = useAuth();
   const { route, navigate } = useNavigation();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    setUnreadCount(getUnreadCount(user?.id || 'guest'));
+  }, [user?.id]);
 
   const handleOpenAuth = (mode: AuthModalMode) => {
     if (onOpenAuth) {
@@ -55,6 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
     { label: '全真模考', href: '#mock-exam' },
     { label: '程式沙盒', href: '#code-editor' },
     { label: 'AI 教練', href: '#ai-coach' },
+    { label: '遊戲中心', href: '#games' },
     { label: '學習進度', href: '#progress' },
   ];
 
@@ -105,6 +114,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
     if (itemHref === '#mock-exam') return route.page === 'mock-exam';
     if (itemHref === '#code-editor') return route.page === 'code-editor';
     if (itemHref === '#ai-coach') return route.page === 'ai-coach';
+    if (itemHref === '#games') {
+      return (
+        route.page === 'game-center' ||
+        route.page === 'code-puzzle' ||
+        route.page === 'css-designer' ||
+        route.page === 'bug-hunter' ||
+        route.page === 'quiz-rush' ||
+        route.page === 'web-builder'
+      );
+    }
     if (itemHref === '#progress') return route.page === 'learning-progress';
     if (itemHref === '#sources') return route.page === 'import-system';
     if (itemHref === '#hero' && route.page === 'home') return true;
@@ -188,6 +207,52 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
 
           {/* Action CTAs / User Auth Info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} className="desktop-only-cta">
+            {/* In-App Notification Center Bell */}
+            <button
+              type="button"
+              onClick={() => setIsNotificationOpen(true)}
+              style={{
+                position: 'relative',
+                background: 'none',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--color-brand-deep-slate)',
+                backgroundColor: 'var(--surface-sunken)',
+              }}
+              aria-label={`站內通知中心 (${unreadCount} 則未讀)`}
+              title={`站內通知中心 (${unreadCount} 則未讀)`}
+            >
+              <Bell size={17} />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-2px',
+                    right: '-2px',
+                    backgroundColor: '#BDA77E',
+                    color: '#FFF',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    minWidth: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 2px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
@@ -610,6 +675,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           width: 100%;
         }
       `}</style>
+      <NotificationCenterModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        userId={user?.id || 'guest'}
+        onNavigate={navigate}
+        onNotificationsUpdated={() => setUnreadCount(getUnreadCount(user?.id || 'guest'))}
+      />
     </>
   );
 };

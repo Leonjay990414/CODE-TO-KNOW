@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, School, Check, ArrowRight } from 'lucide-react';
+import { GraduationCap, School, Check, ArrowRight, Gamepad2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface StudentTeacherDualProps {
@@ -153,15 +153,31 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
                     </span>
                     <span><strong>個人錯題複習本</strong>：根據遺忘曲線智慧推薦最需複習之節點</span>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--status-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--status-success)', flexShrink: 0 }}>
+                      <Check size={14} />
+                    </span>
+                    <span><strong>5 大互動教育遊戲</strong>：語意拼圖、版面調校、程式除錯，寓教於樂</span>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-mobile-full"
-                  onClick={() => openAuth('register')}
-                >
-                  <span>以學生身分開始探索</span>
-                  <ArrowRight size={14} />
-                </button>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-mobile-full"
+                    onClick={() => openAuth('register')}
+                  >
+                    <span>以學生身分開始探索</span>
+                    <ArrowRight size={14} />
+                  </button>
+                  <a
+                    href="#games"
+                    className="btn btn-outline btn-mobile-full"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Gamepad2 size={15} />
+                    <span>進入遊戲中心</span>
+                  </a>
+                </div>
               </div>
 
               {/* Student Workflow Visual Mockup */}

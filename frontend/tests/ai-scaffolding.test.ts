@@ -1,71 +1,119 @@
 import { describe, it, expect } from 'vitest';
+import {
+  classifyTechnology,
+  generateFallbackResponse,
+  validateAiSourceStatus,
+  AIS_009_PROMPT_METADATA,
+  SCAFFOLDING_STAGES_INFO,
+} from '../src/utils/aiFallbackEngine';
 
-describe('Phase 11: AI Core & Cognitive Scaffolding Engine (P11-AIX-001, P11-AIX-002, P11-AIX-004)', () => {
-  // Canonical 4-Stage Pedagogical Scaffolding
-  const SCAFFOLDING_STAGES = [
-    { stage: 1, name: '觀念聚焦', description: '檢驗先備知識與底層定理，禁止直接提供代碼' },
-    { stage: 2, name: '思考破題', description: '引導演算法與邏輯流程，梳理條件分支' },
-    { stage: 3, name: '邊界提點', description: '指出檢定考場陷阱、特殊案例與邊界條件' },
-    { stage: 4, name: '完整解構', description: '對比架構選型、語意標準與時空複雜度' },
-  ];
+describe('Phase 11: AI Core & Cognitive Scaffolding Engine (P11-AIS-001 ~ P11-AIS-011)', () => {
+  describe('1. HTML / CSS / JavaScript Technology Classification (P11-AIS-004)', () => {
+    it('classifies HTML structural questions accurately', () => {
+      const res = classifyTechnology('如何在頁面中加入 iframe 並且讓超連結可以在裡面開啟？');
+      expect(res.category).toBe('HTML');
+      expect(res.nameZh).toContain('HTML');
+      expect(res.focusZh).toContain('結構');
+    });
 
-  describe('1. 4-Stage Cognitive Architecture Verification', () => {
+    it('classifies CSS styling and layout questions accurately', () => {
+      const res = classifyTechnology('為什麼我的外層容器設定了 margin: 0 auto 卻無法水平置中？');
+      expect(res.category).toBe('CSS');
+      expect(res.nameZh).toContain('CSS');
+      expect(res.focusZh).toContain('排版');
+    });
+
+    it('classifies JavaScript interactive and DOM questions accurately', () => {
+      const res = classifyTechnology('使用 addEventListener 綁定 click 事件卻一直報錯 null 怎麼辦？');
+      expect(res.category).toBe('JAVASCRIPT');
+      expect(res.nameZh).toContain('JavaScript');
+      expect(res.focusZh).toContain('互動');
+    });
+
+    it('classifies general certification or unspecified questions as GENERAL', () => {
+      const res = classifyTechnology('丙級技術士檢定的評分規則與考場注意事項有哪些？');
+      expect(res.category).toBe('GENERAL');
+      expect(res.nameZh).toContain('通識');
+    });
+  });
+
+  describe('2. Canonical 4-Stage Pedagogical Scaffolding (P11-AIS-005)', () => {
     it('defines exactly 4 progressive cognitive scaffolding stages', () => {
-      expect(SCAFFOLDING_STAGES).toHaveLength(4);
-      expect(SCAFFOLDING_STAGES.map((s) => s.stage)).toEqual([1, 2, 3, 4]);
+      const stages = Object.keys(SCAFFOLDING_STAGES_INFO).map(Number);
+      expect(stages).toEqual([1, 2, 3, 4]);
     });
 
     it('enforces pedagogical progression from conceptual focus to architectural deconstruction', () => {
-      expect(SCAFFOLDING_STAGES[0].name).toContain('觀念');
-      expect(SCAFFOLDING_STAGES[1].name).toContain('思考');
-      expect(SCAFFOLDING_STAGES[2].name).toContain('邊界');
-      expect(SCAFFOLDING_STAGES[3].name).toContain('解構');
+      expect(SCAFFOLDING_STAGES_INFO[1].name).toBe('觀念聚焦');
+      expect(SCAFFOLDING_STAGES_INFO[2].name).toBe('思考破題');
+      expect(SCAFFOLDING_STAGES_INFO[3].name).toBe('邊界提點');
+      expect(SCAFFOLDING_STAGES_INFO[4].name).toBe('完整解構');
+    });
+
+    it('stage 1 enforces anti-spoiler rule: forbids direct code dump and focuses on reflective guiding', () => {
+      expect(SCAFFOLDING_STAGES_INFO[1].antiSpoilerRuleZh).toContain('嚴禁直接輸出解答程式碼');
     });
   });
 
-  describe('2. Anti-Spoiler Principle (Independent Thinking First)', () => {
-    it('stage 1 prompt generator asks reflective questions instead of providing direct solution code', () => {
-      const userQuestion = '我的水平置中失效了，怎麼辦？';
-      const stage1Prompt = `針對問題「${userQuestion}」，請引導學生回想 CSS 盒模型外距（margin）自動分配原則，不得直接提供完整 CSS 程式碼。`;
+  describe('3. Offline Fallback Engine & Curated Patterns (P11-AIS-006, P11-AIS-010)', () => {
+    it('produces curated multi-stage advice for CSS float collapse', () => {
+      const stage1 = generateFallbackResponse('子元素 float 導致父容器高度塌陷怎麼辦？', 1);
+      expect(stage1.source).toBe('OFFLINE');
+      expect(stage1.category).toBe('CSS');
+      expect(stage1.stage).toBe(1);
+      expect(stage1.contentZh).toContain('文件流');
+      expect(stage1.guidingQuestionZh).toBeDefined();
 
-      expect(stage1Prompt).toContain('不得直接提供完整 CSS 程式碼');
-      expect(stage1Prompt).toContain('引導');
+      const stage3 = generateFallbackResponse('子元素 float 導致父容器高度塌陷怎麼辦？', 3);
+      expect(stage3.stage).toBe(3);
+      expect(stage3.contentZh).toContain('考場邊界提點');
     });
 
-    it('stage 2 provides logical steps and pseudocode concepts without solving the problem entirely', () => {
-      const stage2Concept = '要讓區塊元素水平置中，外層容器寬度固定時，左右外距需要設為 auto。';
-      expect(stage2Concept).not.toContain('<style>');
-      expect(stage2Concept).toContain('左右外距');
+    it('produces curated advice for HTML target iframe mismatch', () => {
+      const res = generateFallbackResponse('點選超連結無法在 iframe 內嵌框架開啟', 2);
+      expect(res.category).toBe('HTML');
+      expect(res.contentZh).toContain('name');
+      expect(res.stage).toBe(2);
     });
-  });
 
-  describe('3. Offline Degradation & Fallback Resilience', () => {
-    it('gracefully degrades to curated rule-based hints when external LLM API is unavailable', () => {
-      const isExternalLlmConnected = false;
-      const getAiResponse = (query: string, stage: number) => {
-        if (!isExternalLlmConnected) {
-          return {
-            source: 'RULE_BASED_FALLBACK',
-            text: `【本機離線觀念引導】：針對「${query}」，請檢查核心盒模型規範或 HTML5 標籤語意。`,
-            stage,
-            isOnlineModel: false,
-          };
-        }
-        return { source: 'CLOUD_LLM', text: '線上回應', stage, isOnlineModel: true };
-      };
-
-      const response = getAiResponse('Float 塌陷問題', 1);
-      expect(response.source).toBe('RULE_BASED_FALLBACK');
-      expect(response.isOnlineModel).toBe(false);
-      expect(response.text).toContain('本機離線觀念引導');
+    it('provides honest and non-hallucinatory generic guidance when question does not match curated patterns', () => {
+      const res = generateFallbackResponse('某個冷門未知的語法或奇怪錯誤', 1);
+      expect(res.source).toBe('OFFLINE');
+      expect(res.contentZh).toContain('觀念聚焦引導');
+      expect(res.transparencyNoticeZh).toContain('未匹配到特定特定考題模式');
+      expect(res.isLiveModel).toBe(false);
     });
   });
 
-  describe('4. AI Transparency & Educational Disclaimer', () => {
-    it('includes disclaimer statement that AI assists thinking rather than replacing independent problem-solving', () => {
-      const disclaimer = '碼上學 AI 教學助理僅供學習啟發與思考導引，所有實作與評分標準均以勞動部技能檢定中心官方公布之最新規範為準。';
-      expect(disclaimer).toContain('啟發與思考導引');
-      expect(disclaimer).toContain('勞動部技能檢定中心官方公布');
+  describe('4. AI Source Status Verification: DEMO / OFFLINE / AI_LIVE (P11-AIS-011)', () => {
+    it('allows DEMO source for curated scenario demonstrations', () => {
+      const res = generateFallbackResponse('版面置中失效', 1, { isDemoScenario: true, hasActiveLlmKey: false });
+      expect(res.source).toBe('DEMO');
+      expect(res.isLiveModel).toBe(false);
+      expect(res.transparencyNoticeZh).toContain('展示模式');
+    });
+
+    it('strictly forbids AI_LIVE when no active commercial LLM key is configured', () => {
+      const validated = validateAiSourceStatus('AI_LIVE', false);
+      expect(validated).toBe('OFFLINE');
+    });
+
+    it('only permits AI_LIVE when an active commercial LLM key is verified', () => {
+      const validated = validateAiSourceStatus('AI_LIVE', true);
+      expect(validated).toBe('AI_LIVE');
+    });
+  });
+
+  describe('5. AIS-009 Protection & Metadata Regression (P11-AIS-009 100% PASS)', () => {
+    it('preserves AIS-009 prompt version and metadata contracts', () => {
+      expect(AIS_009_PROMPT_METADATA.uid).toBe('P11-AIS-009');
+      expect(AIS_009_PROMPT_METADATA.version).toBe('v1.4.0-socratic-offline');
+      expect(AIS_009_PROMPT_METADATA.antiSpoilerEnforced).toBe(true);
+    });
+
+    it('attaches AIS-009 prompt version to every generated fallback response', () => {
+      const res = generateFallbackResponse('任意題目測試', 1);
+      expect(res.promptVersion).toBe('v1.4.0-socratic-offline');
     });
   });
 });

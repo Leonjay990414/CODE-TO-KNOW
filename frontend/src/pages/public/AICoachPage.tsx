@@ -5,11 +5,21 @@ import {
   CheckCircle2,
   ChevronRight,
   BookOpen,
+  ShieldCheck,
+  Tag,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import {
+  classifyTechnology,
+  generateFallbackResponse,
+  AIS_009_PROMPT_METADATA,
+  ResponseSource,
+  ScaffoldingStage,
+  TechnologyClassification,
+} from '../../utils/aiFallbackEngine';
 
 interface AICoachPageProps {
   onOpenTeacherApply?: () => void;
@@ -19,16 +29,28 @@ interface CoachScenario {
   id: string;
   topic: string;
   studentQuery: string;
+  category: 'HTML' | 'CSS' | 'JAVASCRIPT';
   stage1: string; // 觀念聚焦
   stage2: string; // 思考破題
   stage3: string; // 邊界提點
   stage4: string; // 完整解構
 }
 
+interface ChatMessage {
+  role: 'user' | 'ai';
+  text: string;
+  stage?: ScaffoldingStage;
+  source?: ResponseSource;
+  categoryName?: string;
+  guidingQuestion?: string;
+  nextStep?: string;
+}
+
 const COACH_SCENARIOS: CoachScenario[] = [
   {
     id: 's1',
     topic: '版面水平置中失效',
+    category: 'CSS',
     studentQuery: '我在寫題組一外層容器時，設定了 width: 1024px，但畫面卻一直靠左對齊，沒有水平置中，為什麼？',
     stage1: '在 CSS 中，要讓一個「區塊元素（Block-level element）」在可用視窗中水平居中，必須讓瀏覽器自動分配左右邊界。你現在的外距（margin）是怎麼宣告的呢？',
     stage2: '許多初學者常誤用 `text-align: center;`，但那只能讓「行內文字」置中。若要讓 1024px 區塊本身置中，需要利用 `margin-left: auto;` 與 `margin-right: auto;`。',
@@ -38,6 +60,7 @@ const COACH_SCENARIOS: CoachScenario[] = [
   {
     id: 's2',
     topic: 'CSS Float 導致父容器高度塌陷',
+    category: 'CSS',
     studentQuery: '我在左右兩欄排版時對選單設定了 float: left，結果外層父容器的高度瞬間變成 0，背景色都不見了！',
     stage1: '當元素被設定為 `float: left;` 後，它就脫離了正常的「文件排版流 (Document Flow)」。此時父容器便無法「感知」浮動子元素的高度，因此發生高度塌陷。',
     stage2: '思考解決方向：我們需要告訴父容器「必須重新包裹住浮動的子元素」。傳統作法是使用清除浮動（Clearfix），或者觸發 BFC（Block Formatting Context）。',
@@ -47,6 +70,7 @@ const COACH_SCENARIOS: CoachScenario[] = [
   {
     id: 's3',
     topic: '超連結 target 開啟錯誤',
+    category: 'HTML',
     studentQuery: '點選左側選單的吉他社連結時，它都在全新的瀏覽器分頁開啟，沒有在右邊的主內容框顯示，扣分很重嗎？',
     stage1: '在考場評分標準中，「超連結未於指定框架開啟」會被判定為功能不符直接扣分。超連結預設的開啟方式是 `_self`，而全新視窗是 `_blank`。',
     stage2: '回想題目要求：右側的主內容區是一個 iframe，它具備 `name="main"` 屬性。你的 `<a>` 標籤的 `target` 屬性填寫了什麼？',
@@ -60,34 +84,89 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
   const { goToHome, goToCertifications, goToTheoryPractice } = useNavigation();
 
   const [selectedScenario, setSelectedScenario] = useState<CoachScenario>(COACH_SCENARIOS[0]);
-  const [currentStage, setCurrentStage] = useState<number>(1);
+  const [currentQueryText, setCurrentQueryText] = useState<string>(COACH_SCENARIOS[0].studentQuery);
+  const [currentCategory, setCurrentCategory] = useState<TechnologyClassification>(
+    classifyTechnology(COACH_SCENARIOS[0].studentQuery)
+  );
+  const [currentStage, setCurrentStage] = useState<ScaffoldingStage>(1);
   const [customQuery, setCustomQuery] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; text: string; stage?: number }>>([
+  const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'user', text: COACH_SCENARIOS[0].studentQuery },
-    { role: 'ai', text: COACH_SCENARIOS[0].stage1, stage: 1 },
+    {
+      role: 'ai',
+      text: COACH_SCENARIOS[0].stage1,
+      stage: 1,
+      source: 'DEMO',
+      categoryName: 'CSS 視覺樣式',
+      guidingQuestion: '你現在的外距（margin）是怎麼宣告的呢？',
+      nextStep: '檢查外層包裹容器是否有設定明確寬度（width）與 margin 屬性。',
+    },
   ]);
 
   const handleSelectScenario = (sc: CoachScenario) => {
     setSelectedScenario(sc);
+    setIsCustomMode(false);
+    setCurrentQueryText(sc.studentQuery);
+    setCurrentCategory(classifyTechnology(sc.studentQuery));
     setCurrentStage(1);
     setMessages([
       { role: 'user', text: sc.studentQuery },
-      { role: 'ai', text: sc.stage1, stage: 1 },
+      {
+        role: 'ai',
+        text: sc.stage1,
+        stage: 1,
+        source: 'DEMO',
+        categoryName: sc.category === 'CSS' ? 'CSS 視覺樣式' : 'HTML 網頁結構',
+        guidingQuestion: '請先回想核心規範與標籤屬性關係。',
+        nextStep: '點選上方按鈕推進至第 2 階思考破題。',
+      },
     ]);
   };
 
   const handleNextStage = () => {
     if (currentStage >= 4) return;
-    const nextStage = currentStage + 1;
+    const nextStage = (currentStage + 1) as ScaffoldingStage;
     setCurrentStage(nextStage);
 
-    let text = '';
-    if (nextStage === 2) text = selectedScenario.stage2;
-    else if (nextStage === 3) text = selectedScenario.stage3;
-    else if (nextStage === 4) text = selectedScenario.stage4;
+    if (!isCustomMode) {
+      let text = '';
+      if (nextStage === 2) text = selectedScenario.stage2;
+      else if (nextStage === 3) text = selectedScenario.stage3;
+      else if (nextStage === 4) text = selectedScenario.stage4;
 
-    setMessages((prev) => [...prev, { role: 'ai', text, stage: nextStage }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text,
+          stage: nextStage,
+          source: 'DEMO',
+          categoryName: currentCategory.nameZh,
+        },
+      ]);
+    } else {
+      // Custom query progression using offline fallback engine
+      const fallback = generateFallbackResponse(currentQueryText, nextStage, {
+        isDemoScenario: false,
+        hasActiveLlmKey: false,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text: fallback.contentZh,
+          stage: nextStage,
+          source: fallback.source,
+          categoryName: fallback.categoryName,
+          guidingQuestion: fallback.guidingQuestionZh,
+          nextStep: fallback.nextStepZh,
+        },
+      ]);
+    }
   };
 
   const handleSendCustomQuery = (e: React.FormEvent) => {
@@ -96,20 +175,35 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
 
     const userText = customQuery.trim();
     setCustomQuery('');
+    setIsCustomMode(true);
+    setCurrentQueryText(userText);
+    const cat = classifyTechnology(userText);
+    setCurrentCategory(cat);
+    setCurrentStage(1);
+
     setMessages((prev) => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
 
     setTimeout(() => {
+      const fallback = generateFallbackResponse(userText, 1, {
+        isDemoScenario: false,
+        hasActiveLlmKey: false,
+      });
+
       setMessages((prev) => [
         ...prev,
         {
           role: 'ai',
-          text: `【觀念引導提示 · 離線模式】：針對問題「${userText}」，先停下來回想核心概念：在 HTML5 語意化或 CSS 盒模型標準中，這個問題涉及到哪一條基礎原則？試著檢查標籤屬性、盒模型邊界或父子階層關係。`,
+          text: fallback.contentZh,
           stage: 1,
+          source: fallback.source,
+          categoryName: fallback.categoryName,
+          guidingQuestion: fallback.guidingQuestionZh,
+          nextStep: fallback.nextStepZh,
         },
       ]);
       setIsGenerating(false);
-    }, 350);
+    }, 280);
   };
 
   return (
@@ -130,12 +224,18 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                   <span className="badge badge-gold">
                     <Sparkles size={12} color="#7C663D" />
                     <span>啟發式引導教練</span>
                   </span>
-                  <span className="badge badge-neutral">不直接劇透答案 · 培養推導思維</span>
+                  <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <ShieldCheck size={12} color="#2E7D32" />
+                    <span>運行模式：OFFLINE (本機離線備援引擎)</span>
+                  </span>
+                  <span className="badge badge-neutral">
+                    <span>Prompt {AIS_009_PROMPT_METADATA.version}</span>
+                  </span>
                 </div>
                 <h1 className="text-h2" style={{ fontSize: '28px' }}>
                   CODE TO KNOW 4 階 AI 學習鷹架
@@ -164,7 +264,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
             <span style={{ fontSize: '13px', lineHeight: 1.6 }}>
               CODE TO KNOW AI 學習教練依循「觀念聚焦 → 思考破題 → 邊界提點 → 完整解構」四階鷹架，陪伴你親自寫出正確解法。
               <span style={{ display: 'block', marginTop: '4px', color: 'var(--color-brand-deep-slate)', fontWeight: 600 }}>
-                〔功能透明度告知〕本頁目前採用本地題庫與四階引導規則展示教學邏輯（展示模式），尚未串接即時商業 LLM API。
+                〔功能透明度告知〕本頁目前採用本地題庫與離線啟發式引導規則（OFFLINE / DEMO 模式），未連接外部商業 LLM API（禁止標示 AI LIVE）。
               </span>
             </span>
           </div>
@@ -173,15 +273,29 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
         {/* Coach Interactive Interface */}
         <div className="container" style={{ marginTop: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '24px', alignItems: 'start' }} className="coach-grid">
-            {/* Left Column: Common Scenarios Selector */}
+            {/* Left Column: Common Scenarios & Classification */}
             <aside>
+              {/* Active Classification Badge */}
+              <div className="card" style={{ padding: '16px', marginBottom: '16px', borderLeft: '4px solid var(--color-brand-gold)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <Tag size={14} color="var(--color-brand-gold)" />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>當前問題技術分類</span>
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  {currentCategory.nameZh}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  {currentCategory.focusZh}
+                </div>
+              </div>
+
               <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>
                   考場常見盲點題組
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {COACH_SCENARIOS.map((sc) => {
-                    const isSelected = selectedScenario.id === sc.id;
+                    const isSelected = !isCustomMode && selectedScenario.id === sc.id;
                     return (
                       <button
                         key={sc.id}
@@ -199,8 +313,13 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                           cursor: 'pointer',
                         }}
                       >
-                        <div style={{ fontSize: '11px', color: 'var(--color-brand-gold)', fontWeight: 700, marginBottom: '2px' }}>
-                          高頻疑難
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--color-brand-gold)', fontWeight: 700 }}>
+                            {sc.category} 考題
+                          </span>
+                          <span style={{ fontSize: '10px', padding: '1px 4px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }}>
+                            DEMO
+                          </span>
                         </div>
                         <div>{sc.topic}</div>
                       </button>
@@ -234,9 +353,14 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
             {/* Right Column: Chat Dialog & Step Controller */}
             <div className="card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', minHeight: '580px' }}>
               {/* Stepper Status Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-charcoal)' }}>
-                  當前引導進度：第 {currentStage} 階 / 共 4 階
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-charcoal)' }}>
+                    當前引導進度：第 {currentStage} 階 / 共 4 階
+                  </div>
+                  <span className="badge badge-neutral" style={{ fontSize: '11px' }}>
+                    {isCustomMode ? 'OFFLINE 備援' : 'DEMO 示範'}
+                  </span>
                 </div>
 
                 {currentStage < 4 ? (
@@ -294,7 +418,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                       <div
                         className="fade-in-section is-visible"
                         style={{
-                          maxWidth: '75%',
+                          maxWidth: '80%',
                           padding: '14px 18px',
                           borderRadius: 'var(--radius-md)',
                           backgroundColor: isAi ? 'var(--surface-sunken)' : 'var(--color-brand-deep-slate)',
@@ -304,15 +428,39 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                           border: isAi ? '1px solid var(--border-subtle)' : 'none',
                         }}
                       >
-                        {isAi && m.stage && (
-                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)', marginBottom: '4px' }}>
-                            {m.stage === 1 && '【第 1 階 · 觀念聚焦】'}
-                            {m.stage === 2 && '【第 2 階 · 思考破題】'}
-                            {m.stage === 3 && '【第 3 階 · 邊界提點】'}
-                            {m.stage === 4 && '【第 4 階 · 完整解構】'}
+                        {isAi && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: '8px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>
+                              {m.stage === 1 && '【第 1 階 · 觀念聚焦】'}
+                              {m.stage === 2 && '【第 2 階 · 思考破題】'}
+                              {m.stage === 3 && '【第 3 階 · 邊界提點】'}
+                              {m.stage === 4 && '【第 4 階 · 完整解構】'}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '10px',
+                                padding: '1px 6px',
+                                borderRadius: '4px',
+                                backgroundColor: m.source === 'DEMO' ? '#E8DCD8' : '#D9E2EA',
+                                color: '#2B3A42',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {m.source === 'DEMO' ? 'DEMO 示範' : 'OFFLINE 備援'}
+                            </span>
                           </div>
                         )}
                         <div>{m.text}</div>
+
+                        {/* Guiding Question or Next Step */}
+                        {isAi && m.guidingQuestion && (
+                          <div style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: 'var(--surface-base)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-default)', fontSize: '12px' }}>
+                            <div style={{ fontWeight: 600, color: 'var(--color-brand-deep-slate)', marginBottom: '2px' }}>
+                              啟發式自問引導：
+                            </div>
+                            <div style={{ color: 'var(--text-secondary)' }}>{m.guidingQuestion}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -348,7 +496,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                       }}
                     >
                       <span className="spinner" style={{ width: '14px', height: '14px' }} />
-                      <span>AI 教練正在梳理觀念引導步驟...</span>
+                      <span>AI 本機備援引擎正在為你梳理觀念引導步驟...</span>
                     </div>
                   </div>
                 )}
@@ -360,7 +508,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                   type="text"
                   value={customQuery}
                   onChange={(e) => setCustomQuery(e.target.value)}
-                  placeholder="輸入你在網頁設計檢定遇到的疑問或盲點..."
+                  placeholder="輸入你在網頁設計檢定遇到的疑問（如：表格邊框、超連結 target、float 塌陷...）"
                   style={{
                     flex: 1,
                     padding: '12px 16px',

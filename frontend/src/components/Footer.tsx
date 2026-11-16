@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
+import { FeedbackModal } from './FeedbackModal';
 
 export const Footer: React.FC = () => {
   const { goToLegalNotice } = useNavigation();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <footer style={{ backgroundColor: 'var(--color-brand-charcoal)', color: 'var(--color-brand-sand)', paddingTop: 'var(--space-16)', paddingBottom: 'var(--space-12)', borderTop: '1px solid rgba(82, 107, 123, 0.2)' }}>
@@ -142,10 +144,30 @@ export const Footer: React.FC = () => {
             >
               AI 使用倫理聲明
             </a>
+            <a
+              href="#feedback"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsFeedbackOpen(true);
+              }}
+              className="footer-legal-link"
+              style={{
+                color: 'var(--color-brand-sand)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                transition: 'color 0.15s ease, background-color 0.15s ease',
+              }}
+            >
+              意見回饋
+            </a>
           </div>
         </div>
 
       </div>
+
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
       <style>{`
         .footer-legal-link:hover {
