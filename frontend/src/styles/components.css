@@ -103,7 +103,11 @@
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-standard),
+              background-color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -132,8 +136,10 @@
   box-shadow: var(--shadow-sm);
 }
 
-.btn-primary:active {
-  transform: translateY(0);
+.btn-primary:active,
+.btn:active {
+  transform: scale(var(--motion-scale-press, 0.97)) translateY(0) !important;
+  transition-duration: var(--dur-instant, 100ms) !important;
 }
 
 .btn-secondary {
@@ -190,7 +196,10 @@
   border-radius: var(--radius-md);
   padding: var(--space-6);
   box-shadow: var(--shadow-subtle);
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard),
+              background-color var(--dur-base) var(--ease-standard);
 }
 
 .card-interactive {
@@ -199,8 +208,13 @@
 
 .card-interactive:hover {
   border-color: var(--color-brand-slate);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
+}
+
+.card-interactive:active {
+  transform: translateY(-1px) scale(0.99);
+  transition-duration: var(--dur-instant, 100ms);
 }
 
 /* Glassmorphism */
@@ -832,6 +846,220 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid rgba(90, 125, 108, 0.3);
 }
 
+/* ==========================================================================
+   11. Text Animation Utilities (CTK-SPEC-ANIMATION-INTERACTION-20261117)
+   ========================================================================== */
+.text-reveal-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.text-reveal-up {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: textRevealUp var(--dur-slow) var(--ease-enter) forwards;
+}
+
+@keyframes textRevealUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accent-underline-grow {
+  position: relative;
+  display: inline-block;
+}
+
+.accent-underline-grow::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--color-brand-gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-enter);
+  border-radius: var(--radius-full);
+}
+
+.accent-underline-grow.is-active::after,
+.accent-underline-grow:hover::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+   12. SVG & Icon Micro-Animations
+   ========================================================================== */
+.svg-logo-spark {
+  transform-origin: 200px 56px;
+  transition: transform var(--dur-fast) var(--ease-spring), opacity var(--dur-fast) var(--ease-standard);
+}
+
+.brand-logo-interactive:hover .svg-logo-spark {
+  animation: logoSparkPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes logoSparkPulse {
+  0% { transform: scale(1); opacity: 0.85; }
+  100% { transform: scale(1.18); opacity: 1; filter: drop-shadow(0 0 4px rgba(189, 167, 126, 0.6)); }
+}
+
+.icon-interactive {
+  display: inline-flex;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.btn:hover .icon-interactive {
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   13. Scroll Reveal System (Zero Overflow, Safe Transitions)
+   ========================================================================== */
+.reveal-scroll-fade {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-enter);
+  will-change: opacity;
+}
+
+.reveal-scroll-fade.is-revealed {
+  opacity: 1;
+}
+
+.reveal-scroll-up {
+  opacity: 0;
+  transform: translateY(var(--motion-displacement-md, 16px));
+  transition: opacity var(--dur-slow) var(--ease-enter),
+              transform var(--dur-slow) var(--ease-enter);
+  will-change: opacity, transform;
+}
+
+.reveal-scroll-up.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   14. Unified Icon Containers & Typography Balancing
+   ========================================================================== */
+.icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  transition: transform var(--dur-fast) var(--ease-standard),
+              background-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+
+.icon-box-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.icon-box-md {
+  width: 40px;
+  height: 40px;
+}
+
+.icon-box-lg {
+  width: 48px;
+  height: 48px;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-natural-break {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ==========================================================================
+   15. Mobile Hamburger Animated Morphing Icon & Drawer Animation
+   ========================================================================== */
+.hamburger-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background-color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-instant) var(--ease-standard);
+}
+
+.hamburger-toggle-btn:hover {
+  background-color: var(--surface-sunken);
+  border-color: var(--color-brand-slate);
+}
+
+.hamburger-toggle-btn:active {
+  transform: scale(var(--motion-scale-press, 0.96));
+}
+
+.hamburger-lines-box {
+  width: 22px;
+  height: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-brand-deep-slate);
+  border-radius: 2px;
+  transform-origin: center;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 200ms ease;
+}
+
+/* Morphing from 3 bars to X */
+.hamburger-lines-box.is-open .hamburger-bar-top {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-lines-box.is-open .hamburger-bar-mid {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger-lines-box.is-open .hamburger-bar-bot {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Staggered item entrance */
+@keyframes mobileMenuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Reduced motion preference (Strict WCAG AAA & Zero Disorientation) */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -844,8 +1072,22 @@ input:focus, select:focus, textarea:focus {
     transform: none !important;
   }
   .fade-in-section,
-  .stagger-item {
+  .stagger-item,
+  .text-reveal-up,
+  .reveal-scroll-fade,
+  .reveal-scroll-up,
+  .mobile-menu-item-stagger {
     opacity: 1 !important;
     transform: none !important;
+    animation: none !important;
+  }
+  .accent-underline-grow::after {
+    transform: scaleX(1) !important;
+    transition: none !important;
+  }
+  .svg-logo-spark,
+  .hamburger-bar {
+    animation: none !important;
+    transition: none !important;
   }
 }

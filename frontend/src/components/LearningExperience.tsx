@@ -57,10 +57,10 @@ export const LearningExperience: React.FC = () => {
         </div>
 
         {/* Pillars Grid & Interactive Showcase */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--space-10)', alignItems: 'center' }} className="experience-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--space-10)', alignItems: 'stretch' }} className="experience-grid">
 
           {/* Left: Tab Selector List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' }}>
             {pillars.map((pillar, idx) => {
               const IconComp = pillar.icon;
               const isActive = activeTab === idx;
@@ -75,7 +75,11 @@ export const LearningExperience: React.FC = () => {
                     backgroundColor: isActive ? 'var(--surface-raised)' : 'transparent',
                     boxShadow: isActive ? 'var(--shadow-md)' : 'none',
                     borderLeft: isActive ? '4px solid var(--color-brand-gold)' : '1px solid var(--border-default)',
-                    transition: 'all var(--duration-normal) var(--ease-out)',
+                    transition: 'border-color var(--dur-base) var(--ease-standard), background-color var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-fast) var(--ease-standard)',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -112,7 +116,17 @@ export const LearningExperience: React.FC = () => {
           </div>
 
           {/* Right: Dynamic Interactive Preview Canvas */}
-          <div className="card glass-card" style={{ padding: '28px', minHeight: '440px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div
+            className="card glass-card experience-showcase-card"
+            style={{
+              padding: '28px',
+              height: '100%',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
 
             {/* Top Bar of the Mockup */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '20px' }}>
@@ -235,6 +249,11 @@ export const LearningExperience: React.FC = () => {
         @media (max-width: 1023px) {
           .experience-grid {
             grid-template-columns: 1fr !important;
+            align-items: stretch !important;
+          }
+          .experience-showcase-card {
+            min-height: 440px !important;
+            height: auto !important;
           }
         }
       `}</style>

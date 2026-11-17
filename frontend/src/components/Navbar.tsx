@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight, User as UserIcon, LogOut, School, ShieldAlert, Bell } from 'lucide-react';
+import { ArrowRight, User as UserIcon, LogOut, School, ShieldAlert, Bell } from 'lucide-react';
 import { useAuth, AuthModalMode } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
 import { NotificationCenterModal } from './NotificationCenterModal';
@@ -42,9 +42,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Accessibility: Close mobile menu on Escape key
+  // Accessibility: Close mobile menu on Escape key & Lock background scroll
   useEffect(() => {
     if (!mobileMenuOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -52,7 +55,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
   }, [mobileMenuOpen]);
 
   const navLinks = [
@@ -144,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           <a
             href="#hero"
             onClick={(e) => handleNavClick(e, '#hero')}
-            className="brand-logo-lockup"
+            className="brand-logo-lockup brand-logo-interactive"
             aria-label="碼上學 CODE TO KNOW 首頁"
           >
             {/* The Folio Monogram SVG Symbol */}
@@ -153,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                 <path fill="#526B7B" d="M 140 48 C 84 48 40 84 40 128 C 40 172 84 208 140 208 C 149 208 156 201 156 192 C 156 183 149 176 140 176 C 102 176 70 154 70 128 C 70 102 102 80 140 80 C 149 80 156 73 156 64 C 156 55 149 48 140 48 Z"/>
                 <path fill="#8FA9B8" d="M 130 126 C 135 121 143 121 148 126 L 194 172 C 200 178 200 186 194 192 C 188 198 180 198 174 192 L 130 148 C 124 142 124 132 130 126 Z"/>
                 <path fill="#BDA77E" d="M 126 114 L 176 64 C 181 59 189 59 194 64 C 199 69 199 77 194 82 L 144 132 C 139 137 131 137 126 132 C 121 127 121 119 126 114 Z"/>
-                <path fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
+                <path className="svg-logo-spark" fill="#BDA77E" d="M 200 38 C 200 48 194 54 184 56 C 194 58 200 64 200 74 C 200 64 206 58 216 56 C 206 54 200 48 200 38 Z"/>
               </svg>
             </div>
             <div className="brand-logo-text">
@@ -373,22 +379,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           {/* Mobile Hamburger Toggle Button */}
           <button
             type="button"
-            className="mobile-only-toggle"
+            className="mobile-only-toggle hamburger-toggle-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? '關閉選單' : '開啟導覽選單'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
-            style={{
-              display: 'none',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '44px',
-              height: '44px',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-primary)',
-            }}
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            <div className={`hamburger-lines-box ${mobileMenuOpen ? 'is-open' : ''}`} aria-hidden="true">
+              <span className="hamburger-bar hamburger-bar-top" />
+              <span className="hamburger-bar hamburger-bar-mid" />
+              <span className="hamburger-bar hamburger-bar-bot" />
+            </div>
           </button>
         </div>
       </header>
@@ -416,18 +417,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
+            className="mobile-drawer-scrollable"
             style={{
               backgroundColor: 'var(--surface-base)',
-              padding: '24px',
+              width: '100%',
+              maxHeight: 'calc(100vh - 72px)',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              padding: '20px 20px calc(48px + env(safe-area-inset-bottom, 24px)) 20px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '10px',
               borderBottom: '1px solid var(--border-default)',
               boxShadow: 'var(--shadow-lg)',
+              boxSizing: 'border-box',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {navLinks.map((item) => {
+            {navLinks.map((item, idx) => {
               const active = isLinkActive(item.href);
               return (
                 <a
@@ -435,27 +443,59 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   style={{
-                    fontSize: '16px',
-                    fontWeight: active ? 700 : 600,
+                    fontSize: '15px',
+                    fontWeight: active ? 700 : 500,
                     color: active ? 'var(--color-brand-deep-slate)' : 'var(--text-primary)',
-                    padding: '12px 8px',
+                    padding: '12px 14px',
                     borderBottom: '1px solid var(--border-subtle)',
                     borderLeft: active ? '4px solid var(--color-brand-gold)' : '4px solid transparent',
-                    paddingLeft: active ? '12px' : '8px',
                     backgroundColor: active ? 'var(--surface-sunken)' : 'transparent',
                     borderRadius: 'var(--radius-xs)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minHeight: '44px',
+                    boxSizing: 'border-box',
+                    animation: 'mobileMenuSlideDown 280ms cubic-bezier(0.16, 1, 0.3, 1) both',
+                    animationDelay: `${idx * 40}ms`,
                   }}
+                  className="mobile-menu-item-stagger"
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {active && (
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-brand-gold)' }} />
+                  )}
                 </a>
               );
             })}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginTop: '12px',
+                paddingTop: '12px',
+                borderTop: '1px solid var(--border-subtle)',
+                animation: 'mobileMenuSlideDown 280ms cubic-bezier(0.16, 1, 0.3, 1) both',
+                animationDelay: `${navLinks.length * 40}ms`,
+              }}
+              className="mobile-menu-item-stagger"
+            >
               {user ? (
                 <>
                   <div
                     onClick={() => { setMobileMenuOpen(false); navigate('#student'); }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      backgroundColor: 'var(--surface-sunken)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                      border: '1px solid var(--border-subtle)',
+                    }}
                     title="點擊進入學生中心"
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -470,7 +510,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                       type="button"
                       className="btn btn-outline"
                       onClick={() => { setMobileMenuOpen(false); navigate('#teacher'); }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', height: '44px' }}
                     >
                       <School size={15} />
                       <span>進入教師管理中心</span>
@@ -482,7 +522,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                       type="button"
                       className="btn btn-outline"
                       onClick={() => { setMobileMenuOpen(false); navigate('#admin'); }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', borderColor: 'var(--color-brand-gold)' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', height: '44px', borderColor: 'var(--color-brand-gold)' }}
                     >
                       <ShieldAlert size={15} />
                       <span>進入平台管理後台</span>
@@ -497,7 +537,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                         setMobileMenuOpen(false);
                         if (onOpenTeacherApply) onOpenTeacherApply();
                       }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '44px' }}
                     >
                       <School size={16} />
                       <span>申請成為認證教師</span>
@@ -512,7 +552,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                         const nextRole = user.roles.includes('TEACHER') ? 'STUDENT' : 'TEACHER';
                         loginAsDemo(nextRole);
                       }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '44px' }}
                     >
                       <span>⇄ 切換為{user.roles.includes('TEACHER') ? '示範學員' : '示範教師'}</span>
                     </button>
@@ -525,6 +565,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                       setMobileMenuOpen(false);
                       logout();
                     }}
+                    style={{ height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <LogOut size={16} />
                     <span>登出系統</span>
@@ -540,7 +581,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                         setMobileMenuOpen(false);
                         loginAsDemo('STUDENT');
                       }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '44px' }}
                     >
                       <span>以示範學員身分進入</span>
                     </button>
@@ -552,6 +593,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                       setMobileMenuOpen(false);
                       handleOpenAuth('login');
                     }}
+                    style={{ height: '44px' }}
                   >
                     登入
                   </button>
@@ -562,6 +604,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                       setMobileMenuOpen(false);
                       handleOpenAuth('register');
                     }}
+                    style={{ height: '44px' }}
                   >
                     <span>免費開始學習</span>
                     <ArrowRight size={16} />
@@ -635,7 +678,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
             letter-spacing: 0.08em;
           }
         }
-        @media (max-width: 1023px) {
+        @media (max-width: 1140px) {
           .desktop-only-nav, .desktop-only-cta {
             display: none !important;
           }
@@ -643,18 +686,32 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
             display: flex !important;
           }
         }
-        @media (min-width: 1024px) and (max-width: 1199px) {
+        @media (min-width: 1141px) and (max-width: 1279px) {
           .desktop-only-nav {
-            gap: 16px !important;
+            gap: 14px !important;
           }
           .nav-link-item {
             font-size: 13px !important;
+            padding: 6px 4px !important;
+            white-space: nowrap !important;
           }
           .desktop-only-cta {
             gap: 8px !important;
           }
           .desktop-only-cta button {
             padding: 5px 8px !important;
+          }
+        }
+        @media (min-width: 1280px) {
+          .desktop-only-nav {
+            gap: 22px !important;
+          }
+          .nav-link-item {
+            font-size: 14px !important;
+            white-space: nowrap !important;
+          }
+          .desktop-only-cta {
+            gap: 12px !important;
           }
         }
         .nav-link-item:hover {
@@ -668,7 +725,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
           width: 0;
           height: 2px;
           background-color: var(--color-brand-gold);
-          transition: all var(--duration-fast) var(--ease-out);
+          transition: width var(--dur-fast) var(--ease-enter);
           transform: translateX(-50%);
         }
         .nav-link-item:hover::after {

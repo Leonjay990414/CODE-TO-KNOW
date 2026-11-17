@@ -25,3 +25,38 @@ test-results/
 /900080A15.mp3
 /900090A12.mp3
 /173003B13.7z
+
+# Internal development notes, temporary scratch scripts and runtime dumps
+scratch/
+tmp/
+work/
+graphify-out/
+docs/development/
+
+# Local agent skills and multi-agent workspaces
+.adal/
+.agents/
+.aider-desk/
+.augment/
+.autohand/
+.bob/
+.claude/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+reverse-skill/
+skills/
+
+# Local proprietary documents and raw exam packages
+照片/
+計劃書.docx
+計劃書.pdf
+題組一答案/
+題組二答案/
+題組三答案/
+題組四答案/
+題組五答案/
+題組二_五.7z
+.vite/
+*.docx

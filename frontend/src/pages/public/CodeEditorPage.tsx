@@ -12,6 +12,7 @@ import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { OFFICIAL_PRACTICAL_TASKS, PracticalTaskDetail } from '../../data/practicalTasksData';
+import { PracticalSandboxPage } from '../student/practical';
 
 interface CodeEditorPageProps {
   onOpenTeacherApply?: () => void;
@@ -24,6 +25,7 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
   // Selected task id from route or default to 1
   const initialTaskId = route.taskId || 1;
   const [selectedTaskId, setSelectedTaskId] = useState<number>(initialTaskId);
+  const [editorMode, setEditorMode] = useState<'multipage' | 'single'>('multipage');
   const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [mobilePane, setMobilePane] = useState<'code' | 'preview'>('code');
@@ -144,8 +146,51 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
           </div>
         </div>
 
-        {/* Dual-Pane Code Sandbox Workspace */}
+        {/* 沙盒模式切換器：多頁網站沙盒 vs 單頁快速演練 */}
         <div className="container" style={{ marginTop: '16px' }}>
+          <div style={{ display: 'inline-flex', backgroundColor: '#E2E8F0', padding: '4px', borderRadius: '8px', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => setEditorMode('multipage')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: editorMode === 'multipage' ? '#FFFFFF' : 'transparent',
+                fontWeight: editorMode === 'multipage' ? 700 : 500,
+                color: editorMode === 'multipage' ? '#5A7D6C' : '#526B7B',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              🌐 多頁 HTML/CSS 網站沙盒 (支援超連結與子頁)
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorMode('single')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: editorMode === 'single' ? '#FFFFFF' : 'transparent',
+                fontWeight: editorMode === 'single' ? 700 : 500,
+                color: editorMode === 'single' ? '#26343D' : '#526B7B',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}
+            >
+              📄 單頁程式碼快速演練
+            </button>
+          </div>
+        </div>
+
+        {editorMode === 'multipage' ? (
+          <div className="container" style={{ marginTop: '12px' }}>
+            <PracticalSandboxPage initialTaskId={selectedTaskId} />
+          </div>
+        ) : (
+          /* Dual-Pane Code Sandbox Workspace */
+          <div className="container" style={{ marginTop: '16px' }}>
           {/* Toolbar */}
           <div
             style={{
@@ -421,7 +466,8 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
             </div>
           </div>
         </div>
-      </main>
+      )}
+    </main>
 
       <Footer />
     </div>

@@ -74,8 +74,15 @@ export const Hero: React.FC = () => {
             </div>
 
             <h1 className="text-h1" style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', marginBottom: 'var(--space-4)', letterSpacing: '-0.03em' }}>
-              讓每一次學習，<br />
-              都更接近真正的<span style={{ color: 'var(--color-brand-deep-slate)', borderBottom: '3px solid var(--color-brand-gold)' }}>理解</span>。
+              <span className="text-reveal-mask">
+                <span className="text-reveal-up" style={{ animationDelay: '60ms' }}>讓每一次學習，</span>
+              </span>
+              <br />
+              <span className="text-reveal-mask">
+                <span className="text-reveal-up" style={{ animationDelay: '140ms' }}>
+                  都更接近真正的<span className="accent-underline-grow is-active" style={{ color: 'var(--color-brand-deep-slate)' }}>理解</span>。
+                </span>
+              </span>
             </h1>
 
             <p className="text-body" style={{ fontSize: 'var(--font-size-md)', lineHeight: 1.8, marginBottom: 'var(--space-8)', maxWidth: '540px' }}>
@@ -93,7 +100,7 @@ export const Hero: React.FC = () => {
                 }}
               >
                 <span>開始探索平台</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="icon-interactive" />
               </a>
 
               <a
@@ -197,7 +204,7 @@ export const Hero: React.FC = () => {
                         backgroundColor: activeHintStep === item.step ? 'var(--color-brand-deep-slate)' : 'var(--color-brand-ice-slate)',
                         color: activeHintStep === item.step ? 'var(--color-brand-ivory)' : 'var(--color-brand-charcoal)',
                         border: '1px solid transparent',
-                        transition: 'all var(--duration-fast) var(--ease-out)',
+                        transition: 'background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-standard)',
                       }}
                     >
                       階梯 {item.step}：{item.title}

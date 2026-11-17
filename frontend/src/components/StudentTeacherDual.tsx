@@ -74,7 +74,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
                 backgroundColor: activeRole === 'student' ? 'var(--color-brand-deep-slate)' : 'transparent',
                 color: activeRole === 'student' ? '#FFFFFF' : 'var(--color-brand-deep-slate)',
                 boxShadow: activeRole === 'student' ? 'var(--shadow-sm)' : 'none',
-                transition: 'all var(--duration-fast) var(--ease-out)',
+                transition: 'background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-standard)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -102,7 +102,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
                 backgroundColor: activeRole === 'teacher' ? 'var(--color-brand-deep-slate)' : 'transparent',
                 color: activeRole === 'teacher' ? '#FFFFFF' : 'var(--color-brand-deep-slate)',
                 boxShadow: activeRole === 'teacher' ? 'var(--shadow-sm)' : 'none',
-                transition: 'all var(--duration-fast) var(--ease-out)',
+                transition: 'background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-standard)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -125,7 +125,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
             className="card"
             style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'center' }} className="dual-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'stretch' }} className="dual-grid">
               <div>
                 <span className="badge badge-gold" style={{ marginBottom: 'var(--space-2)' }}>自主探索 × 個性化</span>
                 <h3 className="text-h3" style={{ marginBottom: 'var(--space-4)' }}>
@@ -181,7 +181,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
               </div>
 
               {/* Student Workflow Visual Mockup */}
-              <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '14px', color: 'var(--color-brand-deep-slate)' }}>
                   學生端工作區介面預覽
                 </div>
@@ -219,7 +219,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
             className="card"
             style={{ padding: 'var(--space-10)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)' }}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'center' }} className="dual-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-10)', alignItems: 'stretch' }} className="dual-grid">
               <div>
                 <span className="badge badge-gold" style={{ marginBottom: 'var(--space-2)' }}>數據賦能 × 高效教學</span>
                 <h3 className="text-h3" style={{ marginBottom: 'var(--space-4)' }}>
@@ -259,7 +259,7 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
               </div>
 
               {/* Teacher Analytics Visual Mockup */}
-              <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '14px', color: 'var(--color-brand-deep-slate)' }}>
                   教師端班級數據概覽預覽
                 </div>

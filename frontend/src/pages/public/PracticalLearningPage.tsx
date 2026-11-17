@@ -31,6 +31,12 @@ import {
   resetPracticalProgress,
   PracticalTaskProgress,
 } from '../../utils/learningStorage';
+import {
+  PracticalHomePage,
+  PracticalDetailPage,
+  PracticalLessonPage,
+  PracticalSandboxPage,
+} from '../student/practical';
 
 interface PracticalLearningPageProps {
   onOpenTeacherApply?: () => void;
@@ -52,6 +58,11 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
 
   // User ID identifier (Demo/Guest fallback to 'guest-anonymous')
   const userId = user?.id || 'guest-anonymous';
+
+  // View mode: 'interactive' (new 13-module system) or 'spec' (classic specification audit view)
+  const [viewMode, setViewMode] = useState<'interactive' | 'spec'>('interactive');
+  const [subView, setSubView] = useState<'home' | 'detail' | 'lesson' | 'sandbox'>('home');
+  const [lessonStepNumber, setLessonStepNumber] = useState<number>(1);
 
   // Task 5 progress state
   const [progress, setProgress] = useState<PracticalTaskProgress>(() => {
@@ -128,7 +139,111 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
           </div>
         </section>
 
-        {/* Demo Mode Notice */}
+        {/* 模式切換器：13大模組互動實作 vs 規範查核 */}
+        <div className="container" style={{ marginTop: '20px' }}>
+          <div style={{ display: 'inline-flex', backgroundColor: '#E2E8F0', padding: '4px', borderRadius: '8px', gap: '4px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setViewMode('interactive')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: viewMode === 'interactive' ? '#FFFFFF' : 'transparent',
+                fontWeight: viewMode === 'interactive' ? 700 : 500,
+                color: viewMode === 'interactive' ? '#5A7D6C' : '#526B7B',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+              }}
+            >
+              <Sparkles size={15} color={viewMode === 'interactive' ? '#5A7D6C' : '#8FA9B8'} />
+              <span>五大題組 13 大標準教學模組與沙盒 (正式版)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('spec')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: viewMode === 'spec' ? '#FFFFFF' : 'transparent',
+                fontWeight: viewMode === 'spec' ? 700 : 500,
+                color: viewMode === 'spec' ? '#26343D' : '#526B7B',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+              }}
+            >
+              <FileCheck size={15} color={viewMode === 'spec' ? '#26343D' : '#8FA9B8'} />
+              <span>官方考綱規準與素材清冊 (查核版)</span>
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'interactive' ? (
+          <div className="container" style={{ marginTop: '16px' }}>
+            {subView === 'home' && (
+              <PracticalHomePage
+                onSelectTaskDetail={(id) => {
+                  setActiveTaskId(id);
+                  setSubView('detail');
+                }}
+                onOpenSandbox={(id) => {
+                  setActiveTaskId(id);
+                  setSubView('sandbox');
+                }}
+                onOpenLesson={(id, step) => {
+                  setActiveTaskId(id);
+                  setLessonStepNumber(step || 1);
+                  setSubView('lesson');
+                }}
+              />
+            )}
+            {subView === 'detail' && (
+              <PracticalDetailPage
+                taskId={activeTaskId}
+                onBackToHome={() => setSubView('home')}
+                onOpenLesson={(id, step) => {
+                  setActiveTaskId(id);
+                  setLessonStepNumber(step || 1);
+                  setSubView('lesson');
+                }}
+                onOpenSandbox={(id) => {
+                  setActiveTaskId(id);
+                  setSubView('sandbox');
+                }}
+              />
+            )}
+            {subView === 'lesson' && (
+              <PracticalLessonPage
+                taskId={activeTaskId}
+                initialStepNumber={lessonStepNumber}
+                onBackToDetail={() => setSubView('detail')}
+                onOpenSandbox={(id) => {
+                  setActiveTaskId(id);
+                  setSubView('sandbox');
+                }}
+              />
+            )}
+            {subView === 'sandbox' && (
+              <PracticalSandboxPage
+                initialTaskId={activeTaskId}
+                onBackToHome={() => setSubView('home')}
+                onBackToDetail={(id) => {
+                  setActiveTaskId(id);
+                  setSubView('detail');
+                }}
+              />
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Demo Mode Notice */}
         <div className="container" style={{ marginTop: '20px' }}>
           <div className="demo-banner">
             <Sparkles size={16} />
@@ -576,7 +691,9 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
             </aside>
           </div>
         </div>
-      </main>
+      </>
+    )}
+  </main>
 
       <Footer />
     </div>

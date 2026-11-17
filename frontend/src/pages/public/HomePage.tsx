@@ -28,20 +28,35 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenTeacherApply }) => {
     }
   };
 
-  // IntersectionObserver for soft scroll-reveal animations
+  // IntersectionObserver for soft scroll-reveal animations with reduced-motion support
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.fade-in-section, .reveal-scroll-up').forEach((el) => {
+        el.classList.add('is-visible', 'is-revealed');
+      });
+      return;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      document.querySelectorAll('.fade-in-section, .reveal-scroll-up').forEach((el) => {
+        el.classList.add('is-visible', 'is-revealed');
+      });
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
+            entry.target.classList.add('is-visible', 'is-revealed');
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }
     );
 
-    const sections = document.querySelectorAll('.fade-in-section');
+    const sections = document.querySelectorAll('.fade-in-section, .reveal-scroll-up');
     sections.forEach((section) => observer.observe(section));
 
     return () => observer.disconnect();
