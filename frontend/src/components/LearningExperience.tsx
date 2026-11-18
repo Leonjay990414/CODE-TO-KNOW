@@ -99,7 +99,7 @@ export const LearningExperience: React.FC = () => {
                       <IconComp size={18} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-brand-gold)', letterSpacing: '0.05em' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-brand-gold-text)', letterSpacing: '0.05em' }}>
                         {pillar.subtitle}
                       </div>
                       <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
@@ -165,7 +165,7 @@ export const LearningExperience: React.FC = () => {
                 <div style={{ backgroundColor: 'var(--surface-raised)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span className="badge badge-neutral">題號 #104 · 二元樹深度</span>
-                    <span style={{ fontSize: '12px', color: 'var(--status-success)', fontWeight: 600 }}>通過率 72.4%</span>
+                    <span style={{ fontSize: '12px', color: 'var(--status-success)', fontWeight: 600 }}>通過率 72.4% (示範題組參考值)</span>
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>
                     給定一個二元樹根節點 root，返回其最大深度（從根到最遠葉節點的路徑長度）。
@@ -206,7 +206,7 @@ export const LearningExperience: React.FC = () => {
                 <div style={{ backgroundColor: 'var(--surface-raised)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700 }}>知識掌握雷達分佈</span>
-                    <span className="badge badge-success">成長率 +18%</span>
+                    <span className="badge badge-success">成長率 +18% (示範模擬)</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
@@ -223,7 +223,7 @@ export const LearningExperience: React.FC = () => {
                     </div>
                     <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>持續學習天數</div>
-                      <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>24 天</div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>24 天</div>
                     </div>
                   </div>
                 </div>
@@ -232,8 +232,8 @@ export const LearningExperience: React.FC = () => {
             </div>
 
             {/* Bottom Status Caption */}
-            <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
-              <span>展示說明：四項模組完全互聯，建構無縫學習體驗</span>
+            <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-muted)', flexWrap: 'wrap', gap: '8px' }}>
+              <span>展示說明：四項模組完全互聯（*本區數據為展示評估模型，非線上真實學員統計）</span>
               <span style={{ color: 'var(--color-brand-deep-slate)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 查看模組詳細規格 <ArrowUpRight size={14} />
               </span>

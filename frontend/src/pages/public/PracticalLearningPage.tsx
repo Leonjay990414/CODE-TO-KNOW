@@ -44,7 +44,7 @@ interface PracticalLearningPageProps {
 
 export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
-  const { goToHome, goToCertifications, goToCodeEditor } = useNavigation();
+  const { goToHome, goToCertifications, goToCodeEditor, goToStudentPractical } = useNavigation();
 
   // Active Task Tab (1..5)
   const [activeTaskId, setActiveTaskId] = useState<number>(1);
@@ -125,16 +125,27 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                 </h1>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => goToCodeEditor(activeTaskId)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-              >
-                <Code2 size={16} />
-                <span>在線上程式沙盒實作此題組</span>
-                <ArrowRight size={14} />
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => goToStudentPractical(activeTaskId, 'home')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Sparkles size={16} />
+                  <span>進入學生專屬實作環境</span>
+                  <ArrowRight size={14} />
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => goToCodeEditor(activeTaskId)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Code2 size={16} />
+                  <span>線上程式編輯器</span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -476,7 +487,7 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                       <div style={{ padding: '20px', borderRadius: '8px', backgroundColor: 'var(--surface-sunken)', border: '1px solid var(--border-default)', marginBottom: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                           <div>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>
                               STEP {st.stepNumber} / {activeCurriculum.steps.length}
                             </span>
                             <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-brand-charcoal)', margin: '4px 0' }}>
@@ -554,7 +565,7 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
                         <FolderOpen size={16} color="var(--color-brand-deep-slate)" />
                         官方 {currentCurriculumConfig.totalAssetsCount} 份原始素材詳細索引清冊（已核實）
                       </span>
-                      <span style={{ fontSize: '12px', color: 'var(--color-brand-gold)' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--color-brand-gold-text)', fontWeight: 600 }}>
                         {showAssetTable ? '收合清單 ▲' : `展開檢視 (${currentCurriculumConfig.totalAssetsCount} 個檔案) ▼`}
                       </span>
                     </button>

@@ -213,12 +213,19 @@ export const GameAchievementsModal: React.FC<GameAchievementsModalProps> = ({
             onClick={handleClose}
             aria-label="關閉成就中心"
             style={{
-              padding: '6px',
+              padding: '10px',
+              width: '44px',
+              height: '44px',
+              minWidth: '44px',
+              minHeight: '44px',
               backgroundColor: 'transparent',
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
               color: '#64748B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <X size={20} />

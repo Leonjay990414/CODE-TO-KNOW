@@ -231,7 +231,7 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
     if (currentLevel.levelId === 2) {
       return (
         <div style={styles}>
-          <div style={{ fontWeight: 700, marginBottom: '4px', color: 'var(--color-brand-gold)' }}>
+          <div style={{ fontWeight: 700, marginBottom: '4px', color: 'var(--color-brand-gold-text)' }}>
             學習提醒 (Box Model)
           </div>
           <div>考前請務必掌握 padding 與 margin 留白定位，避免排版溢出！</div>
@@ -272,7 +272,7 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
             涵蓋學科 605 題與五大術科題組全真通關解析，助您輕鬆考取國家證照。
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-brand-gold)' }}>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-brand-gold-text)' }}>
               NT$ 0 <span style={{ fontSize: '11px', fontWeight: 400, color: '#94A3B8' }}>(公益免費)</span>
             </span>
             <button
@@ -736,7 +736,7 @@ export const CSSDesignerPage: React.FC<CSSDesignerPageProps> = ({ onOpenTeacherA
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       [目標畫面 Target]
                     </span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-brand-gold)' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--color-brand-gold-text)', fontWeight: 600 }}>
                       {currentLevel.targetDescription}
                     </span>
                   </div>

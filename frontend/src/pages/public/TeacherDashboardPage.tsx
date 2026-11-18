@@ -23,6 +23,9 @@ import {
   X,
   Check,
   UserCheck,
+  Gamepad2,
+  Star,
+  Edit3,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -42,6 +45,16 @@ import {
   UnifiedTaskCurriculum,
   TaskStep,
 } from '../../data/unifiedPracticalCurriculumData';
+import {
+  GameTypeKey,
+  TeacherGameTask,
+  GAME_TYPE_METADATA,
+  getAssignedGameTasks,
+  assignGameTask,
+  updateGameTask,
+  revokeGameTask,
+  hasTeacherAssignmentPermission,
+} from '../../utils/teacherGameTaskManager';
 
 const UNIFIED_PRACTICAL_TASKS: UnifiedTaskCurriculum[] = Object.values(UNIFIED_PRACTICAL_CURRICULUM_MAP);
 
@@ -55,8 +68,22 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
 
   const userId = user?.id || 'demo-teacher';
 
-  // Active view tab ('roster' | 'benchmark' | 'curriculum' | 'announcements')
-  const [activeTab, setActiveTab] = useState<'roster' | 'benchmark' | 'curriculum' | 'announcements'>('roster');
+  // Active view tab ('roster' | 'benchmark' | 'curriculum' | 'announcements' | 'game-tasks')
+  const [activeTab, setActiveTab] = useState<'roster' | 'benchmark' | 'curriculum' | 'announcements' | 'game-tasks'>('roster');
+
+  // Game Task Assignment States (P14-GAM-014 Local Prototype)
+  const [assignedGameTasks, setAssignedGameTasks] = useState<TeacherGameTask[]>([]);
+  const [selectedGameType, setSelectedGameType] = useState<GameTypeKey>('puzzle');
+  const [selectedGameLevel, setSelectedGameLevel] = useState<number>(1);
+  const [selectedTargetStars, setSelectedTargetStars] = useState<number>(2);
+  const [taskDueDate, setTaskDueDate] = useState<string>(
+    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  );
+  const [taskDescription, setTaskDescription] = useState<string>('');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editStars, setEditStars] = useState<number>(2);
+  const [editDueDate, setEditDueDate] = useState<string>('');
+  const [editDescription, setEditDescription] = useState<string>('');
 
   // Teacher Application Status State
   const [application, setApplication] = useState<TeacherApplication | null>(null);
@@ -302,6 +329,80 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
   };
 
   const isTeacherApproved = user?.roles.includes('TEACHER') || application?.status === 'APPROVED';
+
+  // Game Task Handlers (P14-GAM-014 Local Prototype)
+  useEffect(() => {
+    if (selectedClassId) {
+      setAssignedGameTasks(getAssignedGameTasks(selectedClassId, userId));
+    } else {
+      setAssignedGameTasks([]);
+    }
+  }, [selectedClassId, userId, activeTab]);
+
+  const handleAssignGameTask = () => {
+    if (!selectedClassId) {
+      alert('請先選擇或建立教學班級！');
+      return;
+    }
+    const hasPermission = hasTeacherAssignmentPermission(
+      user?.roles?.includes('TEACHER') ? 'TEACHER' : ((user as any)?.role || 'STUDENT'),
+      application?.status
+    );
+    if (!hasPermission && !isTeacherApproved) {
+      alert('權限不足：僅有經認證核准之教師可指派班級遊戲作業！');
+      return;
+    }
+
+    try {
+      const task = assignGameTask(selectedClassId, {
+        gameType: selectedGameType,
+        levelId: selectedGameLevel,
+        targetStars: selectedTargetStars,
+        dueDate: taskDueDate,
+        description: taskDescription.trim() || undefined,
+        teacherId: userId,
+      });
+      setAssignedGameTasks((prev) => [task, ...prev.filter((t) => t.id !== task.id)]);
+      setTaskDescription('');
+      setFeedbackMessage(`✓ 成功為班級指派【${task.gameTitle} · 第 ${task.levelId} 關】作業！`);
+      setTimeout(() => setFeedbackMessage(null), 3500);
+    } catch (err) {
+      console.error(err);
+      alert('指派作業失敗');
+    }
+  };
+
+  const handleUpdateGameTask = (taskId: string) => {
+    if (!selectedClassId) return;
+    const updated = updateGameTask(
+      selectedClassId,
+      taskId,
+      {
+        targetStars: editStars,
+        dueDate: editDueDate,
+        description: editDescription,
+      },
+      userId
+    );
+    if (updated) {
+      setAssignedGameTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
+      setEditingTaskId(null);
+      setFeedbackMessage('✓ 作業設定已成功更新！');
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  };
+
+  const handleRevokeGameTask = (taskId: string) => {
+    if (!selectedClassId) return;
+    if (confirm('確定要撤銷此項遊戲作業嗎？')) {
+      const success = revokeGameTask(selectedClassId, taskId, userId);
+      if (success) {
+        setAssignedGameTasks((prev) => prev.filter((t) => t.id !== taskId));
+        setFeedbackMessage('✓ 該項遊戲作業已撤銷！');
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      }
+    }
+  };
 
   // Derived current selected classroom
   const currentClass = classrooms.find((c) => c.id === selectedClassId);
@@ -640,6 +741,15 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
             >
               <Bell size={14} />
               <span>教學備忘與草稿 ({announcements.length} 則)</span>
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'game-tasks' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('game-tasks')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Gamepad2 size={14} />
+              <span>遊戲化作業指派 (P14-GAM-014 展示原型)</span>
             </button>
           </div>
         </div>
@@ -1161,7 +1271,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                             <div key={st.stepNumber} style={{ padding: '14px', borderRadius: '4px', backgroundColor: 'var(--surface-sunken)', borderLeft: '4px solid var(--color-brand-deep-slate)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
                                 <span>步驟 {st.stepNumber}：{st.title}</span>
-                                <span style={{ color: 'var(--color-brand-gold)', fontSize: '12px' }}>教學目標</span>
+                                <span style={{ color: 'var(--color-brand-gold-text)', fontSize: '12px' }}>教學目標</span>
                               </div>
                               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 6px 0', lineHeight: 1.5 }}>
                                 {st.purpose}
@@ -1277,6 +1387,408 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                   </div>
                 </div>
               </aside>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 5: Game Task Assignment (P14-GAM-014 Local Prototype) */}
+        {activeTab === 'game-tasks' && (
+          <div className="container" style={{ marginTop: '24px' }}>
+            {/* Prototype Transparency Notice Banner */}
+            <div
+              className="card"
+              style={{
+                padding: '16px 20px',
+                backgroundColor: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                borderRadius: 'var(--radius-md)',
+                marginBottom: '20px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <Info size={20} color="#1D4ED8" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1E40AF', margin: '0 0 4px 0' }}>
+                    【本機展示原型】教師遊戲關卡作業指派系統 (P14-GAM-014)
+                  </h4>
+                  <p style={{ fontSize: '12px', color: '#1E3A8A', margin: 0, lineHeight: 1.6 }}>
+                    此介面為教育遊戲作業指派之本機互動原型。作業資料以 <code>ctk_teacher_game_tasks:{'{teacherId}'}:{'{classroomId}'}</code> 格式實施教師與班級本機隔離存儲。本原型尚未介接雲端 Supabase 資料庫與班級即時推播 API，一般學員端展示模式亦不會受未授權指派干擾。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Classroom Selection Header */}
+            <div
+              className="card"
+              style={{
+                padding: '16px 20px',
+                marginBottom: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <School size={18} color="var(--color-brand-deep-slate)" />
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>目前作業指派目標班級：</span>
+                <select
+                  value={selectedClassId || ''}
+                  onChange={(e) => setSelectedClassId(e.target.value || null)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-default)',
+                    fontWeight: 600,
+                  }}
+                  aria-label="選擇目標班級"
+                >
+                  {classrooms.length === 0 && <option value="">(尚未建立任何教學班級)</option>}
+                  {classrooms.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.memberCount || 0} 位學員)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                該班級目前已指派 <strong>{assignedGameTasks.length}</strong> 項關卡任務
+              </div>
+            </div>
+
+            {/* Main Assignment Workspace Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '24px' }}>
+              {/* Left Column: New Task Assignment Form */}
+              <div className="card" style={{ padding: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                  <PlusCircle size={18} color="var(--color-brand-gold-text)" />
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    指派新遊戲關卡任務
+                  </h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Select Game Type */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      選擇教育遊戲項目：
+                    </label>
+                    <select
+                      value={selectedGameType}
+                      onChange={(e) => {
+                        const gt = e.target.value as GameTypeKey;
+                        setSelectedGameType(gt);
+                        setSelectedGameLevel(1);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-default)',
+                      }}
+                    >
+                      {(Object.keys(GAME_TYPE_METADATA) as GameTypeKey[]).map((key) => (
+                        <option key={key} value={key}>
+                          {GAME_TYPE_METADATA[key].name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Select Level */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      指派目標關卡（第 1 ～ {GAME_TYPE_METADATA[selectedGameType]?.maxLevel || 4} 關）：
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {Array.from({ length: GAME_TYPE_METADATA[selectedGameType]?.maxLevel || 4 }, (_, i) => i + 1).map((lvl) => (
+                        <button
+                          key={lvl}
+                          type="button"
+                          className={`btn btn-sm ${selectedGameLevel === lvl ? 'btn-primary' : 'btn-outline'}`}
+                          onClick={() => setSelectedGameLevel(lvl)}
+                          style={{ flex: 1, minHeight: '44px' }}
+                        >
+                          第 {lvl} 關
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Target Stars */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      過關星級門檻要求：
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {[1, 2, 3].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          className={`btn btn-sm ${selectedTargetStars === star ? 'btn-primary' : 'btn-outline'}`}
+                          onClick={() => setSelectedTargetStars(star)}
+                          style={{ flex: 1, minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                        >
+                          <Star size={14} fill={selectedTargetStars === star ? 'currentColor' : 'none'} />
+                          <span>{star} 星滿星</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Due Date */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      作業繳交截止日期：
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="date"
+                        value={taskDueDate}
+                        onChange={(e) => setTaskDueDate(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          fontSize: '13px',
+                          borderRadius: '4px',
+                          border: '1px solid var(--border-default)',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes / Description */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+                      學習重點與備註提示（選填）：
+                    </label>
+                    <textarea
+                      value={taskDescription}
+                      onChange={(e) => setTaskDescription(e.target.value)}
+                      placeholder="例如：請同學注意排版浮動塌陷問題，嘗試以兩星以上過關..."
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-default)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleAssignGameTask}
+                    style={{
+                      width: '100%',
+                      minHeight: '44px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckSquare size={16} />
+                    <span>確認發布指派至目前班級</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Currently Assigned Tasks List */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    班級已發布遊戲作業清單
+                  </h3>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    依時間倒序排列
+                  </span>
+                </div>
+
+                {assignedGameTasks.length === 0 ? (
+                  <div
+                    className="card"
+                    style={{
+                      padding: '40px 20px',
+                      textAlign: 'center',
+                      color: 'var(--text-muted)',
+                      backgroundColor: 'var(--surface-sunken)',
+                    }}
+                  >
+                    <Gamepad2 size={36} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                    <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
+                      此班級尚未指派任何遊戲關卡任務
+                    </div>
+                    <div style={{ fontSize: '12px' }}>
+                      請從左側表單選取關卡與目標星級，一鍵派送給全班學員自主演練。
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {assignedGameTasks.map((task) => {
+                      const isEditing = editingTaskId === task.id;
+                      return (
+                        <div
+                          key={task.id}
+                          className="card"
+                          style={{
+                            padding: '18px 20px',
+                            border: '1px solid var(--border-default)',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: 'var(--surface-base)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <span
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    padding: '2px 8px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#EFF6FF',
+                                    color: '#1D4ED8',
+                                  }}
+                                >
+                                  {task.gameTitle}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    padding: '2px 8px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#FEF3C7',
+                                    color: '#B45309',
+                                  }}
+                                >
+                                  第 {task.levelId} 關
+                                </span>
+                              </div>
+                              <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                                目標：達成 {task.targetStars} 星通關
+                              </h4>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {!isEditing && (
+                                <button
+                                  type="button"
+                                  className="btn btn-outline btn-sm"
+                                  onClick={() => {
+                                    setEditingTaskId(task.id);
+                                    setEditStars(task.targetStars);
+                                    setEditDueDate(task.dueDate);
+                                    setEditDescription(task.description || '');
+                                  }}
+                                  style={{ fontSize: '11px', padding: '4px 8px', minHeight: '32px' }}
+                                  aria-label="編輯作業"
+                                >
+                                  <Edit3 size={13} />
+                                  <span>編輯</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="btn btn-outline btn-sm"
+                                onClick={() => handleRevokeGameTask(task.id)}
+                                style={{ fontSize: '11px', padding: '4px 8px', minHeight: '32px', color: '#DC2626', borderColor: '#FCA5A5' }}
+                                aria-label="撤銷作業"
+                              >
+                                <Trash2 size={13} />
+                                <span>撤銷</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {isEditing ? (
+                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--surface-sunken)', borderRadius: '4px' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '2px' }}>
+                                    調整星級門檻：
+                                  </label>
+                                  <select
+                                    value={editStars}
+                                    onChange={(e) => setEditStars(Number(e.target.value))}
+                                    style={{ width: '100%', padding: '4px 8px', fontSize: '12px' }}
+                                  >
+                                    <option value={1}>1 星即可</option>
+                                    <option value={2}>2 星及格</option>
+                                    <option value={3}>3 星滿星</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '2px' }}>
+                                    調整截止日期：
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={editDueDate}
+                                    onChange={(e) => setEditDueDate(e.target.value)}
+                                    style={{ width: '100%', padding: '4px 8px', fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ marginBottom: '10px' }}>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, marginBottom: '2px' }}>
+                                  調整說明：
+                                </label>
+                                <input
+                                  type="text"
+                                  value={editDescription}
+                                  onChange={(e) => setEditDescription(e.target.value)}
+                                  style={{ width: '100%', padding: '4px 8px', fontSize: '12px' }}
+                                />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline btn-sm"
+                                  onClick={() => setEditingTaskId(null)}
+                                  style={{ fontSize: '11px', minHeight: '32px' }}
+                                >
+                                  取消
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => handleUpdateGameTask(task.id)}
+                                  style={{ fontSize: '11px', minHeight: '32px' }}
+                                >
+                                  儲存更新
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {task.description && (
+                                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: 1.5 }}>
+                                  {task.description}
+                                </p>
+                              )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
+                                <span>截止日期：{task.dueDate}</span>
+                                <span>發布時間：{new Date(task.assignedAt).toLocaleDateString()}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

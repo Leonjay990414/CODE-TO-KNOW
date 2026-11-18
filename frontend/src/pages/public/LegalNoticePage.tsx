@@ -92,7 +92,7 @@ export const LegalNoticePage: React.FC<LegalNoticePageProps> = ({
               gap: '12px',
             }}
           >
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', borderRadius: '20px', backgroundColor: 'rgba(189, 167, 126, 0.15)', color: 'var(--color-brand-gold, #BDA77E)', width: 'fit-content', fontSize: '13px', fontWeight: 600 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', borderRadius: '20px', backgroundColor: 'rgba(189, 167, 126, 0.15)', color: 'var(--color-brand-gold-text, #7C663D)', width: 'fit-content', fontSize: '13px', fontWeight: 600 }}>
               <Scale size={16} />
               資訊透明・個資保護・教學倫理
             </div>

@@ -139,7 +139,7 @@ export const PracticalDetailPage: React.FC<PracticalDetailPageProps> = ({
           <span style={{ backgroundColor: '#EBF2EE', color: '#5A7D6C', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 700 }}>
             {moduleData.taskCode}
           </span>
-          <span style={{ color: '#BDA77E', fontWeight: 600, fontSize: '13px' }}>
+          <span style={{ color: '#7C663D', fontWeight: 600, fontSize: '13px' }}>
             難度：{moduleData.difficulty}
           </span>
           <span style={{ color: '#8FA9B8', fontSize: '13px' }}>

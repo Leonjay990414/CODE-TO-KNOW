@@ -15,14 +15,36 @@ import {
   Search,
   X,
   Filter,
+  Flame,
+  CheckCircle2,
+  Target,
+  History,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { getOverallGameStats, getUserGameRecord } from '../../utils/gameStorage';
+import {
+  getOverallGameStats,
+  getUserGameRecord,
+  getGamePlayHistory,
+  GamePlayHistoryItem,
+} from '../../utils/gameStorage';
 import { GameAchievementsModal } from '../../components/GameAchievementsModal';
 import { getDetailedAchievements } from '../../utils/gameAchievementEngine';
+import {
+  getUserStreak,
+  getDailyQuests,
+  claimQuestReward,
+  recordDailyActivity,
+  DailyStreakRecord,
+  DailyQuestsRecord,
+} from '../../utils/dailyQuestEngine';
+import {
+  getRecommendedGamesByWeakness,
+} from '../../utils/gameLearningInterlock';
 
 interface GameCenterPageProps {
   onOpenTeacherApply?: () => void;
@@ -44,6 +66,16 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
   const [quizRecord, setQuizRecord] = useState(() => getUserGameRecord(userId, 'quiz-rush'));
   const [webBuilderRecord, setWebBuilderRecord] = useState(() => getUserGameRecord(userId, 'web-builder'));
 
+  // P14-GAM-011: 連續學習 Streak 與每日任務狀態
+  const [streak, setStreak] = useState<DailyStreakRecord>(() => getUserStreak(userId));
+  const [dailyQuests, setDailyQuests] = useState<DailyQuestsRecord>(() => getDailyQuests(userId));
+
+  // P14-GAM-013: 題庫錯題弱點連動推薦狀態
+  const [weaknessRec, setWeaknessRec] = useState(() => getRecommendedGamesByWeakness(userId));
+
+  // P14-GAM-012: 最近遊玩對局歷程
+  const [playHistory, setPlayHistory] = useState<GamePlayHistoryItem[]>(() => getGamePlayHistory(userId, 3));
+
   const [selectedCategory, setSelectedCategory] = useState<GameCategory>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -55,7 +87,21 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
     setBugRecord(getUserGameRecord(userId, 'bug-hunter'));
     setQuizRecord(getUserGameRecord(userId, 'quiz-rush'));
     setWebBuilderRecord(getUserGameRecord(userId, 'web-builder'));
+    setStreak(getUserStreak(userId));
+    setDailyQuests(getDailyQuests(userId));
+    setWeaknessRec(getRecommendedGamesByWeakness(userId));
+    setPlayHistory(getGamePlayHistory(userId, 3));
   }, [userId]);
+
+  const handleClaim = (questId: string) => {
+    const updated = claimQuestReward(userId, questId);
+    setDailyQuests(updated);
+  };
+
+  const handleDailyCheckIn = () => {
+    const updated = recordDailyActivity(userId);
+    setStreak(updated);
+  };
 
   const gamesList: Array<{
     id: string;
@@ -259,6 +305,18 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
 
                 <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--border-default)' }} />
 
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Flame size={20} color="#EA580C" fill={streak.currentStreak > 0 ? '#EA580C' : 'none'} />
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>連續學習</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {streak.currentStreak} <span style={{ fontSize: '12px', fontWeight: 400 }}>天</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--border-default)' }} />
+
                 <button
                   onClick={() => setIsAchievementsModalOpen(true)}
                   style={{
@@ -299,7 +357,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
               display: 'flex',
               alignItems: 'center',
               gap: '14px',
-              marginBottom: '28px',
+              marginBottom: '24px',
             }}
           >
             <Sparkles size={24} color="var(--color-brand-gold)" style={{ flexShrink: 0 }} />
@@ -307,6 +365,282 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
               <strong>碼上學 遊戲化學習準則：</strong>遊戲是思維訓練的催化劑，絕非盲目盲猜。每款遊戲均針對「網頁設計丙級」核心技能研發，包含階層排序、排版直覺、除錯敏銳度與知識反應。每關皆提供漸進式思考提示與通關深度解析，輔助您獨立掌握技術本質。
             </div>
           </div>
+
+          {/* P14-GAM-011: 每日學習任務與連續打卡 Streak 儀表板 */}
+          <div
+            data-testid="daily-quests-dashboard"
+            style={{
+              padding: '20px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--surface-sunken)',
+              border: '1px solid var(--border-default)',
+              marginBottom: '24px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Target size={22} color="#EA580C" />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    每日挑戰任務 (Daily Quests)
+                  </h3>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    每日 00:00 自動刷新 · 連續打卡維持熱情 · 完成領取學習經驗值
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    backgroundColor: streak.currentStreak > 0 ? '#FEF2F2' : 'var(--surface-base)',
+                    border: '1px solid',
+                    borderColor: streak.currentStreak > 0 ? '#FCA5A5' : 'var(--border-default)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: streak.currentStreak > 0 ? '#B91C1C' : 'var(--text-muted)',
+                  }}
+                >
+                  <Flame size={16} color={streak.currentStreak > 0 ? '#EF4444' : 'var(--text-muted)'} />
+                  <span>連續打卡 {streak.currentStreak} 天 (歷史最高 {streak.longestStreak} 天)</span>
+                </div>
+
+                <button
+                  onClick={handleDailyCheckIn}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: '12px', padding: '6px 12px', minHeight: '32px' }}
+                >
+                  今日簽到
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Quests Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '14px',
+              }}
+            >
+              {dailyQuests.quests.map((q) => {
+                const percent = Math.min(100, Math.round((q.current / q.target) * 100));
+                return (
+                  <div
+                    key={q.id}
+                    data-testid={`quest-card-${q.id}`}
+                    style={{
+                      padding: '14px',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--surface-base)',
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '10px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{q.title}</span>
+                        <span style={{ fontSize: '11px', color: '#B45309', fontWeight: 600 }}>+{q.rewardExp} EXP</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                        {q.description}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                        <span>進度</span>
+                        <span>{q.current} / {q.target}</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', borderRadius: '3px', backgroundColor: 'var(--surface-sunken)', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            width: `${percent}%`,
+                            height: '100%',
+                            backgroundColor: q.completed ? '#10B981' : '#EA580C',
+                            transition: 'width 0.3s ease',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                      {q.claimed ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
+                          <CheckCircle2 size={14} /> 已領取
+                        </span>
+                      ) : q.completed ? (
+                        <button
+                          onClick={() => handleClaim(q.id)}
+                          className="btn btn-primary btn-sm"
+                          style={{ fontSize: '12px', padding: '4px 10px', minHeight: '28px' }}
+                        >
+                          領取獎勵
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>進行中</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* P14-GAM-013: 題庫錯題弱點智慧連動推薦區塊 */}
+          <div
+            data-testid="learning-interlock-recommendation"
+            style={{
+              padding: '20px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--surface-sunken)',
+              border: '1px solid var(--border-default)',
+              marginBottom: '24px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <TrendingUp size={22} color="#2563EB" />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  學科弱點連動推薦 (P14-GAM-013 智慧引導)
+                </h3>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  {weaknessRec.hasWeakness
+                    ? `依據您錯題本累積的 ${weaknessRec.totalUnmasteredQuestions} 道待加強題目，智慧推薦專屬教育遊戲以強化弱點技能`
+                    : '根據您的學習狀況提供專屬遊戲挑戰指引，及早發現學習盲點'}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '12px',
+              }}
+            >
+              {weaknessRec.recommendations.map((rec) => (
+                <div
+                  key={rec.gameId}
+                  style={{
+                    padding: '14px',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--surface-base)',
+                    border: '1px solid',
+                    borderColor: rec.priority === 'HIGH' ? '#93C5FD' : 'var(--border-subtle)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {rec.gameTitleZh}
+                      </span>
+                      <span
+                        className={`badge ${rec.priority === 'HIGH' ? 'badge-primary' : 'badge-neutral'}`}
+                        style={{ fontSize: '11px' }}
+                      >
+                        {rec.tagZh}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {rec.reasonZh}
+                    </p>
+                  </div>
+
+                  <a
+                    href={rec.actionHash}
+                    className="btn btn-outline btn-sm btn-nowrap"
+                    style={{ alignSelf: 'flex-start', fontSize: '12px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span>{rec.actionLabelZh}</span>
+                    <ArrowRight size={14} />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* P14-GAM-012: 最近遊玩對局歷程 (Play History Audit Trail) */}
+          {playHistory.length > 0 && (
+            <div
+              data-testid="play-history-section"
+              style={{
+                padding: '16px 20px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--surface-sunken)',
+                border: '1px solid var(--border-default)',
+                marginBottom: '24px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <History size={18} color="var(--text-secondary)" />
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  最近挑戰歷程 (P14-GAM-012 對局軌跡)
+                </h4>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {playHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--surface-base)',
+                      border: '1px solid var(--border-subtle)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {item.gameId === 'quiz-rush' ? 'Quiz Rush 快答' : item.gameId}
+                      </span>
+                      <span className="badge badge-neutral" style={{ fontSize: '11px' }}>
+                        第 {item.levelId} 關
+                      </span>
+                      {item.isNewHighScore && (
+                        <span className="badge badge-gold" style={{ fontSize: '11px' }}>
+                          新紀錄!
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--color-brand-gold-text)', fontWeight: 600 }}>
+                        ★ {item.stars} 顆星 ({item.score} 分)
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={12} />
+                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Search & Filter Controls (P14-GAM-001) */}
           <div
@@ -516,7 +850,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                     <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--text-primary)' }}>
                       {game.title}
                     </h2>
-                    <div style={{ fontSize: '12px', color: 'var(--color-brand-gold)', fontWeight: 600, marginBottom: '8px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--color-brand-gold-text)', fontWeight: 600, marginBottom: '8px' }}>
                       {game.tag}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 16px 0' }}>
@@ -546,7 +880,7 @@ export const GameCenterPage: React.FC<GameCenterPageProps> = ({ onOpenTeacherApp
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>累積星星 / 分數</div>
-                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>
                           ★ {game.stars} <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({game.score}分)</span>
                         </div>
                       </div>

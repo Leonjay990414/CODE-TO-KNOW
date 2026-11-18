@@ -44,11 +44,11 @@ export const Footer: React.FC = () => {
               平台核心
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <li><a href="#hero" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>首頁總覽</a></li>
-              <li><a href="#story" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>品牌教育理念</a></li>
-              <li><a href="#experience" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>學習體驗系統</a></li>
-              <li><a href="#ai-learning" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>AI 分階段引導</a></li>
-              <li><a href="#dual-audience" style={{ color: 'var(--color-brand-sand)', textDecoration: 'none' }}>師生雙端架構</a></li>
+              <li><a href="#hero" className="footer-link">首頁總覽</a></li>
+              <li><a href="#story" className="footer-link">品牌教育理念</a></li>
+              <li><a href="#experience" className="footer-link">學習體驗系統</a></li>
+              <li><a href="#ai-learning" className="footer-link">AI 分階段引導</a></li>
+              <li><a href="#dual-audience" className="footer-link">師生雙端架構</a></li>
             </ul>
           </div>
 
@@ -58,11 +58,14 @@ export const Footer: React.FC = () => {
               學習與教學服務
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <li><span style={{ color: 'var(--color-brand-sand)' }}>學科題庫與模擬考（規劃中）</span></li>
-              <li><span style={{ color: 'var(--color-brand-sand)' }}>程式實戰工作區（規劃中）</span></li>
-              <li><span style={{ color: 'var(--color-brand-sand)' }}>教師班級數據後台（規劃中）</span></li>
-              <li><span style={{ color: 'var(--color-brand-sand)' }}>學習分析與弱點雷達（規劃中）</span></li>
-              <li><span style={{ color: 'var(--color-brand-sand)' }}>教育遊戲闖關中心（規劃中）</span></li>
+              <li><a href="#theory" className="footer-link">學科題庫與即時測驗</a></li>
+              <li><a href="#mock-exam" className="footer-link">官方全真模擬考</a></li>
+              <li><a href="#practical" className="footer-link">網頁設計術科實作 (五大題組)</a></li>
+              <li><a href="#code-editor" className="footer-link">線上程式實戰工作區</a></li>
+              <li><a href="#games" className="footer-link">互動教育遊戲中心</a></li>
+              <li><a href="#ai-coach" className="footer-link">AI 鷹架教學教練 (展示版)</a></li>
+              <li><a href="#progress" className="footer-link">個人學習歷程與弱點分析</a></li>
+              <li><a href="#teacher" className="footer-link">教師班級教學後台</a></li>
             </ul>
           </div>
 
@@ -75,7 +78,7 @@ export const Footer: React.FC = () => {
               歡迎學校、培訓單位或教育合作夥伴洽詢教學解決方案。
             </p>
             <div style={{ fontSize: '13px', color: 'var(--color-brand-sand)', marginBottom: '8px' }}>
-              聯絡信箱：contact@codetoknow.edu (預留)
+              聯絡信箱：<a href="mailto:contact@codetoknow.edu" className="footer-link" style={{ textDecoration: 'underline' }}>contact@codetoknow.edu</a>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-brand-slate)', marginTop: '16px' }}>
               符合 WCAG 2.1 AA 無障礙標準
@@ -170,6 +173,20 @@ export const Footer: React.FC = () => {
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
       <style>{`
+        .footer-link {
+          color: var(--color-brand-sand, #D9D2C4);
+          text-decoration: none;
+          transition: color 0.15s ease, text-decoration 0.15s ease;
+        }
+        .footer-link:hover {
+          color: #FFFFFF !important;
+          text-decoration: underline !important;
+        }
+        .footer-link:focus-visible {
+          outline: 2px solid var(--color-brand-gold, #BDA77E);
+          outline-offset: 2px;
+          color: #FFFFFF !important;
+        }
         .footer-legal-link:hover {
           color: #FFFFFF !important;
           text-decoration: underline !important;

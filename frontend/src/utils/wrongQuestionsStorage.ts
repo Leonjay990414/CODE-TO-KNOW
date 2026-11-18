@@ -5,6 +5,8 @@
 
 export type MasteryStatus = 'unmastered' | 'reviewing' | 'mastered';
 
+export type WrongQuestionSource = 'theory_practice' | 'mock_exam' | 'manual_review' | 'quiz_rush' | 'game_challenge';
+
 export interface WrongQuestionItem {
   questionId: string;
   certificationId: string;
@@ -26,7 +28,7 @@ export interface WrongQuestionItem {
   wrongCount: number;
   consecutiveCorrect: number; // 連續答對次數 (門檻：2 次判定為已掌握)
   masteryStatus: MasteryStatus; // 'unmastered' | 'reviewing' | 'mastered'
-  source?: 'theory_practice' | 'mock_exam' | 'manual_review';
+  source?: WrongQuestionSource;
   firstFailedAt: string;
   lastAttemptAt: string;
   resolved: boolean; // 相容舊版欄位 (masteryStatus === 'mastered')
@@ -185,7 +187,7 @@ export function recordWrongAttempt(
     userSelectedAnswer: string;
     correctAnswer: string;
     explanation: string;
-    source?: 'theory_practice' | 'mock_exam' | 'manual_review';
+    source?: WrongQuestionSource;
   }
 ): WrongQuestionItem {
   const collection = getWrongQuestionsCollection(userId);
@@ -413,3 +415,117 @@ export function getWrongQuestionsStats(userId: string): WrongQuestionsStats {
     bySection,
   };
 }
+
+/**
+ * P11-AIS-007: 錯題弱點深度診斷報告 (Weakness Diagnostic Report)
+ */
+export interface WeaknessDiagnosticReport {
+  userId: string;
+  totalWrongQuestions: number;
+  unmasteredCount: number;
+  reviewingCount: number;
+  masteredCount: number;
+  masteryPercentage: number;
+  overallGrade: 'EXCELLENT' | 'GOOD' | 'NEEDS_IMPROVEMENT' | 'CRITICAL';
+  weakestSection: {
+    sectionId: '01' | '02' | '03' | '04';
+    sectionName: string;
+    unmasteredCount: number;
+    recommendedActionZh: string;
+  } | null;
+  sectionBreakdown: Record<string, {
+    total: number;
+    unmastered: number;
+    mastered: number;
+    masteryRate: number;
+  }>;
+  generatedAt: string;
+}
+
+const SECTION_TITLE_MAP: Record<string, string> = {
+  '01': '工作項目 01：電腦與網路通訊基礎',
+  '02': '工作項目 02：網頁語法 HTML 與語意地標',
+  '03': '工作項目 03：CSS 樣式設計與盒模型排版',
+  '04': '工作項目 04：網頁應用技術與考場除錯實務',
+};
+
+const SECTION_REMEDY_MAP: Record<string, string> = {
+  '01': '建議加強記憶電腦硬體規範、色彩三原色與通訊協定，搭配 Quiz Rush 快答強化反應。',
+  '02': '建議複習 HTML5 語意地標階層結構，透過 Code Puzzle 重新熟悉語法積木。',
+  '03': '建議重點攻克 Flexbox 與盒模型邊界計算，使用 CSS Designer 滑桿進行實時比對。',
+  '04': '建議著重排查未閉合標籤與非法 CSS 屬性陷阱，進入 Bug Hunter 進行特訓。',
+};
+
+export function getWeaknessDiagnosticReport(userId: string): WeaknessDiagnosticReport {
+  const stats = getWrongQuestionsStats(userId);
+  const total = stats.totalRecorded;
+  const mastered = stats.masteredCount;
+  const unmastered = stats.unmasteredCount;
+  const reviewing = stats.reviewingCount;
+
+  const masteryPercentage = total > 0 ? Math.round((mastered / total) * 100) : 100;
+
+  let overallGrade: 'EXCELLENT' | 'GOOD' | 'NEEDS_IMPROVEMENT' | 'CRITICAL' = 'EXCELLENT';
+  if (total === 0 || masteryPercentage >= 85) {
+    overallGrade = 'EXCELLENT';
+  } else if (masteryPercentage >= 70) {
+    overallGrade = 'GOOD';
+  } else if (masteryPercentage >= 50) {
+    overallGrade = 'NEEDS_IMPROVEMENT';
+  } else {
+    overallGrade = 'CRITICAL';
+  }
+
+  const sectionBreakdown: Record<string, {
+    total: number;
+    unmastered: number;
+    mastered: number;
+    masteryRate: number;
+  }> = {};
+
+  let weakestSecId: '01' | '02' | '03' | '04' | null = null;
+  let maxUnmastered = 0;
+
+  (['01', '02', '03', '04'] as const).forEach((sec) => {
+    const data = stats.bySection[sec] || { total: 0, unresolved: 0, mastered: 0 };
+    const secTotal = data.total;
+    const secMastered = data.mastered;
+    const secUnresolved = data.unresolved;
+    const rate = secTotal > 0 ? Math.round((secMastered / secTotal) * 100) : 100;
+
+    sectionBreakdown[sec] = {
+      total: secTotal,
+      unmastered: secUnresolved,
+      mastered: secMastered,
+      masteryRate: rate,
+    };
+
+    if (secUnresolved > maxUnmastered) {
+      maxUnmastered = secUnresolved;
+      weakestSecId = sec;
+    }
+  });
+
+  const weakestSection = weakestSecId
+    ? {
+        sectionId: weakestSecId,
+        sectionName: SECTION_TITLE_MAP[weakestSecId] || `單元 ${weakestSecId}`,
+        unmasteredCount: maxUnmastered,
+        recommendedActionZh: SECTION_REMEDY_MAP[weakestSecId] || '加強該單元之核心概念複習。',
+      }
+    : null;
+
+  return {
+    userId,
+    totalWrongQuestions: total,
+    unmasteredCount: unmastered,
+    reviewingCount: reviewing,
+    masteredCount: mastered,
+    masteryPercentage,
+    overallGrade,
+    weakestSection,
+    sectionBreakdown,
+    generatedAt: new Date().toISOString(),
+  };
+}
+

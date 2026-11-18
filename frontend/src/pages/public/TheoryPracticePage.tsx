@@ -967,7 +967,7 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                     <button
                       type="button"
                       onClick={() => setViewMode('wrong_notebook')}
-                      style={{ color: 'var(--color-brand-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                      style={{ color: 'var(--color-brand-gold-text)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px', minHeight: '44px', padding: '10px 14px', display: 'inline-flex', alignItems: 'center' }}
                     >
                       開啟複習 →
                     </button>

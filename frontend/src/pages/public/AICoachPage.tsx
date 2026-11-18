@@ -225,13 +225,13 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                  <span className="badge badge-gold">
+                  <span className="badge badge-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <Sparkles size={12} color="#7C663D" />
-                    <span>啟發式引導教練</span>
+                    <span>AI 鷹架教學展示版</span>
                   </span>
                   <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <ShieldCheck size={12} color="#2E7D32" />
-                    <span>運行模式：OFFLINE (本機離線備援引擎)</span>
+                    <span>引導引擎：本機離線教學規則</span>
                   </span>
                   <span className="badge badge-neutral">
                     <span>Prompt {AIS_009_PROMPT_METADATA.version}</span>
@@ -256,17 +256,43 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
 
         {/* Philosophy & Transparency Banner */}
         <div className="container" style={{ marginTop: '20px' }}>
-          <div className="demo-banner" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} />
-              <strong>教育核心精神：AI 不應取代學生的獨立思考</strong>
-            </div>
-            <span style={{ fontSize: '13px', lineHeight: 1.6 }}>
-              CODE TO KNOW AI 學習教練依循「觀念聚焦 → 思考破題 → 邊界提點 → 完整解構」四階鷹架，陪伴你親自寫出正確解法。
-              <span style={{ display: 'block', marginTop: '4px', color: 'var(--color-brand-deep-slate)', fontWeight: 600 }}>
-                〔功能透明度告知〕本頁目前採用本地題庫與離線啟發式引導規則（OFFLINE / DEMO 模式），未連接外部商業 LLM API（禁止標示 AI LIVE）。
+          <div
+            className="demo-banner"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              backgroundColor: 'var(--color-brand-cream, #FAF8F2)',
+              border: '1px solid var(--color-brand-ice-slate, #D9E2EA)',
+              borderLeft: '4px solid var(--color-brand-gold, #BDA77E)',
+              padding: '16px 20px',
+              borderRadius: 'var(--radius-md, 8px)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <Sparkles size={16} color="var(--color-brand-deep-slate, #526B7B)" />
+              <strong style={{ fontSize: '15px', color: 'var(--text-primary, #26343D)' }}>
+                AI 鷹架教學展示版
+              </strong>
+              <span
+                style={{
+                  fontSize: '11px',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(189, 167, 126, 0.2)',
+                  color: '#7C663D',
+                  fontWeight: 600,
+                }}
+              >
+                展示版運行中
               </span>
-            </span>
+            </div>
+            <div style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--text-secondary, #526B7B)' }}>
+              <strong>補充說明：</strong>目前使用本機教學規則提供學習引導，雲端 AI 服務仍在整合中。
+            </div>
+            <div style={{ fontSize: '12px', lineHeight: 1.6, color: 'var(--text-muted, #8FA9B8)', borderTop: '1px solid rgba(217, 226, 234, 0.6)', paddingTop: '8px' }}>
+              教育核心精神：AI 不應取代學生的獨立思考。CODE TO KNOW 4 階學習鷹架透過「觀念聚焦 → 思考破題 → 邊界提點 → 完整解構」的層遞啟發，陪伴你親自寫出正確解法。
+            </div>
           </div>
         </div>
 
@@ -314,7 +340,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--color-brand-gold)', fontWeight: 700 }}>
+                          <span style={{ fontSize: '11px', color: 'var(--color-brand-gold-text)', fontWeight: 700 }}>
                             {sc.category} 考題
                           </span>
                           <span style={{ fontSize: '10px', padding: '1px 4px', borderRadius: '4px', backgroundColor: 'var(--border-subtle)' }}>
@@ -354,12 +380,12 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
             <div className="card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', minHeight: '580px' }}>
               {/* Stepper Status Bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-charcoal)' }}>
                     當前引導進度：第 {currentStage} 階 / 共 4 階
                   </div>
                   <span className="badge badge-neutral" style={{ fontSize: '11px' }}>
-                    {isCustomMode ? 'OFFLINE 備援' : 'DEMO 示範'}
+                    {isCustomMode ? '本機離線規則型展示版' : '示範題組展示版 (本機引導)'}
                   </span>
                 </div>
 
@@ -430,7 +456,7 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                       >
                         {isAi && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: '8px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>
                               {m.stage === 1 && '【第 1 階 · 觀念聚焦】'}
                               {m.stage === 2 && '【第 2 階 · 思考破題】'}
                               {m.stage === 3 && '【第 3 階 · 邊界提點】'}

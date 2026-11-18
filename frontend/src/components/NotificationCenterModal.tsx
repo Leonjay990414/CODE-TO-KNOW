@@ -208,7 +208,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#BDA77E',
+                color: 'var(--color-brand-gold-text, #7C663D)',
               }}
             >
               <Bell size={20} />
@@ -247,7 +247,11 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
               border: 'none',
               cursor: 'pointer',
               color: '#718096',
-              padding: '8px',
+              padding: '10px',
+              width: '44px',
+              height: '44px',
+              minWidth: '44px',
+              minHeight: '44px',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
@@ -286,7 +290,11 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
                 style={{
-                  padding: '5px 12px',
+                  padding: '8px 14px',
+                  minHeight: '44px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   borderRadius: '20px',
                   fontSize: '12px',
                   fontWeight: activeCategory === cat.id ? 700 : 500,

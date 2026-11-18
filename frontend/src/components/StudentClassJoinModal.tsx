@@ -213,9 +213,15 @@ export const StudentClassJoinModal: React.FC<StudentClassJoinModalProps> = ({
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-muted)',
-              padding: '4px',
+              padding: '10px',
+              width: '44px',
+              height: '44px',
+              minWidth: '44px',
+              minHeight: '44px',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
             }}
           >
             <X size={20} />

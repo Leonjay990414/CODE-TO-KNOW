@@ -15,6 +15,8 @@ import { StudentDashboardPage } from '../pages/public/StudentDashboardPage';
 import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
 import { AdminDashboardPage } from '../pages/public/AdminDashboardPage';
 import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
+import { StudentPracticalHubPage } from '../pages/student/practical';
+import { SystemOpsDashboardPage } from '../pages/system-ops/SystemOpsDashboardPage';
 import { LegalNoticePage } from '../pages/public/LegalNoticePage';
 import { GameCenterPage } from '../pages/public/GameCenterPage';
 import { AuthModal } from '../components/AuthModal';
@@ -299,6 +301,20 @@ export const AppContent: React.FC = () => {
         return <MockExamPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'practical-learning':
         return <PracticalLearningPage onOpenTeacherApply={handleOpenTeacherApply} />;
+      case 'student-practical':
+        return (
+          <ProtectedRoute
+            pageTitle="學生五大術科實作工作區 (Student Practical Hub)"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <StudentPracticalHubPage
+              initialTaskId={route.taskId}
+              initialView={route.practicalView}
+              initialStep={route.taskStep}
+              onOpenTeacherApply={handleOpenTeacherApply}
+            />
+          </ProtectedRoute>
+        );
       case 'code-editor':
         return <CodeEditorPage onOpenTeacherApply={handleOpenTeacherApply} />;
       case 'ai-coach':
@@ -339,6 +355,16 @@ export const AppContent: React.FC = () => {
             onOpenTeacherApply={handleOpenTeacherApply}
           >
             <AdminDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </ProtectedRoute>
+        );
+      case 'system-ops':
+        return (
+          <ProtectedRoute
+            requiredRoles={['ADMIN']}
+            pageTitle="系統營運與維運後台 (System Ops Console)"
+            onOpenTeacherApply={handleOpenTeacherApply}
+          >
+            <SystemOpsDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
           </ProtectedRoute>
         );
       case 'import-system':

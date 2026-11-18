@@ -34,8 +34,14 @@ import {
   getUserGameRecord,
   saveLevelCompletion,
   markGameSessionSettled,
+  saveGamePlayHistory,
+  recordScoreSubmissionTimestamp,
   UserGameRecord,
 } from '../../utils/gameStorage';
+import {
+  recordDailyActivity,
+  updateQuestProgress,
+} from '../../utils/dailyQuestEngine';
 import {
   recordWrongAttempt,
   recordCorrectAttempt,
@@ -203,12 +209,14 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
           userSelectedAnswer: choice === 'TIMEOUT' ? '超時未作答' : choice,
           correctAnswer: q.correctAnswer,
           explanation: q.explanation,
-          source: 'theory_practice',
+          source: 'quiz_rush',
         });
       } else {
         // If correct, increase mastery on previously failed questions
         recordCorrectAttempt(userId, q.id);
       }
+      // P14-GAM-011: 推進每日複習任務進度
+      updateQuestProgress(userId, 'review', 1);
     }
 
     // Update Combo & Score
@@ -274,6 +282,9 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
       markGameSessionSettled(userId, roundSessionIdRef.current);
     }
 
+    const previousHighScore = gameRecord?.levels[levelId]?.highScore || 0;
+    const isNewHighScore = currentScore > previousHighScore;
+
     const updatedRecord = saveLevelCompletion(
       userId,
       'quiz-rush',
@@ -284,6 +295,22 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
       0
     );
     setGameRecord(updatedRecord);
+
+    // P14-GAM-011 & P14-GAM-012: 連續學習打卡、每日任務累積與遊玩歷程記錄
+    recordDailyActivity(userId);
+    updateQuestProgress(userId, 'game', 1);
+    if (stars > 0) {
+      updateQuestProgress(userId, 'stars', stars);
+    }
+    recordScoreSubmissionTimestamp(userId, 'quiz-rush', levelId);
+    saveGamePlayHistory(userId, {
+      gameId: 'quiz-rush',
+      levelId,
+      stars,
+      score: currentScore,
+      hintsUsed: 0,
+      isNewHighScore,
+    });
 
     setGameState('summary');
   };
@@ -789,7 +816,7 @@ export const QuizRushPage: React.FC<QuizRushPageProps> = ({ onOpenTeacherApply }
               }}
             >
               <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{ fontSize: '36px', color: 'var(--color-brand-gold)', marginBottom: '8px' }}>
+                <div style={{ fontSize: '36px', color: 'var(--color-brand-gold-text)', marginBottom: '8px' }}>
                   {'★'.repeat(calculateRoundStars(accuracyPercent))}
                   {'☆'.repeat(3 - calculateRoundStars(accuracyPercent))}
                 </div>

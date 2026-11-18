@@ -29,7 +29,7 @@ interface StudentDashboardPageProps {
 
 export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
-  const { goToHome, goToTheoryPractice, goToPracticalLearning, goToMockExam, goToLearningProgress, goToGameCenter } = useNavigation();
+  const { goToHome, goToTheoryPractice, goToStudentPractical, goToMockExam, goToLearningProgress, goToGameCenter } = useNavigation();
 
   const userId = user?.id || 'guest-anonymous';
   const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
@@ -152,7 +152,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>距離正式檢定</div>
-                    <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-brand-gold)' }}>剩餘 28 天</div>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-brand-gold-text)' }}>剩餘 28 天</div>
                   </div>
                 </div>
 
@@ -192,7 +192,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
 
                   <button
                     type="button"
-                    onClick={() => goToPracticalLearning('web-design-c')}
+                    onClick={() => goToStudentPractical(1, 'home')}
                     style={{
                       padding: '16px',
                       borderRadius: 'var(--radius-sm)',
@@ -401,7 +401,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   <button
                     type="button"
                     onClick={() => setIsJoinClassOpen(true)}
-                    style={{ color: 'var(--color-brand-gold)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                    style={{ color: 'var(--color-brand-gold-text)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600, minHeight: '44px', padding: '10px 14px', display: 'inline-flex', alignItems: 'center' }}
                   >
                     管理 / 加入 →
                   </button>

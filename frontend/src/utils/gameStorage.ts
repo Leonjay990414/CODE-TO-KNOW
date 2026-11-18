@@ -53,6 +53,8 @@ export interface ActiveSessionData {
 const STORAGE_PREFIX = 'ctk_game_progress';
 const SESSION_STORAGE_PREFIX = 'ctk_game_session';
 const SETTLED_STORAGE_PREFIX = 'ctk_game_settled';
+const HISTORY_STORAGE_PREFIX = 'ctk_game_history';
+const COOLDOWN_STORAGE_PREFIX = 'ctk_game_cooldown';
 
 function buildStorageKey(userId: string, gameId: GameId): string {
   const safeUser = (userId || 'guest-anonymous').trim();
@@ -302,3 +304,120 @@ export function getOverallGameStats(userId: string): {
     totalLevelsCompleted,
   };
 }
+
+/**
+ * P14-GAM-012: Anti-replay protection & score submission throttling
+ */
+function buildCooldownKey(userId: string, gameId: GameId, levelId: number): string {
+  const safeUser = (userId || 'guest-anonymous').trim();
+  return `${COOLDOWN_STORAGE_PREFIX}:${safeUser}:${gameId}:${levelId}`;
+}
+
+export function canSubmitScore(
+  userId: string,
+  gameId: GameId,
+  levelId: number,
+  cooldownMs: number = 1500
+): boolean {
+  if (typeof window === 'undefined' || !window.localStorage) return true;
+  const key = buildCooldownKey(userId, gameId, levelId);
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return true;
+    const lastTimestamp = parseInt(raw, 10);
+    if (isNaN(lastTimestamp)) return true;
+    return Date.now() - lastTimestamp >= cooldownMs;
+  } catch {
+    return true;
+  }
+}
+
+export function recordScoreSubmissionTimestamp(
+  userId: string,
+  gameId: GameId,
+  levelId: number
+): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  const key = buildCooldownKey(userId, gameId, levelId);
+  try {
+    window.localStorage.setItem(key, String(Date.now()));
+  } catch (err) {
+    console.error(`[GameStorage] Failed to record submission timestamp:`, err);
+  }
+}
+
+/**
+ * P14-GAM-012: Game Play History Audit Trail (最近遊玩對局紀錄)
+ */
+export interface GamePlayHistoryItem {
+  id: string;
+  gameId: GameId;
+  levelId: number;
+  stars: number;
+  score: number;
+  hintsUsed: number;
+  timeSpentSeconds?: number;
+  timestamp: string;
+  isNewHighScore: boolean;
+}
+
+function buildHistoryKey(userId: string): string {
+  const safeUser = (userId || 'guest-anonymous').trim();
+  return `${HISTORY_STORAGE_PREFIX}:${safeUser}`;
+}
+
+export function saveGamePlayHistory(
+  userId: string,
+  item: Omit<GamePlayHistoryItem, 'id' | 'timestamp'>
+): GamePlayHistoryItem {
+  const historyItem: GamePlayHistoryItem = {
+    ...item,
+    id: `play-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return historyItem;
+  }
+
+  const key = buildHistoryKey(userId);
+  try {
+    const currentList = getGamePlayHistory(userId, 50);
+    // Prepend newest item, limit to 30 items max
+    const updatedList = [historyItem, ...currentList].slice(0, 30);
+    window.localStorage.setItem(key, JSON.stringify(updatedList));
+  } catch (err) {
+    console.warn(`[GameStorage] Failed to save play history at ${key}:`, err);
+  }
+
+  return historyItem;
+}
+
+export function getGamePlayHistory(userId: string, limit: number = 20): GamePlayHistoryItem[] {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return [];
+  }
+
+  const key = buildHistoryKey(userId);
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.slice(0, Math.max(1, limit));
+  } catch (err) {
+    console.warn(`[GameStorage] Failed to read play history at ${key}, returning empty:`, err);
+    return [];
+  }
+}
+
+export function clearGamePlayHistory(userId: string): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  const key = buildHistoryKey(userId);
+  try {
+    window.localStorage.removeItem(key);
+  } catch (err) {
+    console.error(`[GameStorage] Failed to clear play history at ${key}:`, err);
+  }
+}
+

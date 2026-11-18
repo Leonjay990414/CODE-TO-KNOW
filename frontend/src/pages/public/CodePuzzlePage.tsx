@@ -345,7 +345,7 @@ export const CodePuzzlePage: React.FC<CodePuzzlePageProps> = ({ onOpenTeacherApp
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 4px 0' }}>
                   {currentLevel.description}
                 </p>
-                <p style={{ fontSize: '13px', color: 'var(--color-brand-gold)', margin: 0, fontWeight: 600 }}>
+                <p style={{ fontSize: '13px', color: 'var(--color-brand-gold-text)', margin: 0, fontWeight: 600 }}>
                   任務指引：{currentLevel.instructions}
                 </p>
               </div>

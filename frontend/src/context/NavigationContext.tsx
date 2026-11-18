@@ -8,12 +8,14 @@ export type AppPage =
   | 'theory-practice'
   | 'mock-exam'
   | 'practical-learning'
+  | 'student-practical'
   | 'code-editor'
   | 'ai-coach'
   | 'learning-progress'
   | 'student-dashboard'
   | 'teacher-dashboard'
   | 'admin-dashboard'
+  | 'system-ops'
   | 'import-system'
   | 'legal'
   | 'game-center'
@@ -27,6 +29,8 @@ export interface RouteState {
   page: AppPage;
   certId?: string;
   taskId?: number;
+  taskStep?: number;
+  practicalView?: 'home' | 'detail' | 'lesson' | 'sandbox';
   legalTab?: 'privacy' | 'terms' | 'ethics';
   hash: string;
 }
@@ -41,12 +45,14 @@ interface NavigationContextType {
   goToTheoryPractice: (certId?: string) => void;
   goToMockExam: (certId?: string) => void;
   goToPracticalLearning: (certId?: string) => void;
+  goToStudentPractical: (taskId?: number, view?: 'home' | 'detail' | 'lesson' | 'sandbox', step?: number) => void;
   goToCodeEditor: (taskId?: number) => void;
   goToAICoach: () => void;
   goToLearningProgress: () => void;
   goToStudentDashboard: () => void;
   goToTeacherDashboard: () => void;
   goToAdminDashboard: () => void;
+  goToSystemOps: () => void;
   goToImportSystem: () => void;
   goToLegalNotice: (tab?: 'privacy' | 'terms' | 'ethics') => void;
   goToGameCenter: () => void;
@@ -92,7 +98,43 @@ export function parseHash(rawHash: string): RouteState {
     return { page: 'mock-exam', certId: 'web-design-c', hash: rawHash };
   }
 
-  // Route: practical learning
+  // Route: student practical interactive hub (Protected Level 2)
+  if (hash.startsWith('student/practical') || hash.startsWith('student-practical')) {
+    let practicalView: 'home' | 'detail' | 'lesson' | 'sandbox' = 'home';
+    let taskId = 1;
+    let taskStep: number | undefined = undefined;
+
+    if (hash.includes('/detail')) {
+      practicalView = 'detail';
+    } else if (hash.includes('/lesson')) {
+      practicalView = 'lesson';
+    } else if (hash.includes('/sandbox')) {
+      practicalView = 'sandbox';
+    }
+
+    const matchTask = hash.match(/[?&]task=(\d+)/);
+    if (matchTask) {
+      taskId = parseInt(matchTask[1], 10);
+      if (practicalView === 'home') practicalView = 'detail';
+    }
+
+    const matchStep = hash.match(/[?&]step=(\d+)/);
+    if (matchStep) {
+      taskStep = parseInt(matchStep[1], 10);
+      practicalView = 'lesson';
+    }
+
+    return {
+      page: 'student-practical',
+      certId: 'web-design-c',
+      taskId,
+      practicalView,
+      taskStep,
+      hash: rawHash,
+    };
+  }
+
+  // Route: practical learning (Public Level 1 & Spec Overview)
   if (hash === 'practical' || hash === 'practical-learning' || hash.includes('/practical')) {
     return { page: 'practical-learning', certId: 'web-design-c', hash: rawHash };
   }
@@ -127,6 +169,11 @@ export function parseHash(rawHash: string): RouteState {
   // Route: admin center
   if (hash === 'admin' || hash === 'admin-dashboard') {
     return { page: 'admin-dashboard', hash: rawHash };
+  }
+
+  // Route: system operations & telemetry (L5 Ops Console)
+  if (hash === 'ops' || hash === 'system-ops' || hash === 'system-operations') {
+    return { page: 'system-ops', hash: rawHash };
   }
 
   // Route: certifications/:id
@@ -222,6 +269,22 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     navigate(`#certifications/${certId}/practical`);
   };
 
+  const goToStudentPractical = (
+    taskId: number = 1,
+    view: 'home' | 'detail' | 'lesson' | 'sandbox' = 'home',
+    step?: number
+  ) => {
+    if (view === 'lesson' && step) {
+      navigate(`#student/practical/lesson?task=${taskId}&step=${step}`);
+    } else if (view === 'sandbox') {
+      navigate(`#student/practical/sandbox?task=${taskId}`);
+    } else if (view === 'detail') {
+      navigate(`#student/practical/detail?task=${taskId}`);
+    } else {
+      navigate('#student/practical');
+    }
+  };
+
   const goToCodeEditor = (taskId: number = 1) => {
     navigate(`#code-editor?task=${taskId}`);
   };
@@ -244,6 +307,10 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const goToAdminDashboard = () => {
     navigate('#admin');
+  };
+
+  const goToSystemOps = () => {
+    navigate('#ops');
   };
 
   const goToImportSystem = () => {
@@ -296,12 +363,14 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         goToTheoryPractice,
         goToMockExam,
         goToPracticalLearning,
+        goToStudentPractical,
         goToCodeEditor,
         goToAICoach,
         goToLearningProgress,
         goToStudentDashboard,
         goToTeacherDashboard,
         goToAdminDashboard,
+        goToSystemOps,
         goToImportSystem,
         goToLegalNotice,
         goToGameCenter,

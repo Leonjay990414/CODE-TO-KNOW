@@ -112,7 +112,7 @@ export const AIScaffoldingDemo: React.FC = () => {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: isSelected ? 'var(--color-brand-gold)' : 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: isSelected ? 'var(--color-brand-gold-text)' : 'var(--text-muted)' }}>
                     STEP 0{lvl.level}
                   </span>
                   {isSelected && <Check size={14} color="var(--color-brand-gold)" />}

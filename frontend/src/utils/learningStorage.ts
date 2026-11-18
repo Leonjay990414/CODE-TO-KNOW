@@ -50,7 +50,12 @@ export function getPracticalProgress(
       return defaultProgress;
     }
 
-    const raw = window.localStorage.getItem(key);
+    let raw = window.localStorage.getItem(key);
+    // 舊版相容容錯：若新前綴 ctk_practical_progress 無資料，安全回退嘗試讀取舊版 practical_progress
+    if (!raw) {
+      const legacyKey = `practical_progress:${effectiveUserId}:${taskId}:${version}`;
+      raw = window.localStorage.getItem(legacyKey);
+    }
     if (!raw) {
       return defaultProgress;
     }

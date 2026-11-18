@@ -216,7 +216,7 @@ export const Hero: React.FC = () => {
               {/* Active Step Content Output */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', minHeight: '140px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold)', letterSpacing: '0.05em' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-brand-gold-text)', letterSpacing: '0.05em' }}>
                     ✦ AI 學習助教第 {activeHintStep} 階梯啟發
                   </span>
                   <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
@@ -226,7 +226,7 @@ export const Hero: React.FC = () => {
                 <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.6, marginBottom: '10px' }}>
                   {scaffoldingSteps[activeHintStep - 1].content}
                 </p>
-                <div style={{ fontSize: '12px', color: '#968159', backgroundColor: 'rgba(189, 167, 126, 0.1)', padding: '8px 12px', borderRadius: 'var(--radius-xs)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-brand-gold-text)', backgroundColor: 'rgba(189, 167, 126, 0.12)', padding: '8px 12px', borderRadius: 'var(--radius-xs)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {scaffoldingSteps[activeHintStep - 1].spark}
                 </div>
               </div>

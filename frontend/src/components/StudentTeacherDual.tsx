@@ -261,20 +261,20 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
               {/* Teacher Analytics Visual Mockup */}
               <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '14px', color: 'var(--color-brand-deep-slate)' }}>
-                  教師端班級數據概覽預覽
+                  教師端班級數據概覽預覽 (展示版示範模型)
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '12px' }}>
                   <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>全班及格率</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>全班及格率 (示範指標)</div>
                     <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>89.2%</div>
                   </div>
                   <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>平均作業時長</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>平均作業時長 (示範指標)</div>
                     <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>38 分鐘</div>
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#FFFFFF', padding: '14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>高頻錯題診斷提醒</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>高頻錯題診斷提醒 (示範情境)</div>
                   <div style={{ fontSize: '12px', color: 'var(--status-error)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>⚠ 題號 #42「指標記憶體位址存取」答錯率高達 46%，建議課堂專題覆盤。</span>
                   </div>

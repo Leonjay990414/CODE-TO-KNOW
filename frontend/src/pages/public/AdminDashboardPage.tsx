@@ -19,7 +19,15 @@ import {
   Lock,
   Search,
   School,
+  Gamepad2,
 } from 'lucide-react';
+import {
+  AdminGameSetting,
+  getAllGameSettings,
+  updateGameSetting,
+  resetAllGameSettings,
+} from '../../utils/adminGameConfigManager';
+import { GameTypeKey } from '../../utils/teacherGameTaskManager';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { StatCard, EmptyState } from '../../components/common';
@@ -38,13 +46,17 @@ interface AdminDashboardPageProps {
 }
 
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTeacherApply }) => {
-  const { openAuth } = useAuth();
+  const { user, openAuth } = useAuth();
   const { goToHome } = useNavigation();
 
   // Active Admin Subsystem Tab
   const [activeTab, setActiveTab] = useState<
-    'applications' | 'governance' | 'classrooms' | 'audit' | 'health' | 'standards' | 'policies'
+    'applications' | 'governance' | 'classrooms' | 'audit' | 'health' | 'standards' | 'policies' | 'game-configs'
   >('applications');
+
+  // Game Configurations State (P14-GAM-015 Local Prototype)
+  const [gameSettings, setGameSettings] = useState<Record<GameTypeKey, AdminGameSetting>>(() => getAllGameSettings());
+  const [gameSettingFeedback, setGameSettingFeedback] = useState<string | null>(null);
 
   // Teacher Applications State
   const [appStatusFilter, setAppStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
@@ -151,8 +163,41 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
       fetchAuditLogs(1);
     } else if (activeTab === 'health') {
       fetchHealth();
+    } else if (activeTab === 'game-configs') {
+      setGameSettings(getAllGameSettings());
     }
   }, [activeTab]);
+
+  const handleUpdateGameConfig = (
+    key: GameTypeKey,
+    updates: Partial<Omit<AdminGameSetting, 'gameType' | 'gameName' | 'updatedAt'>>
+  ) => {
+    try {
+      const userRole = user?.roles?.[0] || (user as any)?.role || 'ADMIN';
+      const updated = updateGameSetting(key, updates, userRole);
+      setGameSettings((prev) => ({ ...prev, [key]: updated }));
+      setGameSettingFeedback(`✓ 已更新【${updated.gameName}】參數設定（本地即時生效）`);
+      setTimeout(() => setGameSettingFeedback(null), 3000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '更新失敗';
+      alert(msg);
+    }
+  };
+
+  const handleResetAllGameConfigs = () => {
+    if (confirm('確定要將全站 5 款遊戲之管理參數重設為官方預設值嗎？')) {
+      try {
+        const userRole = user?.roles?.[0] || (user as any)?.role || 'ADMIN';
+        resetAllGameSettings(userRole);
+        setGameSettings(getAllGameSettings());
+        setGameSettingFeedback('✓ 已成功將全站遊戲規則參數重設為官方預設值！');
+        setTimeout(() => setGameSettingFeedback(null), 3000);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : '重設失敗';
+        alert(msg);
+      }
+    }
+  };
 
   const handleApprove = (app: AdminTeacherApplicationWithUser) => {
     setReviewModalApp(app);
@@ -421,6 +466,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
             >
               <Lock size={14} />
               <span>維運事件通報 (P16-ADM-004)</span>
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'game-configs' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('game-configs')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Gamepad2 size={14} />
+              <span>遊戲化參數設定 (P14-GAM-015 本機原型)</span>
             </button>
           </div>
         </div>
@@ -1132,6 +1186,204 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
                 當外部相依服務（如 Gemini API、外部 SMTP 或 CDN）發生網路中斷或配額耗盡時，平台將自動啟動 <strong>Graceful Degradation（平緩降級）</strong>：
                 AI 助教切換為本地預置 4 階段認知鷹架提示，信件驗證保留驗證碼於安全日誌由管理員人工核對，確保存取不中斷，杜絕 500 內部伺服器崩潰。
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 8: Game Configurations (P14-GAM-015 Local Prototype) */}
+        {activeTab === 'game-configs' && (
+          <div className="container" style={{ marginTop: '24px' }}>
+            {/* Prototype Transparency Notice */}
+            <div
+              className="card"
+              style={{
+                padding: '16px 20px',
+                backgroundColor: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                borderRadius: 'var(--radius-md)',
+                marginBottom: '20px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <Activity size={20} color="#1D4ED8" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1E40AF', margin: '0 0 4px 0' }}>
+                    【本機管理原型】平台管理員教育遊戲參數配置 (P14-GAM-015)
+                  </h4>
+                  <p style={{ fontSize: '12px', color: '#1E3A8A', margin: 0, lineHeight: 1.6 }}>
+                    此介面為教育遊戲後台參數管理之本機展示原型。可即時調整各遊戲之倒數秒數、樣式比對容差與計分倍率，設定資料以 <code>ctk_admin_game_configs</code> 儲存於瀏覽器 LocalStorage。本原型尚未介接雲端管理資料庫與全站 WebSocket 廣播通知。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Toolbar */}
+            <div
+              className="card"
+              style={{
+                padding: '16px 20px',
+                marginBottom: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
+                  五大教育遊戲營運參數調整
+                </h3>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  參數變更將立即影響本機遊玩體驗（倒數計時、容差門檻與得分倍率）
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {gameSettingFeedback && (
+                  <span style={{ fontSize: '12px', color: '#15803D', fontWeight: 600 }}>
+                    {gameSettingFeedback}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={handleResetAllGameConfigs}
+                  style={{ minHeight: '44px', color: '#DC2626', borderColor: '#FCA5A5' }}
+                >
+                  <RefreshCw size={14} />
+                  <span>全部重設為官方預設值</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Game Config Cards Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+              {(Object.keys(gameSettings) as GameTypeKey[]).map((key) => {
+                const setting = gameSettings[key];
+                return (
+                  <div
+                    key={key}
+                    className="card"
+                    style={{
+                      padding: '20px',
+                      border: '1px solid var(--border-default)',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--surface-base)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                          {setting.gameName}
+                        </h4>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            backgroundColor: setting.isEnabled ? '#DCFCE7' : '#FEE2E2',
+                            color: setting.isEnabled ? '#15803D' : '#991B1B',
+                          }}
+                        >
+                          {setting.isEnabled ? '正常開放中' : '已停用維護'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '16px' }}>
+                        {/* Enable Toggle */}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
+                          <input
+                            type="checkbox"
+                            checked={setting.isEnabled}
+                            onChange={(e) => handleUpdateGameConfig(key, { isEnabled: e.target.checked })}
+                            style={{ width: '16px', height: '16px' }}
+                          />
+                          <span>允許學員遊玩此遊戲</span>
+                        </label>
+
+                        {/* Countdown Time Limit */}
+                        <div>
+                          <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+                            <span>關卡倒數計時（秒）：</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{setting.timeLimitSeconds === 0 ? '無時間限制' : `${setting.timeLimitSeconds} 秒`}</span>
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={300}
+                            step={5}
+                            value={setting.timeLimitSeconds}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(300, Number(e.target.value) || 0));
+                              handleUpdateGameConfig(key, { timeLimitSeconds: val });
+                            }}
+                            style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            範圍 0～300 秒（填 0 代表無作答倒數限制）
+                          </div>
+                        </div>
+
+                        {/* Tolerance */}
+                        <div>
+                          <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+                            <span>比對容差門檻（%）：</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{setting.tolerancePercentage}%</span>
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            step={1}
+                            value={setting.tolerancePercentage}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(50, Number(e.target.value) || 0));
+                              handleUpdateGameConfig(key, { tolerancePercentage: val });
+                            }}
+                            style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            樣式與積木排版之偏差容許範圍（0～50%）
+                          </div>
+                        </div>
+
+                        {/* Multiplier */}
+                        <div>
+                          <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+                            <span>計分加權倍率：</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{setting.scoreMultiplier.toFixed(1)}x</span>
+                          </label>
+                          <input
+                            type="number"
+                            min={0.5}
+                            max={3.0}
+                            step={0.1}
+                            value={setting.scoreMultiplier}
+                            onChange={(e) => {
+                              const val = Math.max(0.5, Math.min(3.0, Number(e.target.value) || 1.0));
+                              handleUpdateGameConfig(key, { scoreMultiplier: val });
+                            }}
+                            style={{ width: '100%', padding: '6px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            連擊與過關得分倍率加權（0.5x ～ 3.0x）
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px', fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>識別碼: {setting.gameType}</span>
+                      <span>上次更新: {new Date(setting.updatedAt).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

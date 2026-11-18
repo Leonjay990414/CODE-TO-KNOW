@@ -159,7 +159,7 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
                     <span style={{ fontWeight: 600 }}>工作項目 02：HTML5 結構與語意標籤規範</span>
-                    <span style={{ fontWeight: 700, color: 'var(--color-brand-gold)' }}>78% 掌握（良好）</span>
+                    <span style={{ fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>78% 掌握（良好）</span>
                   </div>
                   <div className="progress-track">
                     <div className="progress-bar" style={{ width: '78%', backgroundColor: 'var(--color-brand-gold)' }} />
@@ -233,7 +233,7 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
                   <button
                     type="button"
                     onClick={() => goToTheoryPractice('web-design-c')}
-                    style={{ fontSize: '12px', color: 'var(--color-brand-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    style={{ fontSize: '13px', color: 'var(--color-brand-gold-text)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, minHeight: '44px', padding: '10px 14px', display: 'inline-flex', alignItems: 'center' }}
                   >
                     前往複習 →
                   </button>

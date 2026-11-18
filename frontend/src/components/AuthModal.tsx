@@ -348,8 +348,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             position: 'absolute',
             top: '20px',
             right: '20px',
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
+            minWidth: '44px',
+            minHeight: '44px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -438,6 +440,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     style={{
                       flex: 1,
                       minWidth: '130px',
+                      minHeight: '44px',
                       fontSize: '12px',
                       padding: '8px 10px',
                       display: 'inline-flex',
@@ -459,6 +462,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     style={{
                       flex: 1,
                       minWidth: '130px',
+                      minHeight: '44px',
                       fontSize: '12px',
                       padding: '8px 10px',
                       display: 'inline-flex',
@@ -506,6 +510,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     style={{
                       flex: 1,
                       minWidth: '130px',
+                      minHeight: '44px',
                       fontSize: '12px',
                       padding: '8px 10px',
                       display: 'inline-flex',
@@ -527,6 +532,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     style={{
                       flex: 1,
                       minWidth: '130px',
+                      minHeight: '44px',
                       fontSize: '12px',
                       padding: '8px 10px',
                       display: 'inline-flex',
@@ -822,8 +828,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
                   style={{
                     position: 'absolute',
-                    right: '10px',
-                    top: '11px',
+                    right: '4px',
+                    top: '0',
+                    bottom: '0',
+                    width: '44px',
+                    height: '100%',
+                    minWidth: '44px',
+                    minHeight: '44px',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -831,7 +842,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '4px',
+                    padding: '0',
                   }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -930,17 +941,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     aria-label={showNewPassword ? '隱藏新密碼' : '顯示新密碼'}
                     style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '11px',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
+                    position: 'absolute',
+                    right: '4px',
+                    top: '0',
+                    bottom: '0',
+                    width: '44px',
+                    height: '100%',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0',
                     }}
                   >
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -991,17 +1007,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? '隱藏確認密碼' : '顯示確認密碼'}
                     style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '11px',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
+                    position: 'absolute',
+                    right: '4px',
+                    top: '0',
+                    bottom: '0',
+                    width: '44px',
+                    height: '100%',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0',
                     }}
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

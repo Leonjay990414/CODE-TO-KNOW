@@ -172,7 +172,7 @@ export const PracticalHomePage: React.FC<PracticalHomePageProps> = ({
                     >
                       {moduleData.taskCode}
                     </span>
-                    <span style={{ fontSize: '12px', color: '#BDA77E', fontWeight: 600 }}>
+                    <span style={{ fontSize: '12px', color: '#7C663D', fontWeight: 600 }}>
                       難度：{moduleData.difficulty}
                     </span>
                   </div>
