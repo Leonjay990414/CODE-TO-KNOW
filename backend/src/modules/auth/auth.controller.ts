@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service.js';
 import { env } from '../../config/env.js';
 import { SESSION_COOKIE_NAME } from '../../middleware/authenticate.js';
-import { setCsrfCookie } from '../../middleware/csrf.js';
+import { setCsrfCookie, CSRF_COOKIE_NAME } from '../../middleware/csrf.js';
+import { UnauthorizedError } from '../../utils/errors.js';
 
 export class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -112,8 +113,8 @@ export class AuthController {
     }
   }
 
-  async getCsrfToken(_req: Request, res: Response) {
-    const csrfToken = setCsrfCookie(res);
+  async getCsrfToken(req: Request, res: Response) {
+    const csrfToken = res.locals.csrfToken || req.cookies?.[CSRF_COOKIE_NAME] || setCsrfCookie(res);
     return res.status(200).json({
       success: true,
       data: { csrfToken },
@@ -149,6 +150,36 @@ export class AuthController {
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await authService.resetPassword(
+        req.body,
+        req.ip,
+        req.headers['user-agent']
+      );
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('尚未登入，請先進行登入', 'UNAUTHENTICATED');
+      }
+      const result = await authService.updateProfile(req.user.id, req.body);
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('尚未登入，請先進行登入', 'UNAUTHENTICATED');
+      }
+      const result = await authService.changePassword(
+        req.user.id,
+        req.sessionId,
         req.body,
         req.ip,
         req.headers['user-agent']

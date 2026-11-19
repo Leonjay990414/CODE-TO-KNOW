@@ -38,8 +38,28 @@ export const resetPasswordSchema = z.object({
     .regex(/[0-9]/, '密碼必須包含至少一個數字'),
 });
 
+export const updateProfileSchema = z.object({
+  nickname: z.string().trim().max(50, '暱稱長度不得超過 50 個字元').optional().nullable(),
+  timezone: z.string().trim().max(50, '時區長度不得超過 50 個字元').optional().nullable(),
+  language: z.string().trim().max(20, '語系長度不得超過 20 個字元').optional().nullable(),
+  educationLevel: z.string().trim().max(50, '教育程度長度不得超過 50 個字元').optional().nullable(),
+  bio: z.string().trim().max(500, '個人自介長度不得超過 500 個字元').optional().nullable(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, '請輸入目前密碼'),
+  newPassword: z
+    .string()
+    .min(8, '新密碼長度至少需 8 個字元')
+    .max(100, '新密碼長度不得超過 100 個字元')
+    .regex(/[A-Za-z]/, '新密碼必須包含至少一個英文字母')
+    .regex(/[0-9]/, '新密碼必須包含至少一個數字'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

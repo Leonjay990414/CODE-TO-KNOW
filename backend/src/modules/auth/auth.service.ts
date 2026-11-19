@@ -14,6 +14,8 @@ import {
   RegisterInput,
   LoginInput,
   ResetPasswordInput,
+  UpdateProfileInput,
+  ChangePasswordInput,
 } from './auth.schema.js';
 
 export class AuthService {
@@ -416,6 +418,152 @@ export class AuthService {
     });
 
     return { success: true, message: '密碼已成功更新，請使用新密碼登入' };
+  }
+
+  /**
+   * Update current user's profile.
+   * Only allows the 5 existing fields in Prisma UserProfile model:
+   * nickname, timezone, language, educationLevel, bio.
+   */
+  async updateProfile(userId: string, input: UpdateProfileInput) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true },
+    });
+
+    if (!user || user.deletedAt !== null) {
+      throw new NotFoundError('找不到使用者資料');
+    }
+
+    if (user.status === 'SUSPENDED' || user.status === 'DISABLED') {
+      throw new ForbiddenError('此帳號已停用或凍結，無法執行此操作', 'ACCOUNT_DISABLED');
+    }
+
+    const dataToUpdate: {
+      nickname?: string | null;
+      timezone?: string;
+      language?: string;
+      educationLevel?: string | null;
+      bio?: string | null;
+    } = {};
+
+    if (input.nickname !== undefined) dataToUpdate.nickname = input.nickname;
+    if (input.timezone !== undefined && input.timezone !== null) dataToUpdate.timezone = input.timezone;
+    if (input.language !== undefined && input.language !== null) dataToUpdate.language = input.language;
+    if (input.educationLevel !== undefined) dataToUpdate.educationLevel = input.educationLevel;
+    if (input.bio !== undefined) dataToUpdate.bio = input.bio;
+
+    const profile = await prisma.userProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        nickname: dataToUpdate.nickname ?? null,
+        timezone: dataToUpdate.timezone ?? 'Asia/Taipei',
+        language: dataToUpdate.language ?? 'zh-TW',
+        educationLevel: dataToUpdate.educationLevel ?? null,
+        bio: dataToUpdate.bio ?? null,
+      },
+      update: dataToUpdate,
+    });
+
+    return {
+      success: true,
+      data: {
+        profile: {
+          id: profile.id,
+          userId: profile.userId,
+          nickname: profile.nickname,
+          timezone: profile.timezone,
+          language: profile.language,
+          educationLevel: profile.educationLevel,
+          bio: profile.bio,
+          updatedAt: profile.updatedAt,
+        },
+      },
+      message: '個人檔案已成功更新',
+    };
+  }
+
+  /**
+   * Change password for authenticated user.
+   * Verifies current password, enforces password strength,
+   * hashes new password with bcrypt 12, revokes all other active sessions,
+   * preserves currentSessionId, and writes sanitized AuditLog.
+   */
+  async changePassword(
+    userId: string,
+    currentSessionId: string | undefined,
+    input: ChangePasswordInput,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || user.deletedAt !== null) {
+      throw new NotFoundError('找不到使用者資料');
+    }
+
+    if (user.status === 'SUSPENDED' || user.status === 'DISABLED') {
+      throw new ForbiddenError('此帳號已停用或凍結，無法執行此操作', 'ACCOUNT_DISABLED');
+    }
+
+    const isCurrentPasswordValid = await verifyPassword(input.currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestError('目前密碼不正確', 'INVALID_CREDENTIALS');
+    }
+
+    if (input.currentPassword === input.newPassword) {
+      throw new BadRequestError('新密碼不可與目前密碼相同', 'SAME_AS_CURRENT_PASSWORD');
+    }
+
+    const newPasswordHash = await hashPassword(input.newPassword);
+    const now = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { passwordHash: newPasswordHash },
+      });
+
+      // Revoke all OTHER sessions of this user, preserving currentSessionId
+      if (currentSessionId) {
+        await tx.session.updateMany({
+          where: {
+            userId,
+            id: { not: currentSessionId },
+            revokedAt: null,
+          },
+          data: { revokedAt: now },
+        });
+      } else {
+        await tx.session.updateMany({
+          where: { userId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+      }
+
+      await logAuditEvent(
+        {
+          userId,
+          action: 'USER_PASSWORD_CHANGED',
+          details: {
+            userId,
+            revokedOtherSessions: true,
+            currentSessionPreserved: Boolean(currentSessionId),
+          },
+          ipAddress,
+          userAgent,
+        },
+        tx
+      );
+    });
+
+    return {
+      success: true,
+      message: '密碼已成功變更，其他裝置的登入階段已全面撤銷',
+    };
   }
 }
 

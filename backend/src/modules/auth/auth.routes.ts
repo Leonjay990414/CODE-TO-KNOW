@@ -7,10 +7,11 @@ import {
   verifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  updateProfileSchema,
+  changePasswordSchema,
 } from './auth.schema.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { authRateLimiter } from '../../middleware/rate-limiter.js';
-import { csrfProtection } from '../../middleware/csrf.js';
 
 const router = Router();
 
@@ -21,7 +22,6 @@ router.get('/csrf-token', (req, res) => authController.getCsrfToken(req, res));
 router.post(
   '/register',
   authRateLimiter,
-  csrfProtection,
   validateBody(registerSchema),
   (req, res, next) => authController.register(req, res, next)
 );
@@ -29,7 +29,6 @@ router.post(
 router.post(
   '/login',
   authRateLimiter,
-  csrfProtection,
   validateBody(loginSchema),
   (req, res, next) => authController.login(req, res, next)
 );
@@ -37,7 +36,6 @@ router.post(
 router.post(
   '/verify-email',
   authRateLimiter,
-  csrfProtection,
   validateBody(verifyEmailSchema),
   (req, res, next) => authController.verifyEmail(req, res, next)
 );
@@ -45,7 +43,6 @@ router.post(
 router.post(
   '/forgot-password',
   authRateLimiter,
-  csrfProtection,
   validateBody(forgotPasswordSchema),
   (req, res, next) => authController.forgotPassword(req, res, next)
 );
@@ -53,18 +50,32 @@ router.post(
 router.post(
   '/reset-password',
   authRateLimiter,
-  csrfProtection,
   validateBody(resetPasswordSchema),
   (req, res, next) => authController.resetPassword(req, res, next)
 );
 
 // Protected Auth endpoints
-router.post('/logout', authenticate, csrfProtection, (req, res, next) =>
+router.post('/logout', authenticate, (req, res, next) =>
   authController.logout(req, res, next)
 );
 
 router.get('/me', authenticate, (req, res, next) =>
   authController.getMe(req, res, next)
+);
+
+router.patch(
+  '/profile',
+  authenticate,
+  validateBody(updateProfileSchema),
+  (req, res, next) => authController.updateProfile(req, res, next)
+);
+
+router.post(
+  '/change-password',
+  authenticate,
+  authRateLimiter,
+  validateBody(changePasswordSchema),
+  (req, res, next) => authController.changePassword(req, res, next)
 );
 
 export const authRoutes = router;
