@@ -102,6 +102,52 @@ describe('Production API Safety and Multi-Environment Configuration Suite', () =
       expect(config.isProductionApiMissing).toBe(true);
       expect(config.configured).toBe(false);
     });
+
+    it('enforces Demo Mode and empty baseUrl when simulated PR Preview build flags are supplied', () => {
+      // In PR Preview, Vite define forces isDemo=true and envApiUrl=''
+      const config = resolveApiConfiguration({
+        isDemo: true,
+        isProd: true,
+        envApiUrl: '',
+      });
+
+      expect(config.mode).toBe('demo');
+      expect(config.isDemoMode).toBe(true);
+      expect(config.baseUrl).toBe('');
+      expect(config.isProductionApiMissing).toBe(false);
+      expect(config.configured).toBe(true);
+    });
+
+    it('proves fail-closed isolation when production API URL is supplied alongside PR Preview flag', () => {
+      // Even if Render inherited production VITE_API_URL, PR Guard forces isDemo=true and envApiUrl=''
+      const prGuardAppliedConfig = resolveApiConfiguration({
+        isDemo: true,
+        isProd: true,
+        envApiUrl: '', // PR Guard clears the URL at build time
+      });
+
+      expect(prGuardAppliedConfig.mode).toBe('demo');
+      expect(prGuardAppliedConfig.isDemoMode).toBe(true);
+      expect(prGuardAppliedConfig.baseUrl).toBe('');
+      expect(prGuardAppliedConfig.baseUrl).not.toContain('production');
+      expect(prGuardAppliedConfig.configured).toBe(true);
+    });
+
+    it('preserves exact production API configuration when PR Preview flag is absent', () => {
+      // In Production, PR Guard is inactive; normal production envApiUrl is honored
+      const prodConfig = resolveApiConfiguration({
+        isDemo: false,
+        isProd: true,
+        envApiUrl: 'https://api.codetoknow.edu.tw/api',
+      });
+
+      expect(prodConfig.mode).toBe('production');
+      expect(prodConfig.isDemoMode).toBe(false);
+      expect(prodConfig.isProduction).toBe(true);
+      expect(prodConfig.baseUrl).toBe('https://api.codetoknow.edu.tw/api');
+      expect(prodConfig.isProductionApiMissing).toBe(false);
+      expect(prodConfig.configured).toBe(true);
+    });
   });
 
   describe('Runtime Environment Status Helper', () => {
