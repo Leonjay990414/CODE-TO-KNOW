@@ -1,8 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
-import { AppError } from '../utils/errors.js';
+import { Prisma } from '@prisma/client';
+import { AppError, ConflictError, NotFoundError } from '../utils/errors.js';
 import { env } from '../config/env.js';
 import { logSafeError, redactStringSecrets } from '../utils/redaction.js';
+
+export function isPrismaKnownRequestError(err: unknown): err is Prisma.PrismaClientKnownRequestError {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    return true;
+  }
+  // Structural check for test mocks / cross-realm objects matching Prisma's signature
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { name?: unknown }).name === 'PrismaClientKnownRequestError' &&
+    typeof (err as { code?: unknown }).code === 'string' &&
+    (err as { code: string }).code.startsWith('P') &&
+    typeof (err as { clientVersion?: unknown }).clientVersion === 'string'
+  ) {
+    return true;
+  }
+  return false;
+}
 
 export function errorHandler(
   err: Error,
@@ -41,6 +60,35 @@ export function errorHandler(
         message: '請求格式不是合法的 JSON',
       },
     });
+  }
+
+  // Prisma Known Database Request Errors
+  if (isPrismaKnownRequestError(err)) {
+    // P2002: Unique constraint violation (e.g. duplicate email registration under race conditions)
+    if (err.code === 'P2002') {
+      const conflictError = new ConflictError('資源已存在或資料衝突，請確認後重試');
+      return res.status(conflictError.statusCode).json({
+        success: false,
+        error: {
+          code: conflictError.code,
+          message: conflictError.message,
+        },
+      });
+    }
+
+    // P2025: Record to update/delete/find not found in database
+    if (err.code === 'P2025') {
+      const notFoundError = new NotFoundError('找不到指定的資源或該紀錄已被移除');
+      return res.status(notFoundError.statusCode).json({
+        success: false,
+        error: {
+          code: notFoundError.code,
+          message: notFoundError.message,
+        },
+      });
+    }
+
+    // Other Prisma errors fall through to safe 500 handling
   }
 
   logSafeError('Unhandled server error:', err, {

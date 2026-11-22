@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { classroomController } from './classroom.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { requireRoles } from '../../middleware/authorize.js';
-import { csrfProtection } from '../../middleware/csrf.js';
 import { validateBody, validateParams } from '../../middleware/validate.js';
 import {
   createClassroomSchema,
@@ -21,7 +20,6 @@ router.use(authenticate);
 router.post(
   '/',
   requireRoles(['TEACHER', 'ADMIN']),
-  csrfProtection,
   rejectForgedOwnerFields(['creatorId'], { resourceName: '班級創建' }),
   validateBody(createClassroomSchema),
   (req, res, next) => classroomController.createClassroom(req, res, next)
@@ -45,7 +43,6 @@ router.get(
 router.post(
   '/join',
   requireRoles(['STUDENT', 'ADMIN']),
-  csrfProtection,
   rejectForgedOwnerFields(['studentId'], { resourceName: '班級加入' }),
   validateBody(joinClassroomSchema),
   (req, res, next) => classroomController.joinClassroom(req, res, next)
@@ -63,7 +60,6 @@ router.get(
 router.delete(
   '/:id/members/:studentId',
   requireRoles(['TEACHER', 'ADMIN']),
-  csrfProtection,
   validateParams(removeMemberParamSchema),
   (req, res, next) => classroomController.removeMember(req, res, next)
 );

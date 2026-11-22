@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { NextFunction, Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import {
   logSafeError,
   redactStringSecrets,
   sanitizeAuditValue,
 } from '../src/utils/redaction.js';
-import { errorHandler } from '../src/middleware/error-handler.js';
+import { errorHandler, isPrismaKnownRequestError } from '../src/middleware/error-handler.js';
+import { AppError, ConflictError, NotFoundError } from '../src/utils/errors.js';
+import { env } from '../src/config/env.js';
 
 describe('Safe Global Error Logger & Redaction Precision (Phase 3-C-21)', () => {
   afterEach(() => {
@@ -543,5 +546,159 @@ describe('Safe Global Error Logger & Redaction Precision (Phase 3-C-21)', () => 
     expect(safeUrlOut).not.toContain('dummy_poison_tojson_leak');
     expect(safeUrlOut).toContain('example.org');
     expect(safeUrlOut).toContain('"ok":"1"');
+  });
+
+  describe('P05-SEC-004: Prisma Database Error Safe Mapping & Response Sanitization', () => {
+    function createMockRes() {
+      let statusCode = 200;
+      let jsonBody: any = null;
+      const res = {
+        status(code: number) {
+          statusCode = code;
+          return this;
+        },
+        json(payload: unknown) {
+          jsonBody = payload;
+          return this;
+        },
+        getStatusCode: () => statusCode,
+        getJsonBody: () => jsonBody,
+      } as unknown as Response & { getStatusCode: () => number; getJsonBody: () => any };
+      return res;
+    }
+
+    const mockReq = {
+      method: 'POST',
+      path: '/api/auth/register',
+    } as unknown as Request;
+
+    it('22. correctly identifies genuine PrismaClientKnownRequestError structure', () => {
+      const genuinePrismaError = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed on the fields: (`email`)',
+        {
+          code: 'P2002',
+          clientVersion: '7.10.1',
+          meta: { target: ['email'], modelName: 'User' },
+        }
+      );
+
+      expect(isPrismaKnownRequestError(genuinePrismaError)).toBe(true);
+
+      // Fake/spoofed error without Prisma signature
+      const fakeError = new Error('I have a code property');
+      (fakeError as any).code = 'P2002';
+      expect(isPrismaKnownRequestError(fakeError)).toBe(false);
+
+      // Non-object
+      expect(isPrismaKnownRequestError(null)).toBe(false);
+      expect(isPrismaKnownRequestError('P2002')).toBe(false);
+    });
+
+    it('23. maps Prisma P2002 (Unique constraint violation) to HTTP 409 CONFLICT without leaking schema', () => {
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed on the fields: (`email`) in table `User` with SQL: INSERT INTO ...',
+        {
+          code: 'P2002',
+          clientVersion: '7.10.1',
+          meta: { target: ['email'], modelName: 'User' },
+        }
+      );
+
+      const res = createMockRes();
+      errorHandler(p2002Error, mockReq, res, vi.fn() as NextFunction);
+
+      expect(res.getStatusCode()).toBe(409);
+      const body = res.getJsonBody();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('CONFLICT');
+      expect(body.error.message).toBe('資源已存在或資料衝突，請確認後重試');
+
+      // Crucial security checks: zero database schema or SQL leakage
+      const serialized = JSON.stringify(body);
+      expect(serialized).not.toContain('Unique constraint failed');
+      expect(serialized).not.toContain('table `User`');
+      expect(serialized).not.toContain('INSERT INTO');
+      expect(serialized).not.toContain('email');
+    });
+
+    it('24. maps Prisma P2025 (Record not found) to HTTP 404 NOT_FOUND without leaking table info', () => {
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'An operation failed because it depends on one or more records that were required but not found. Record to update not found on model Classroom.',
+        {
+          code: 'P2025',
+          clientVersion: '7.10.1',
+          meta: { modelName: 'Classroom' },
+        }
+      );
+
+      const res = createMockRes();
+      errorHandler(p2025Error, mockReq, res, vi.fn() as NextFunction);
+
+      expect(res.getStatusCode()).toBe(404);
+      const body = res.getJsonBody();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('NOT_FOUND');
+      expect(body.error.message).toBe('找不到指定的資源或該紀錄已被移除');
+
+      // Zero internal table or model leakage
+      const serialized = JSON.stringify(body);
+      expect(serialized).not.toContain('Classroom');
+      expect(serialized).not.toContain('Record to update not found');
+    });
+
+    it('25. falls back to safe HTTP 500 for unknown Prisma errors (e.g. P1000 or P2003)', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const p2003Error = new Prisma.PrismaClientKnownRequestError(
+        'Foreign key constraint failed on the field: `creatorId` postgresql://admin:leak_pw@db:5432/app',
+        {
+          code: 'P2003',
+          clientVersion: '7.10.1',
+          meta: { field_name: 'creatorId' },
+        }
+      );
+
+      const res = createMockRes();
+      errorHandler(p2003Error, mockReq, res, vi.fn() as NextFunction);
+
+      // Must NOT map to 404 or 409
+      expect(res.getStatusCode()).toBe(500);
+      const body = res.getJsonBody();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(body.error.message).toBe('系統發生非預期錯誤，請稍後再試');
+
+      // Zero internal database details in client response
+      const serialized = JSON.stringify(body);
+      expect(serialized).not.toContain('Foreign key constraint failed');
+      expect(serialized).not.toContain('creatorId');
+      expect(serialized).not.toContain('leak_pw');
+
+      // Console logging went through safe redaction
+      const logged = JSON.stringify(spy.mock.calls);
+      expect(logged).not.toContain('leak_pw');
+      expect(logged).toContain('[REDACTED]');
+    });
+
+    it('26. rejects spoofed code P2002 errors and safely treats them as 500', () => {
+      const fakeError = new Error('Malicious spoof attempt table=Users column=password');
+      (fakeError as any).code = 'P2002'; // spoof code
+
+      const res = createMockRes();
+      errorHandler(fakeError, mockReq, res, vi.fn() as NextFunction);
+
+      // Does not get spoofed into 409 CONFLICT
+      expect(res.getStatusCode()).toBe(500);
+      expect(res.getJsonBody().error.code).toBe('INTERNAL_SERVER_ERROR');
+    });
+
+    it('27. maintains existing AppError behavior as standard regression check', () => {
+      const appErr = new ConflictError('Custom business conflict');
+      const res = createMockRes();
+      errorHandler(appErr, mockReq, res, vi.fn() as NextFunction);
+
+      expect(res.getStatusCode()).toBe(409);
+      expect(res.getJsonBody().error.code).toBe('CONFLICT');
+      expect(res.getJsonBody().error.message).toBe('Custom business conflict');
+    });
   });
 });

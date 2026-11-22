@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { adminController } from './admin.controller.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { requireRoles } from '../../middleware/authorize.js';
-import { csrfProtection } from '../../middleware/csrf.js';
 import { validateBody, validateParams, validateQuery } from '../../middleware/validate.js';
 import {
   reviewApplicationSchema,
@@ -25,7 +24,6 @@ router.get(
 
 router.post(
   '/teacher-applications/:id/approve',
-  csrfProtection,
   validateParams(applicationIdParamSchema),
   validateBody(reviewApplicationSchema),
   (req, res, next) => adminController.approveTeacherApplication(req, res, next)
@@ -33,7 +31,6 @@ router.post(
 
 router.post(
   '/teacher-applications/:id/reject',
-  csrfProtection,
   validateParams(applicationIdParamSchema),
   validateBody(reviewApplicationSchema),
   (req, res, next) => adminController.rejectTeacherApplication(req, res, next)

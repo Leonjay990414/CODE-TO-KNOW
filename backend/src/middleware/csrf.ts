@@ -19,9 +19,15 @@ export function setCsrfCookie(res: Response): string {
 }
 
 export function csrfProtection(req: Request, res: Response, next: NextFunction) {
-  // If no CSRF cookie exists, set one automatically
+  // If already verified in this request pipeline (prevents duplicate execution), skip
+  if ((req as any)._csrfVerified) {
+    return next();
+  }
+
+  // If no CSRF cookie exists, set one automatically on response and store in res.locals
   if (!req.cookies?.[CSRF_COOKIE_NAME]) {
-    setCsrfCookie(res);
+    const token = setCsrfCookie(res);
+    res.locals.csrfToken = token;
   }
 
   // Safe HTTP methods do not mutate state
@@ -30,17 +36,21 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
     return next();
   }
 
-  // Exempt paths if needed (e.g., initial webhook or testing mock override)
-  if (process.env.NODE_ENV === 'test' && req.headers['x-skip-csrf'] === 'true') {
+  // Exempt paths strictly limited to the test environment.
+  // In production (env.NODE_ENV === 'production'), this condition is always false,
+  // preventing any unauthorized bypass via the x-skip-csrf header.
+  if (env.NODE_ENV === 'test' && req.headers['x-skip-csrf'] === 'true') {
+    (req as any)._csrfVerified = true;
     return next();
   }
 
   const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
-  const headerToken = req.headers[CSRF_HEADER_NAME] as string | undefined;
+  const headerToken = (req.headers[CSRF_HEADER_NAME] || req.headers['x-csrf-token']) as string | undefined;
 
   if (!cookieToken || !headerToken || !safeCompare(cookieToken, headerToken)) {
     return next(new ForbiddenError('無效或缺少 CSRF 防護憑證，請重新整理頁面後再試', 'CSRF_VALIDATION_FAILED'));
   }
 
+  (req as any)._csrfVerified = true;
   return next();
 }

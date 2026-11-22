@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { generalRateLimiter } from './middleware/rate-limiter.js';
+import { csrfProtection } from './middleware/csrf.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { teacherRoutes } from './modules/teachers/teacher.routes.js';
 import { adminRoutes } from './modules/admin/admin.routes.js';
@@ -31,7 +32,7 @@ export function createApp(): Express {
       origin: env.CORS_ORIGIN,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-skip-csrf'],
     })
   );
 
@@ -69,6 +70,10 @@ export function createApp(): Express {
       },
     });
   });
+
+  // Global CSRF Protection for mutating API routes
+  // Automatically exempts safe methods (GET, HEAD, OPTIONS) and applies double-submit cookie checks
+  app.use('/api', csrfProtection);
 
   // Mount API modules
   app.use('/api/auth', authRoutes);
