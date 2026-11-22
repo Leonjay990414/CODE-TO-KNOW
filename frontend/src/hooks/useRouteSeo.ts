@@ -49,9 +49,17 @@ export const useRouteSeo = (currentRoute: string) => {
     const config = ROUTE_SEO_MAP[currentRoute] || ROUTE_SEO_MAP['home'];
     document.title = config.title;
 
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', config.description);
-    }
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let el = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      if (el) {
+        el.setAttribute('content', content);
+      }
+    };
+
+    setMetaTag('name', 'description', config.description);
+    setMetaTag('property', 'og:title', config.title);
+    setMetaTag('property', 'og:description', config.description);
+    setMetaTag('name', 'twitter:title', config.title);
+    setMetaTag('name', 'twitter:description', config.description);
   }, [currentRoute]);
 };

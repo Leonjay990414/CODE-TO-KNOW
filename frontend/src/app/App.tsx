@@ -1,44 +1,107 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense } from 'react';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import { HomePage } from '../pages/public/HomePage';
-import { CertificationsPage } from '../pages/public/CertificationsPage';
-import { CertificationDetailPage } from '../pages/public/CertificationDetailPage';
-import { WebDesignCDemoPage } from '../pages/public/WebDesignCDemoPage';
-import { TheoryPracticePage } from '../pages/public/TheoryPracticePage';
-import { MockExamPage } from '../pages/public/MockExamPage';
-import { PracticalLearningPage } from '../pages/public/PracticalLearningPage';
-import { CodeEditorPage } from '../pages/public/CodeEditorPage';
-import { AICoachPage } from '../pages/public/AICoachPage';
-import { LearningProgressPage } from '../pages/public/LearningProgressPage';
-import { StudentDashboardPage } from '../pages/public/StudentDashboardPage';
-import { TeacherDashboardPage } from '../pages/public/TeacherDashboardPage';
-import { AdminDashboardPage } from '../pages/public/AdminDashboardPage';
-import { QuestionBankImportSystemPage } from '../pages/public/QuestionBankImportSystemPage';
-import { StudentPracticalHubPage } from '../pages/student/practical';
-import { SystemOpsDashboardPage } from '../pages/system-ops/SystemOpsDashboardPage';
-import { LegalNoticePage } from '../pages/public/LegalNoticePage';
-import { GameCenterPage } from '../pages/public/GameCenterPage';
 import { AuthModal } from '../components/AuthModal';
 import { TeacherApplyModal } from '../components/TeacherApplyModal';
 import { ProtectedRoute, INTENDED_ROUTE_STORAGE_KEY } from '../components/ProtectedRoute';
 import { useRouteSeo } from '../hooks/useRouteSeo';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 
-// Lazy load 5 game pages with code-splitting
-const CodePuzzlePage = lazy(() =>
-  import('../pages/public/CodePuzzlePage').then((m) => ({ default: m.CodePuzzlePage }))
+// ============================================================================
+// Dynamic Route Code-Splitting with Resilient Single-Retry Chunk Loading
+// (CTK-QUAL-002: Only HomePage remains statically bundled into entry bundle)
+// ============================================================================
+const CertificationsPage = lazyWithRetry(
+  () => import('../pages/public/CertificationsPage').then((m) => ({ default: m.CertificationsPage })),
+  'CertificationsPage'
 );
-const CSSDesignerPage = lazy(() =>
-  import('../pages/public/CSSDesignerPage').then((m) => ({ default: m.CSSDesignerPage }))
+const CertificationDetailPage = lazyWithRetry(
+  () => import('../pages/public/CertificationDetailPage').then((m) => ({ default: m.CertificationDetailPage })),
+  'CertificationDetailPage'
 );
-const BugHunterPage = lazy(() =>
-  import('../pages/public/BugHunterPage').then((m) => ({ default: m.BugHunterPage }))
+const WebDesignCDemoPage = lazyWithRetry(
+  () => import('../pages/public/WebDesignCDemoPage').then((m) => ({ default: m.WebDesignCDemoPage })),
+  'WebDesignCDemoPage'
 );
-const QuizRushPage = lazy(() =>
-  import('../pages/public/QuizRushPage').then((m) => ({ default: m.QuizRushPage }))
+const TheoryPracticePage = lazyWithRetry(
+  () => import('../pages/public/TheoryPracticePage').then((m) => ({ default: m.TheoryPracticePage })),
+  'TheoryPracticePage'
 );
-const WebBuilderPage = lazy(() =>
-  import('../pages/public/WebBuilderPage').then((m) => ({ default: m.WebBuilderPage }))
+const MockExamPage = lazyWithRetry(
+  () => import('../pages/public/MockExamPage').then((m) => ({ default: m.MockExamPage })),
+  'MockExamPage'
+);
+const PracticalLearningPage = lazyWithRetry(
+  () => import('../pages/public/PracticalLearningPage').then((m) => ({ default: m.PracticalLearningPage })),
+  'PracticalLearningPage'
+);
+const CodeEditorPage = lazyWithRetry(
+  () => import('../pages/public/CodeEditorPage').then((m) => ({ default: m.CodeEditorPage })),
+  'CodeEditorPage'
+);
+const AICoachPage = lazyWithRetry(
+  () => import('../pages/public/AICoachPage').then((m) => ({ default: m.AICoachPage })),
+  'AICoachPage'
+);
+const LearningProgressPage = lazyWithRetry(
+  () => import('../pages/public/LearningProgressPage').then((m) => ({ default: m.LearningProgressPage })),
+  'LearningProgressPage'
+);
+const StudentDashboardPage = lazyWithRetry(
+  () => import('../pages/public/StudentDashboardPage').then((m) => ({ default: m.StudentDashboardPage })),
+  'StudentDashboardPage'
+);
+const TeacherDashboardPage = lazyWithRetry(
+  () => import('../pages/public/TeacherDashboardPage').then((m) => ({ default: m.TeacherDashboardPage })),
+  'TeacherDashboardPage'
+);
+const AdminDashboardPage = lazyWithRetry(
+  () => import('../pages/public/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+  'AdminDashboardPage'
+);
+const QuestionBankImportSystemPage = lazyWithRetry(
+  () => import('../pages/public/QuestionBankImportSystemPage').then((m) => ({ default: m.QuestionBankImportSystemPage })),
+  'QuestionBankImportSystemPage'
+);
+const StudentPracticalHubPage = lazyWithRetry(
+  () => import('../pages/student/practical/StudentPracticalHubPage').then((m) => ({ default: m.StudentPracticalHubPage })),
+  'StudentPracticalHubPage'
+);
+const SystemOpsDashboardPage = lazyWithRetry(
+  () => import('../pages/system-ops/SystemOpsDashboardPage').then((m) => ({ default: m.SystemOpsDashboardPage })),
+  'SystemOpsDashboardPage'
+);
+const LegalNoticePage = lazyWithRetry(
+  () => import('../pages/public/LegalNoticePage').then((m) => ({ default: m.LegalNoticePage })),
+  'LegalNoticePage'
+);
+const GameCenterPage = lazyWithRetry(
+  () => import('../pages/public/GameCenterPage').then((m) => ({ default: m.GameCenterPage })),
+  'GameCenterPage'
+);
+
+// 5 Interactive Education Games
+const CodePuzzlePage = lazyWithRetry(
+  () => import('../pages/public/CodePuzzlePage').then((m) => ({ default: m.CodePuzzlePage })),
+  'CodePuzzlePage'
+);
+const CSSDesignerPage = lazyWithRetry(
+  () => import('../pages/public/CSSDesignerPage').then((m) => ({ default: m.CSSDesignerPage })),
+  'CSSDesignerPage'
+);
+const BugHunterPage = lazyWithRetry(
+  () => import('../pages/public/BugHunterPage').then((m) => ({ default: m.BugHunterPage })),
+  'BugHunterPage'
+);
+const QuizRushPage = lazyWithRetry(
+  () => import('../pages/public/QuizRushPage').then((m) => ({ default: m.QuizRushPage })),
+  'QuizRushPage'
+);
+const WebBuilderPage = lazyWithRetry(
+  () => import('../pages/public/WebBuilderPage').then((m) => ({ default: m.WebBuilderPage })),
+  'WebBuilderPage'
 );
 
 export const GameLoadingFallback: React.FC = () => (
@@ -97,7 +160,7 @@ export const GameLoadingFallback: React.FC = () => (
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            backgroundColor: '#5A7D6C',
+            backgroundColor: 'var(--color-brand-sage, #5A7D6C)',
           }}
         />
         智慧學習環境連線中
@@ -131,10 +194,10 @@ export const GameLoadingFallback: React.FC = () => (
 
       {/* Brand Title Lockup */}
       <div style={{ marginBottom: '22px' }}>
-        <div style={{ fontSize: '18px', fontWeight: 700, color: '#26343D', letterSpacing: '0.02em', lineHeight: 1.2 }}>
+        <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-brand-charcoal, #26343D)', letterSpacing: '0.02em', lineHeight: 1.2 }}>
           碼上學
         </div>
-        <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '2.5px', color: '#526B7B', marginTop: '3px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '2.5px', color: 'var(--color-brand-deep-slate, #526B7B)', marginTop: '3px' }}>
           CODE TO KNOW
         </div>
       </div>
@@ -158,8 +221,8 @@ export const GameLoadingFallback: React.FC = () => (
             inset: 0,
             borderRadius: '50%',
             border: '3px solid transparent',
-            borderTopColor: '#BDA77E',
-            borderRightColor: '#8FA9B8',
+            borderTopColor: 'var(--color-brand-gold, #BDA77E)',
+            borderRightColor: 'var(--color-brand-slate, #8FA9B8)',
           }}
         />
         {/* Center Pulsing Ambient Dot */}
@@ -174,7 +237,7 @@ export const GameLoadingFallback: React.FC = () => (
             marginTop: '-4px',
             marginLeft: '-4px',
             borderRadius: '50%',
-            backgroundColor: '#BDA77E',
+            backgroundColor: 'var(--color-brand-gold, #BDA77E)',
           }}
         />
       </div>
@@ -198,16 +261,16 @@ export const GameLoadingFallback: React.FC = () => (
             top: 0,
             bottom: 0,
             width: '60px',
-            background: 'linear-gradient(90deg, transparent, #BDA77E, transparent)',
+            background: 'linear-gradient(90deg, transparent, var(--color-brand-gold, #BDA77E), transparent)',
           }}
         />
       </div>
 
       {/* Informative Status Message (High Contrast Deep Neutrals for WCAG AA) */}
-      <div style={{ fontSize: '13px', fontWeight: 600, color: '#26343D', marginBottom: '6px' }}>
+      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-brand-charcoal, #26343D)', marginBottom: '6px' }}>
         模組載入中，正在準備智慧學習環境...
       </div>
-      <div style={{ fontSize: '11px', fontWeight: 500, color: '#526B7B', letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--color-brand-deep-slate, #526B7B)', letterSpacing: '0.04em' }}>
         碼上學，學無止境。｜Learn Beyond Limits.
       </div>
     </div>
@@ -253,7 +316,7 @@ export const GameLoadingFallback: React.FC = () => (
           transform: none !important;
         }
         .c2k-spinner-head {
-          border-color: #BDA77E !important;
+          border-color: var(--color-brand-gold, #BDA77E) !important;
         }
         .c2k-shimmer-bar {
           display: none !important;
@@ -270,6 +333,8 @@ export const GameLoadingFallback: React.FC = () => (
   </div>
 );
 
+export const PageLoadingFallback = GameLoadingFallback;
+
 export const AppContent: React.FC = () => {
   const { route, navigate } = useNavigation();
   const { authModalOpen, authModalMode, openAuth, closeAuth, refreshUser } = useAuth();
@@ -285,47 +350,81 @@ export const AppContent: React.FC = () => {
   const renderCurrentPage = () => {
     switch (route.page) {
       case 'certifications':
-        return <CertificationsPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <CertificationsPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'certification-detail':
         return (
-          <CertificationDetailPage
-            certId={route.certId}
-            onOpenTeacherApply={handleOpenTeacherApply}
-          />
+          <Suspense fallback={<PageLoadingFallback />}>
+            <CertificationDetailPage
+              certId={route.certId}
+              onOpenTeacherApply={handleOpenTeacherApply}
+            />
+          </Suspense>
         );
       case 'web-design-demo':
-        return <WebDesignCDemoPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <WebDesignCDemoPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'theory-practice':
-        return <TheoryPracticePage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <TheoryPracticePage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'mock-exam':
-        return <MockExamPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <MockExamPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'practical-learning':
-        return <PracticalLearningPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <PracticalLearningPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'student-practical':
         return (
           <ProtectedRoute
             pageTitle="學生五大術科實作工作區 (Student Practical Hub)"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <StudentPracticalHubPage
-              initialTaskId={route.taskId}
-              initialView={route.practicalView}
-              initialStep={route.taskStep}
-              onOpenTeacherApply={handleOpenTeacherApply}
-            />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <StudentPracticalHubPage
+                initialTaskId={route.taskId}
+                initialView={route.practicalView}
+                initialStep={route.taskStep}
+                onOpenTeacherApply={handleOpenTeacherApply}
+              />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'code-editor':
-        return <CodeEditorPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <CodeEditorPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'ai-coach':
-        return <AICoachPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <AICoachPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'learning-progress':
         return (
           <ProtectedRoute
             pageTitle="個人學習歷程與數據儀表板"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <LearningProgressPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <LearningProgressPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'student-dashboard':
@@ -334,7 +433,9 @@ export const AppContent: React.FC = () => {
             pageTitle="學生中心 (Student Hub)"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <StudentDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <StudentDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'teacher-dashboard':
@@ -344,7 +445,9 @@ export const AppContent: React.FC = () => {
             pageTitle="教師教學管理中心 (Educator Dashboard)"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <TeacherDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <TeacherDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'admin-dashboard':
@@ -354,7 +457,9 @@ export const AppContent: React.FC = () => {
             pageTitle="平台管理員與系統營運後台 (Admin Console)"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <AdminDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <AdminDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'system-ops':
@@ -364,7 +469,9 @@ export const AppContent: React.FC = () => {
             pageTitle="系統營運與維運後台 (System Ops Console)"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <SystemOpsDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <SystemOpsDashboardPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'import-system':
@@ -374,45 +481,53 @@ export const AppContent: React.FC = () => {
             pageTitle="官方證照題庫匯入與解析管理系統"
             onOpenTeacherApply={handleOpenTeacherApply}
           >
-            <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <QuestionBankImportSystemPage onOpenTeacherApply={handleOpenTeacherApply} />
+            </Suspense>
           </ProtectedRoute>
         );
       case 'legal':
         return (
-          <LegalNoticePage
-            initialTab={route.legalTab || 'privacy'}
-            onOpenTeacherApply={handleOpenTeacherApply}
-          />
+          <Suspense fallback={<PageLoadingFallback />}>
+            <LegalNoticePage
+              initialTab={route.legalTab || 'privacy'}
+              onOpenTeacherApply={handleOpenTeacherApply}
+            />
+          </Suspense>
         );
       case 'game-center':
-        return <GameCenterPage onOpenTeacherApply={handleOpenTeacherApply} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <GameCenterPage onOpenTeacherApply={handleOpenTeacherApply} />
+          </Suspense>
+        );
       case 'code-puzzle':
         return (
-          <Suspense fallback={<GameLoadingFallback />}>
+          <Suspense fallback={<PageLoadingFallback />}>
             <CodePuzzlePage onOpenTeacherApply={handleOpenTeacherApply} />
           </Suspense>
         );
       case 'css-designer':
         return (
-          <Suspense fallback={<GameLoadingFallback />}>
+          <Suspense fallback={<PageLoadingFallback />}>
             <CSSDesignerPage onOpenTeacherApply={handleOpenTeacherApply} />
           </Suspense>
         );
       case 'bug-hunter':
         return (
-          <Suspense fallback={<GameLoadingFallback />}>
+          <Suspense fallback={<PageLoadingFallback />}>
             <BugHunterPage onOpenTeacherApply={handleOpenTeacherApply} />
           </Suspense>
         );
       case 'quiz-rush':
         return (
-          <Suspense fallback={<GameLoadingFallback />}>
+          <Suspense fallback={<PageLoadingFallback />}>
             <QuizRushPage onOpenTeacherApply={handleOpenTeacherApply} />
           </Suspense>
         );
       case 'web-builder':
         return (
-          <Suspense fallback={<GameLoadingFallback />}>
+          <Suspense fallback={<PageLoadingFallback />}>
             <WebBuilderPage />
           </Suspense>
         );
@@ -424,7 +539,10 @@ export const AppContent: React.FC = () => {
 
   return (
     <>
-      {renderCurrentPage()}
+      {/* Route-level Error Boundary: Isolates page render crashes and auto-resets on route change */}
+      <ErrorBoundary level="route" resetKey={route.page}>
+        {renderCurrentPage()}
+      </ErrorBoundary>
 
       {/* Global Central Authentication Modal (Login / Register / Forgot Password / Reset Password) */}
       <AuthModal
@@ -457,11 +575,13 @@ export const AppContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <NavigationProvider>
-        <AppContent />
-      </NavigationProvider>
-    </AuthProvider>
+    <ErrorBoundary level="global">
+      <AuthProvider>
+        <NavigationProvider>
+          <AppContent />
+        </NavigationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 

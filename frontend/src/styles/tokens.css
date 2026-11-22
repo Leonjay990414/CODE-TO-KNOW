@@ -54,6 +54,15 @@
   --status-info: var(--color-brand-deep-slate);
   --status-info-bg: #EDF3F7;
 
+  /* 焦點指示系統 (Focus Ring System - WCAG 2.1 SC 1.4.11 >= 3.0:1) */
+  --focus-ring-color: var(--color-brand-deep-slate);         /* 淺色基底焦點環：深霧藍灰 (#526B7B)，純白底對比 5.49:1，暖象牙底 4.91:1 */
+  --focus-ring-color-dark: var(--color-brand-gold);          /* 深色容器焦點環：香檳金 (#BDA77E)，深石墨底對比 5.48:1 */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring: 2px solid var(--focus-ring-color);
+  --focus-ring-dark: 2px solid var(--focus-ring-color-dark);
+  --focus-ring-shadow: 0 0 0 3px rgba(82, 107, 123, 0.2);
+
   /* ==========================================================================
      3. 排版與字體系統 (Typography System)
      ========================================================================== */
@@ -161,6 +170,20 @@
 
   --ease-in-out: var(--ease-standard);
   --ease-out: var(--ease-enter);
+
+  /* Component and semantic compatibility aliases */
+  --font-sans: var(--font-sans-tc), var(--font-sans-en);
+  --color-brand-champagne-gold: var(--color-brand-gold);
+  --color-brand-muted-blue: var(--color-brand-slate);
+  --color-brand-muted-slate: var(--color-brand-slate);
+  --shadow-elevated: var(--shadow-md);
+  --surface-subtle: var(--surface-sunken);
+  --text-tertiary: var(--text-muted);
+  --transition-fast: all var(--dur-fast) var(--ease-standard);
+  --navbar-height: 72px;
+  --color-bg-ivory: var(--color-brand-ivory);
+  --color-text-muted: var(--text-muted);
+  --color-text-secondary: var(--text-secondary);
 
   /* ==========================================================================
      9. 響應式斷點 (Breakpoints)

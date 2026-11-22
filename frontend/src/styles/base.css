@@ -10,6 +10,10 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html, body {
+  overflow-x: clip;
+}
+
 body {
   font-family: var(--font-sans-tc), var(--font-sans-en);
   background-color: var(--surface-base);
@@ -17,7 +21,6 @@ body {
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
 ::selection {
@@ -44,8 +47,8 @@ img, svg {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand-deep-slate);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-brand-deep-slate));
+  outline-offset: var(--focus-ring-offset, 2px);
 }
 
 /* Accessibility: Reduced motion */

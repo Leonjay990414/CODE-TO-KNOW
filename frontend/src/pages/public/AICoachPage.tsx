@@ -7,6 +7,7 @@ import {
   BookOpen,
   ShieldCheck,
   Tag,
+  Lightbulb,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
@@ -526,6 +527,28 @@ export const AICoachPage: React.FC<AICoachPageProps> = ({ onOpenTeacherApply }) 
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* CTK-AUDIT-010: Educational Integrity & Independent Thinking Prompt */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '8px',
+                  padding: '10px 14px',
+                  backgroundColor: 'var(--status-info-bg, #EDF3F7)',
+                  border: '1px solid var(--border-subtle, rgba(82, 107, 123, 0.12))',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  marginBottom: '12px',
+                }}
+              >
+                <Lightbulb size={15} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--color-brand-gold-text, #7C663D)' }} />
+                <div style={{ fontSize: '12px', lineHeight: 1.5, color: 'var(--text-secondary, #526B7B)' }}>
+                  <strong style={{ color: 'var(--color-brand-deep-slate, #526B7B)', display: 'block', marginBottom: '2px' }}>
+                    先試著整理自己的想法，再讓 AI 陪你找出解題方向。
+                  </strong>
+                  <span>AI 會協助你釐清觀念、分析問題與探索解法；理解與判斷仍由你自己完成。</span>
+                </div>
               </div>
 
               {/* Input Form for custom question */}

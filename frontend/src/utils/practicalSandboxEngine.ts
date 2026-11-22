@@ -383,7 +383,7 @@ body {
   color: #2D4E5E;
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 .menu-item:hover, .menu-item.active {
   background-color: #5A7D6C;
@@ -490,7 +490,7 @@ body {
       text-align: center;
       font-weight: 600;
     }
-    .nav-btn:hover { background-color: #BDA77E; color: #FFFFFF; }
+    .nav-btn:hover { background-color: #BDA77E; color: #26343D; }
     main.sub-content { flex: 1; padding: 16px; }
     iframe { width: 100%; height: 580px; border: none; }
     footer {

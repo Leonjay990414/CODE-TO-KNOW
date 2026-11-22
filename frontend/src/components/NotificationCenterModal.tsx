@@ -222,7 +222,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
                   <span
                     style={{
                       backgroundColor: '#BDA77E',
-                      color: '#FFF',
+                      color: 'var(--color-brand-charcoal, #26343D)',
                       fontSize: '11px',
                       fontWeight: 700,
                       padding: '2px 8px',

@@ -183,8 +183,8 @@ export const Footer: React.FC = () => {
           text-decoration: underline !important;
         }
         .footer-link:focus-visible {
-          outline: 2px solid var(--color-brand-gold, #BDA77E);
-          outline-offset: 2px;
+          outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color-dark, var(--color-brand-gold, #BDA77E));
+          outline-offset: var(--focus-ring-offset, 2px);
           color: #FFFFFF !important;
         }
         .footer-legal-link:hover {
@@ -192,8 +192,8 @@ export const Footer: React.FC = () => {
           text-decoration: underline !important;
         }
         .footer-legal-link:focus-visible {
-          outline: 2px solid var(--color-brand-gold, #BDA77E);
-          outline-offset: 2px;
+          outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color-dark, var(--color-brand-gold, #BDA77E));
+          outline-offset: var(--focus-ring-offset, 2px);
         }
         @media (max-width: 840px) {
           .footer-grid {

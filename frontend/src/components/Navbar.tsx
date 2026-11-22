@@ -201,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                     position: 'relative',
                     padding: '6px 0',
                     borderBottom: active ? '2px solid var(--color-brand-gold)' : '2px solid transparent',
-                    transition: 'all var(--transition-fast)',
+                    transition: 'color var(--duration-fast, 160ms) var(--ease-standard), border-color var(--duration-fast, 160ms) var(--ease-standard)',
                   }}
                   className="nav-link-item"
                 >
@@ -244,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
                     top: '-2px',
                     right: '-2px',
                     backgroundColor: '#BDA77E',
-                    color: '#FFF',
+                    color: 'var(--color-brand-charcoal, #26343D)',
                     fontSize: '10px',
                     fontWeight: 700,
                     minWidth: '16px',
@@ -656,7 +656,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTeacherApply, onOpenAuth }
         .brand-name-en {
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.08em;
           color: var(--color-brand-deep-slate);
           text-transform: uppercase;
           line-height: 1;

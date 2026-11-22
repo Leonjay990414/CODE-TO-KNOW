@@ -259,10 +259,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   marginTop: '16px',
                   padding: '10px 24px',
                   backgroundColor: '#BDA77E',
-                  color: '#FFFFFF',
+                  color: 'var(--color-brand-charcoal, #26343D)',
                   border: 'none',
                   borderRadius: '10px',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
@@ -526,7 +526,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     borderRadius: '8px',
                     border: 'none',
                     backgroundColor: '#BDA77E',
-                    color: '#FFFFFF',
+                    color: 'var(--color-brand-charcoal, #26343D)',
                     fontWeight: 600,
                     cursor: 'pointer',
                     boxShadow: '0 4px 12px rgba(189, 167, 126, 0.25)',

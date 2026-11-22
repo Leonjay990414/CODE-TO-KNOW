@@ -297,8 +297,8 @@ export const StudentTeacherDual: React.FC<StudentTeacherDualProps> = ({ onOpenTe
           color: var(--color-brand-charcoal) !important;
         }
         .role-toggle-tab:focus-visible {
-          outline: 2px solid var(--color-brand-deep-slate) !important;
-          outline-offset: 2px;
+          outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-brand-deep-slate)) !important;
+          outline-offset: var(--focus-ring-offset, 2px);
         }
       `}</style>
     </section>

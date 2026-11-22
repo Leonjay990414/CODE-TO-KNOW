@@ -65,12 +65,12 @@ export const Hero: React.FC = () => {
 
           {/* Left Column: Brand Copy & CTAs */}
           <div className="fade-in-section is-visible">
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-4)' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
               <span className="badge badge-gold">
                 <Sparkles size={12} color="#7C663D" />
                 <span>AI 智慧學習與教育科技平台</span>
               </span>
-              <span className="badge badge-neutral">Learn Beyond Limits</span>
+              <span className="badge badge-neutral">碼上學，學無止境。｜Learn Beyond Limits</span>
             </div>
 
             <h1 className="text-h1" style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', marginBottom: 'var(--space-4)', letterSpacing: '-0.03em' }}>

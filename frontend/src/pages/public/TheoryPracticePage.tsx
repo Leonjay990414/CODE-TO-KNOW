@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Sparkles,
+  Lightbulb,
   FileCheck,
   AlertCircle,
   Trash2,
@@ -956,7 +957,7 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                     </div>
                     <div style={{ background: 'var(--surface-sunken)', padding: '12px', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>正確答對率</div>
-                      <div style={{ fontSize: '20px', fontWeight: 700, color: answeredCount > 0 ? 'var(--color-brand-gold)' : 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: answeredCount > 0 ? 'var(--color-brand-gold-text)' : 'var(--text-muted)' }}>
                         {answeredCount > 0 ? `${Math.round((correctCount / answeredCount) * 100)}%` : '--'}
                       </div>
                     </div>
@@ -1116,7 +1117,7 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                             gap: '4px',
                             background: 'none',
                             border: 'none',
-                            color: isBookmarked ? 'var(--color-brand-gold)' : 'var(--text-muted)',
+                            color: isBookmarked ? 'var(--color-brand-gold-text)' : 'var(--text-muted)',
                             cursor: 'pointer',
                             fontSize: '13px',
                             fontWeight: 600,
@@ -1279,6 +1280,26 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                           <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-brand-charcoal)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Sparkles size={15} color="var(--color-brand-gold)" />
                             <span>AI 4 階認知鷹架解析（點擊階梯深入探討）</span>
+                          </div>
+
+                          {/* CTK-AUDIT-010: Educational Integrity & Independent Thinking Prompt Chip */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 12px',
+                              backgroundColor: 'var(--status-info-bg, #EDF3F7)',
+                              border: '1px solid var(--border-subtle, rgba(82, 107, 123, 0.12))',
+                              borderRadius: 'var(--radius-sm, 6px)',
+                              marginBottom: '12px',
+                              fontSize: '12px',
+                              lineHeight: 1.5,
+                              color: 'var(--text-secondary, var(--color-brand-deep-slate))',
+                            }}
+                          >
+                            <Lightbulb size={14} style={{ flexShrink: 0, color: 'var(--color-brand-gold-text, #7C663D)' }} />
+                            <span>碼上學 AI 思考鷹架：引導你拆解題意、釐清底層邏輯，培養獨立解題能力。</span>
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px' }}>

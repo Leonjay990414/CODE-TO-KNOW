@@ -222,7 +222,7 @@ export const AuthLoadingView: React.FC<AuthLoadingViewProps> = ({
                 bottom: 0,
                 left: 0,
                 right: 0,
-                background: 'linear-gradient(90deg, transparent, #5A7D6C 40%, #BDA77E 70%, transparent)',
+                background: 'linear-gradient(90deg, transparent, var(--color-brand-sage, #5A7D6C) 40%, var(--color-brand-gold, #BDA77E) 70%, transparent)',
                 animation: 'authShimmerFlow 1.6s ease-in-out infinite',
               }}
             />

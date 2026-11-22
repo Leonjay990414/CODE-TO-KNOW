@@ -346,7 +346,7 @@ export const PracticalDetailPage: React.FC<PracticalDetailPageProps> = ({
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ backgroundColor: '#BDA77E', color: '#FFFFFF', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>
+                      <span style={{ backgroundColor: '#BDA77E', color: 'var(--color-brand-charcoal, #26343D)', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>
                         {step.stepNumber}
                       </span>
                       <span style={{ fontSize: '15px', fontWeight: 700, color: '#26343D' }}>{step.title}</span>
@@ -485,7 +485,7 @@ export const PracticalDetailPage: React.FC<PracticalDetailPageProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: '#BDA77E', color: '#FFFFFF' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: '#BDA77E', color: 'var(--color-brand-charcoal, #26343D)' }}>
                       [{vi.provenanceTag}]
                     </span>
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#26343D' }}>{vi.tip}</span>

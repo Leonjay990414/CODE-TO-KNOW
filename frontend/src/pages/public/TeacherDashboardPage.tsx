@@ -479,7 +479,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                     )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-                    負責檢定科目：17300 網頁設計丙級 · 11900 軟體設計丙級
+                    負責檢定科目：17300 網頁設計丙級 <span aria-hidden="true">·</span> 11900 軟體設計丙級
                   </p>
                 </div>
               </div>
@@ -599,7 +599,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                 <CheckCircle2 size={20} color="#15803D" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: '#166534' }}>
-                    教師資格已核准 · {application.schoolName} ({application.subject})
+                    教師資格已核准 <span aria-hidden="true">·</span> {application.schoolName} ({application.subject})
                   </span>
                   {application.reviewNote && (
                     <span style={{ fontSize: '12px', color: '#15803D', marginLeft: '12px' }}>
@@ -1251,7 +1251,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                             {task.code}｜{task.title}（{version.subtitle}）
                           </h3>
                           <span className="badge badge-gold">
-                            標準解題步驟：共 {version.steps.length} 階段 · 自評核對：{version.selfChecklist?.length || 0} 考點
+                            標準解題步驟：共 {version.steps.length} 階段 <span aria-hidden="true">·</span> 自評核對：{version.selfChecklist?.length || 0} 考點
                           </span>
                         </div>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
@@ -1291,7 +1291,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                         <div className="card" style={{ padding: '24px' }}>
                           <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <CheckSquare size={16} color="var(--color-brand-gold)" />
-                            <span>全真評審查核清單 (Self Checklist · 共 {version.selfChecklist.length} 項)</span>
+                            <span>全真評審查核清單 (Self Checklist <span aria-hidden="true">·</span> 共 {version.selfChecklist.length} 項)</span>
                           </h4>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
