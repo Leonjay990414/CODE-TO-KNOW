@@ -1,5 +1,5 @@
 import { prisma } from '../../config/database.js';
-import { emailProvider } from '../../services/email.provider.js';
+import { emailService } from '../../services/email.service.js';
 import { logAuditEvent } from '../../utils/audit.js';
 import { hashPassword, verifyPassword } from '../../utils/password.js';
 import { generateSecureToken, hashToken } from '../../utils/tokens.js';
@@ -91,8 +91,8 @@ export class AuthService {
       userAgent,
     });
 
-    // Send verification email via provider (console in dev, SMTP in production)
-    await emailProvider.sendVerificationEmail(user.email, rawVerificationToken);
+    // Send verification email via unified EmailService
+    await emailService.sendVerificationEmail(user.email, rawVerificationToken, user.displayName);
 
     return {
       user: {
@@ -353,8 +353,8 @@ export class AuthService {
       userAgent,
     });
 
-    // Send reset email via provider
-    await emailProvider.sendPasswordResetEmail(user.email, rawToken);
+    // Send reset email via unified EmailService
+    await emailService.sendPasswordResetEmail(user.email, rawToken, user.displayName);
 
     return {
       success: true,
