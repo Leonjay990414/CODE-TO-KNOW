@@ -93,6 +93,72 @@ export class AdminController {
       return next(error);
     }
   }
+
+  async getPlatformOverview(req: Request, res: Response, next: NextFunction) {
+    try {
+      const overview = await adminService.getPlatformOverview();
+      return res.status(200).json({
+        success: true,
+        data: overview,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async listUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await adminService.listUsers(req.query as any);
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async updateUserStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const targetUserId = req.params.id as string;
+      const updated = await adminService.updateUserStatus(
+        req.user!.id,
+        targetUserId,
+        req.body,
+        req.ip,
+        req.headers['user-agent'] as string | undefined
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: updated,
+        message: '使用者帳號狀態已更新',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async updateUserRole(req: Request, res: Response, next: NextFunction) {
+    try {
+      const targetUserId = req.params.id as string;
+      const updated = await adminService.updateUserRole(
+        req.user!.id,
+        targetUserId,
+        req.body,
+        req.ip,
+        req.headers['user-agent'] as string | undefined
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: updated,
+        message: '使用者角色權限已更新',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export const adminController = new AdminController();

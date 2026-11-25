@@ -31,6 +31,7 @@ import {
   THEORY_QUESTIONS_NOTE,
 } from '../../data/theoryQuestionsData';
 import { SourceBadge } from '../../components/SourceBadge';
+import { questionApi } from '../../services/api';
 import {
   recordWrongAttempt,
   recordCorrectAttempt,
@@ -126,15 +127,54 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
     });
   }, [userId]);
 
+  // Question bank state: defaults to static verified questions, syncs with backend API when online
+  const [bankQuestions, setBankQuestions] = useState<TheoryQuestionModel[]>(ALL_OFFICIAL_THEORY_QUESTIONS);
+  const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchQuestionsFromBackend() {
+      try {
+        const res = await questionApi.getQuestions({ limit: 700 });
+        if (isMounted && res.success && res.data?.questions && res.data.questions.length > 0) {
+          const mapped: TheoryQuestionModel[] = res.data.questions.map((q) => ({
+            id: q.id,
+            officialNumber: q.officialNumber,
+            officialSection: q.officialSection,
+            sectionName: q.sectionName,
+            category: q.sectionName,
+            question: q.question,
+            options: q.options.map((opt) => ({ key: opt.key as 'A' | 'B' | 'C' | 'D', text: opt.text })),
+            correctAnswer: q.correctAnswer as 'A' | 'B' | 'C' | 'D',
+            explanation: q.explanation,
+            officialPage: 1,
+            isVerified: true,
+            hasDetailedExplanation: Boolean(q.explanation),
+            codeSnippet: q.codeSnippet || undefined,
+            difficulty: (q.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+          }));
+          setBankQuestions(mapped);
+          setIsBackendConnected(true);
+        }
+      } catch {
+        // Retain static ALL_OFFICIAL_THEORY_QUESTIONS on connection issue
+      }
+    }
+    fetchQuestionsFromBackend();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Filter questions based on official section or bookmarks
   const filteredQuestions: TheoryQuestionModel[] = selectedSection === 'all'
-    ? ALL_OFFICIAL_THEORY_QUESTIONS
+    ? bankQuestions
     : selectedSection === 'bookmarked'
-    ? ALL_OFFICIAL_THEORY_QUESTIONS.filter((q) => bookmarkedIds.has(q.id))
-    : ALL_OFFICIAL_THEORY_QUESTIONS.filter((q) => q.officialSection === selectedSection);
+    ? bankQuestions.filter((q) => bookmarkedIds.has(q.id))
+    : bankQuestions.filter((q) => q.officialSection === selectedSection);
 
   const safeIdx = Math.min(currentIdx, Math.max(0, filteredQuestions.length - 1));
-  const currentQ: TheoryQuestionModel = filteredQuestions[safeIdx] || ALL_OFFICIAL_THEORY_QUESTIONS[0];
+  const currentQ: TheoryQuestionModel = filteredQuestions[safeIdx] || bankQuestions[0] || ALL_OFFICIAL_THEORY_QUESTIONS[0];
 
   useEffect(() => {
     if (currentQ?.id) {
@@ -1086,6 +1126,11 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
                         <span className="badge badge-subtle" style={{ fontSize: '11px' }}>
                           {currentQ.category}
                         </span>
+                        {isBackendConnected && (
+                          <span className="badge badge-success" style={{ fontSize: '11px' }}>
+                            資料庫連線
+                          </span>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -39,6 +39,8 @@ import {
   AuditLogEntry,
   PaginationMeta,
   SystemHealthData,
+  PlatformOverviewResponse,
+  AdminUserItem,
 } from '../../services/api';
 
 interface AdminDashboardPageProps {
@@ -88,6 +90,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
 
   // Feedback Notification
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  // Platform Overview State (INT-004)
+  const [overviewData, setOverviewData] = useState<PlatformOverviewResponse | null>(null);
+  const [loadingOverview, setLoadingOverview] = useState<boolean>(false);
+
+  // Platform User Governance State (INT-004)
+  const [usersList, setUsersList] = useState<AdminUserItem[]>([]);
+  const [userPagination, setUserPagination] = useState<PaginationMeta>({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'ADMIN'>('ALL');
+  const [userStatusFilter, setUserStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL');
+  const [userSearchQuery, setUserSearchQuery] = useState<string>('');
+  const [loadingUsers, setLoadingUsers] = useState<boolean>(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // 1. Fetch Applications
   const fetchApplications = async (statusFilter = appStatusFilter, page = appPagination.page) => {
@@ -154,11 +169,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
     fetchHealth();
     fetchAuditLogs(1);
     fetchApplications('PENDING', 1);
+    fetchOverview();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'applications') {
       fetchApplications(appStatusFilter, 1);
+    } else if (activeTab === 'governance') {
+      fetchUsers(1);
     } else if (activeTab === 'audit') {
       fetchAuditLogs(1);
     } else if (activeTab === 'health') {
@@ -167,6 +185,107 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
       setGameSettings(getAllGameSettings());
     }
   }, [activeTab]);
+
+  // 4. Fetch Platform Overview (INT-004)
+  const fetchOverview = async () => {
+    setLoadingOverview(true);
+    try {
+      const res = await adminApi.getOverview();
+      if (res.success && res.data) {
+        setOverviewData(res.data);
+      }
+    } catch {
+      console.warn('Failed to fetch platform overview');
+    } finally {
+      setLoadingOverview(false);
+    }
+  };
+
+  // 5. Fetch Platform Users (INT-004)
+  const fetchUsers = async (
+    page = userPagination.page,
+    role = userRoleFilter,
+    status = userStatusFilter,
+    search = userSearchQuery
+  ) => {
+    setLoadingUsers(true);
+    try {
+      const res = await adminApi.listUsers({
+        page,
+        limit: 10,
+        role: role === 'ALL' ? undefined : role,
+        status: status === 'ALL' ? undefined : status,
+        search: search.trim() || undefined,
+      });
+      if (res.success && res.data) {
+        setUsersList(res.data.users);
+        setUserPagination(res.data.pagination);
+      }
+    } catch {
+      console.warn('Failed to fetch users list');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // 6. Toggle User Status (INT-004)
+  const handleToggleUserStatus = async (targetUser: AdminUserItem) => {
+    if (targetUser.id === user?.id) {
+      alert('安全防護：無法停用或凍結管理員自身的帳號！');
+      return;
+    }
+    const nextStatus = targetUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const actionLabel = nextStatus === 'SUSPENDED' ? '停用' : '啟用';
+    if (!confirm(`確定要${actionLabel}使用者「${targetUser.displayName} (${targetUser.email})」的帳號嗎？`)) {
+      return;
+    }
+    setUpdatingUserId(targetUser.id);
+    try {
+      const res = await adminApi.updateUserStatus(targetUser.id, nextStatus);
+      if (res.success) {
+        setFeedbackMessage(`✓ 已成功${actionLabel}帳號「${targetUser.displayName}」`);
+        setTimeout(() => setFeedbackMessage(null), 3000);
+        fetchUsers();
+        fetchOverview();
+        fetchAuditLogs(1);
+      } else {
+        alert(res.error?.message || '狀態更新失敗');
+      }
+    } catch {
+      alert('網路連線失敗，無法更新帳號狀態');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  // 7. Update User Role (INT-004)
+  const handleUpdateUserRole = async (targetUser: AdminUserItem, newRole: 'STUDENT' | 'TEACHER' | 'ADMIN') => {
+    if (targetUser.id === user?.id && newRole !== 'ADMIN') {
+      alert('安全防護：管理員無法撤銷自身的 ADMIN 角色！');
+      return;
+    }
+    if (!confirm(`確定要將「${targetUser.displayName}」的角色變更為 ${newRole} 嗎？`)) {
+      return;
+    }
+    setUpdatingUserId(targetUser.id);
+    try {
+      const action = targetUser.roles.includes(newRole) ? 'revoke' : 'grant';
+      const res = await adminApi.updateUserRole(targetUser.id, newRole, action);
+      if (res.success) {
+        setFeedbackMessage(`✓ 已成功將「${targetUser.displayName}」角色更新為 ${newRole}`);
+        setTimeout(() => setFeedbackMessage(null), 3000);
+        fetchUsers();
+        fetchOverview();
+        fetchAuditLogs(1);
+      } else {
+        alert(res.error?.message || '角色更新失敗');
+      }
+    } catch {
+      alert('網路連線失敗，無法更新帳號角色');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
 
   const handleUpdateGameConfig = (
     key: GameTypeKey,
@@ -318,12 +437,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
                     fetchHealth();
                     fetchAuditLogs(auditPagination.page);
                     fetchApplications(appStatusFilter, appPagination.page);
+                    fetchOverview();
                   }}
-                  disabled={loadingApps || loadingAudit || loadingHealth}
+                  disabled={loadingApps || loadingAudit || loadingHealth || loadingOverview}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   aria-label="重新整理管理面板資料"
                 >
-                  <RefreshCw size={14} className={loadingApps || loadingAudit || loadingHealth ? 'animate-spin' : ''} />
+                  <RefreshCw size={14} className={loadingApps || loadingAudit || loadingHealth || loadingOverview ? 'animate-spin' : ''} />
                   <span>整理全站數據</span>
                 </button>
               </div>
@@ -393,10 +513,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
             />
             <StatCard
               label="全平台會員與班級"
-              value="暫無統計"
+              value={overviewData ? `${overviewData.users.total} 人 / ${overviewData.classrooms.total} 班` : '統計中...'}
               icon={Server}
-              iconColor="var(--text-muted)"
-              subText="全站帳號與班級大數據（需後端 API 支援）"
+              iconColor="var(--color-brand-deep-slate)"
+              subText={overviewData ? `題庫 ${overviewData.content.officialQuestionsCount} 題 · 模考 ${overviewData.content.examAttemptsTaken} 次` : '全站帳號與班級大數據 (PostgreSQL 17)'}
             />
           </div>
         </div>
@@ -672,72 +792,225 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onOpenTe
           </div>
         )}
 
-        {/* Tab 2: Platform Account Governance (P16-ADM-007) */}
+        {/* Tab 2: Platform Account Governance (P16-ADM-007 & INT-004) */}
         {activeTab === 'governance' && (
           <div className="container" style={{ marginTop: '24px' }}>
             <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <ShieldAlert size={20} color="var(--color-brand-deep-slate)" />
-                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                  全平台帳號安全治理與權限覆蓋規範 (P16-ADM-007)
-                </h3>
-              </div>
-              <div
-                style={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                  border: '1px solid #BFDBFE',
-                  borderRadius: '6px',
-                  padding: '16px',
-                  marginBottom: '16px',
-                  fontSize: '13px',
-                  color: '#1E40AF',
-                  lineHeight: 1.6,
-                }}
-              >
-                <strong>【帳號安全邊界原則】</strong>
-                全平台學生與教師帳號之註銷、停用、凍結或手動角色升級，屬於高影響資安行為。依據專案最小權限架構，高影響權限變更必須依賴伺服端專屬 User Governance API 與審計日誌保護。目前平台不提供未受保護之純前端假操作按鈕，確保資料庫與會員身分安全。
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ShieldAlert size={20} color="var(--color-brand-deep-slate)" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                    全平台帳號安全治理與權限覆蓋 (P16-ADM-007)
+                  </h3>
+                </div>
+                <span className="badge badge-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Database size={12} />
+                  <span>PostgreSQL 17 審計日誌受保護端點</span>
+                </span>
               </div>
 
-              <h4 style={{ fontSize: '15px', fontWeight: 700, margin: '20px 0 12px 0' }}>
-                平台已認證教師名冊（依據審核核准記錄）
-              </h4>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-default)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '10px 8px' }}>教師姓名</th>
-                      <th style={{ padding: '10px 8px' }}>帳號 Email</th>
-                      <th style={{ padding: '10px 8px' }}>任教學校機構</th>
-                      <th style={{ padding: '10px 8px' }}>專長領域</th>
-                      <th style={{ padding: '10px 8px' }}>身分權限狀態</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications
-                      .filter((a) => a.status === 'APPROVED')
-                      .map((app) => (
-                        <tr key={app.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '12px 8px', fontWeight: 600 }}>{app.user?.displayName || '教師'}</td>
-                          <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>{app.user?.email || 'N/A'}</td>
-                          <td style={{ padding: '12px 8px' }}>{app.schoolName}</td>
-                          <td style={{ padding: '12px 8px' }}>{app.subject}</td>
-                          <td style={{ padding: '12px 8px' }}>
-                            <span className="badge badge-neutral" style={{ color: '#15803D' }}>
-                              已核准授權 (TEACHER)
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    {applications.filter((a) => a.status === 'APPROVED').length === 0 && (
-                      <tr>
-                        <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                          目前清單中尚無已核准之教師記錄（請切換至教師資格審核分頁進行審閱）
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+              {/* Filters & Search Row */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative', minWidth: '220px', flex: 1 }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="搜尋使用者姓名、Email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') fetchUsers(1, userRoleFilter, userStatusFilter, userSearchQuery);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px 7px 30px',
+                      fontSize: '13px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-default)',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setUserRoleFilter(val);
+                      fetchUsers(1, val, userStatusFilter, userSearchQuery);
+                    }}
+                    style={{ padding: '7px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                  >
+                    <option value="ALL">全部角色</option>
+                    <option value="STUDENT">一般學員 (STUDENT)</option>
+                    <option value="TEACHER">認證教師 (TEACHER)</option>
+                    <option value="ADMIN">平台管理員 (ADMIN)</option>
+                  </select>
+
+                  <select
+                    value={userStatusFilter}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setUserStatusFilter(val);
+                      fetchUsers(1, userRoleFilter, val, userSearchQuery);
+                    }}
+                    style={{ padding: '7px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                  >
+                    <option value="ALL">全部狀態</option>
+                    <option value="ACTIVE">正常使用中 (ACTIVE)</option>
+                    <option value="SUSPENDED">停用中 (SUSPENDED)</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => fetchUsers(1, userRoleFilter, userStatusFilter, userSearchQuery)}
+                    disabled={loadingUsers}
+                  >
+                    查詢
+                  </button>
+                </div>
               </div>
+
+              {/* Users Table */}
+              {loadingUsers ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 12px' }} />
+                  <div>正在讀取全平台使用者名冊...</div>
+                </div>
+              ) : usersList.length === 0 ? (
+                <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: 'var(--surface-sunken)', borderRadius: '6px' }}>
+                  <Users size={32} color="var(--color-brand-gold)" style={{ margin: '0 auto 10px', opacity: 0.7 }} />
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-brand-charcoal)', marginBottom: '4px' }}>
+                    查無符合條件的使用者
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                    請清除搜尋條件或重新查詢。
+                  </p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-default)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                        <th style={{ padding: '10px 8px' }}>姓名</th>
+                        <th style={{ padding: '10px 8px' }}>Email</th>
+                        <th style={{ padding: '10px 8px' }}>身分角色</th>
+                        <th style={{ padding: '10px 8px' }}>狀態</th>
+                        <th style={{ padding: '10px 8px' }}>註冊時間</th>
+                        <th style={{ padding: '10px 8px', textAlign: 'right' }}>帳號治理操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usersList.map((u) => {
+                        const isSelf = u.id === user?.id;
+                        const isPending = updatingUserId === u.id;
+
+                        return (
+                          <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <td style={{ padding: '12px 8px', fontWeight: 600 }}>
+                              {u.displayName}
+                              {isSelf && (
+                                <span className="badge badge-neutral" style={{ marginLeft: '6px', fontSize: '10px' }}>
+                                  您目前登入
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>
+                              {u.email}
+                            </td>
+                            <td style={{ padding: '12px 8px' }}>
+                              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                {u.roles.map((r) => (
+                                  <span
+                                    key={r}
+                                    className={`badge ${r === 'ADMIN' ? 'badge-gold' : r === 'TEACHER' ? 'badge-slate' : 'badge-neutral'}`}
+                                    style={{ fontSize: '11px' }}
+                                  >
+                                    {r}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td style={{ padding: '12px 8px' }}>
+                              <span
+                                style={{
+                                  color: u.status === 'ACTIVE' ? '#15803D' : '#DC2626',
+                                  fontWeight: 600,
+                                  fontSize: '12px',
+                                }}
+                              >
+                                {u.status === 'ACTIVE' ? '正常' : '已停用'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                              {new Date(u.createdAt).toLocaleDateString('zh-TW')}
+                            </td>
+                            <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                              <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                                {/* Role Switchers */}
+                                <select
+                                  value={u.roles.includes('ADMIN') ? 'ADMIN' : u.roles.includes('TEACHER') ? 'TEACHER' : 'STUDENT'}
+                                  onChange={(e) => handleUpdateUserRole(u, e.target.value as any)}
+                                  disabled={isPending || (isSelf && u.roles.includes('ADMIN'))}
+                                  title={isSelf ? '無法變更自身管理員角色' : '調整使用者角色'}
+                                  style={{ padding: '4px 6px', fontSize: '11px', borderRadius: '4px', border: '1px solid var(--border-default)' }}
+                                >
+                                  <option value="STUDENT">學生 (STUDENT)</option>
+                                  <option value="TEACHER">教師 (TEACHER)</option>
+                                  <option value="ADMIN">管理員 (ADMIN)</option>
+                                </select>
+
+                                {/* Status Toggle */}
+                                <button
+                                  type="button"
+                                  className="btn btn-outline btn-xs"
+                                  onClick={() => handleToggleUserStatus(u)}
+                                  disabled={isPending || isSelf}
+                                  title={isSelf ? '無法停用自身帳號' : u.status === 'ACTIVE' ? '停用帳號' : '恢復啟用'}
+                                  style={{
+                                    color: u.status === 'ACTIVE' ? '#DC2626' : '#15803D',
+                                    borderColor: u.status === 'ACTIVE' ? 'rgba(220, 38, 38, 0.3)' : 'rgba(21, 128, 61, 0.3)',
+                                  }}
+                                >
+                                  {u.status === 'ACTIVE' ? '停用' : '啟用'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* User Pagination */}
+              {userPagination.totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => fetchUsers(userPagination.page - 1, userRoleFilter, userStatusFilter, userSearchQuery)}
+                    disabled={userPagination.page <= 1}
+                  >
+                    <ChevronLeft size={14} />
+                    <span>上一頁</span>
+                  </button>
+                  <span style={{ display: 'flex', alignItems: 'center', fontSize: '13px' }}>
+                    第 {userPagination.page} / {userPagination.totalPages} 頁 (共 {userPagination.total} 筆)
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => fetchUsers(userPagination.page + 1, userRoleFilter, userStatusFilter, userSearchQuery)}
+                    disabled={userPagination.page >= userPagination.totalPages}
+                  >
+                    <span>下一頁</span>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

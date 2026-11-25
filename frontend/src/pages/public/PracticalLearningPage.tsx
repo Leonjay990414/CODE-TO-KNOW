@@ -12,12 +12,14 @@ import {
   Video,
   RotateCcw,
   Check,
+  Database,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { OFFICIAL_PRACTICAL_TASKS, PracticalTaskDetail } from '../../data/practicalTasksData';
+import { practicalApi } from '../../services/api';
 import {
   UNIFIED_PRACTICAL_CURRICULUM_MAP,
   UnifiedTaskCurriculum,
@@ -69,10 +71,40 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
     return getPracticalProgress(userId, activeTaskId, selectedVersion);
   });
 
-  // Re-read progress whenever active task, version or user changes
+  // Re-read progress whenever active task, version or user changes, and sync with DB
   useEffect(() => {
     setProgress(getPracticalProgress(userId, activeTaskId, selectedVersion));
     setActiveStepTab(1);
+
+    // Synchronize remote database progress if available
+    let isMounted = true;
+    practicalApi
+      .getTaskDetails(activeTaskId, selectedVersion === 'B' ? 'VERSION_B' : 'VERSION_A')
+      .then((res) => {
+        if (!isMounted || !res || !res.success || !res.data) return;
+        const remoteProgress = res.data.progress;
+        if (remoteProgress && remoteProgress.completedStepsCount > 0) {
+          const completedStepNums = res.data.steps
+            .filter((s) => s.isCompleted)
+            .map((s) => s.stepNumber);
+          if (completedStepNums.length > 0) {
+            setProgress((prev) => {
+              const mergedSteps = Array.from(new Set([...prev.completedSteps, ...completedStepNums]));
+              return {
+                ...prev,
+                completedSteps: mergedSteps,
+              };
+            });
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback silently to local storage
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, activeTaskId, selectedVersion]);
 
   // Current curriculum version data for active task
@@ -84,6 +116,16 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
   const handleToggleStep = (stepNumber: number) => {
     const updated = toggleStepCompletion(userId, activeTaskId, selectedVersion, stepNumber);
     setProgress(updated);
+
+    // Background sync to PostgreSQL 17
+    practicalApi
+      .saveProgress(activeTaskId, {
+        version: selectedVersion === 'B' ? 'VERSION_B' : 'VERSION_A',
+        completedStepNumbers: updated.completedSteps,
+      })
+      .catch((err) => {
+        console.warn('[PracticalLearning] 資料庫進度同步提示:', err);
+      });
   };
 
   const handleToggleChecklist = (itemText: string) => {
@@ -116,8 +158,12 @@ export const PracticalLearningPage: React.FC<PracticalLearningPageProps> = ({ on
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                   <span className="badge badge-slate">術科官方 5 大題組</span>
+                  <span className="badge badge-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Database size={12} />
+                    <span>PG17 官方題組與進度同步</span>
+                  </span>
                   <span className="badge badge-neutral">考場限時 120 分鐘 · 現場抽測 1 組</span>
                 </div>
                 <h1 className="text-h2" style={{ fontSize: '28px' }}>

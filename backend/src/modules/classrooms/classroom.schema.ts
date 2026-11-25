@@ -26,5 +26,10 @@ export const removeMemberParamSchema = z.object({
   studentId: z.string().min(1, '學生 ID 不能為空'),
 });
 
+export const studentProgressParamSchema = z.object({
+  id: z.string().min(1, '班級 ID 不能為空'),
+  studentId: z.string().min(1, '學生 ID 不能為空'),
+});
+
 export type CreateClassroomInput = z.infer<typeof createClassroomSchema>;
 export type JoinClassroomInput = z.infer<typeof joinClassroomSchema>;

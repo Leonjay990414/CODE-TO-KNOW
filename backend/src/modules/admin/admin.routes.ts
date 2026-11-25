@@ -8,6 +8,10 @@ import {
   listApplicationsQuerySchema,
   listAuditLogsQuerySchema,
   applicationIdParamSchema,
+  userIdParamSchema,
+  listUsersQuerySchema,
+  updateUserStatusSchema,
+  updateUserRoleSchema,
 } from './admin.schema.js';
 
 const router = Router();
@@ -34,6 +38,33 @@ router.post(
   validateParams(applicationIdParamSchema),
   validateBody(reviewApplicationSchema),
   (req, res, next) => adminController.rejectTeacherApplication(req, res, next)
+);
+
+// Platform overview statistics
+router.get(
+  '/overview',
+  (req, res, next) => adminController.getPlatformOverview(req, res, next)
+);
+
+// User management
+router.get(
+  '/users',
+  validateQuery(listUsersQuerySchema),
+  (req, res, next) => adminController.listUsers(req, res, next)
+);
+
+router.patch(
+  '/users/:id/status',
+  validateParams(userIdParamSchema),
+  validateBody(updateUserStatusSchema),
+  (req, res, next) => adminController.updateUserStatus(req, res, next)
+);
+
+router.patch(
+  '/users/:id/role',
+  validateParams(userIdParamSchema),
+  validateBody(updateUserRoleSchema),
+  (req, res, next) => adminController.updateUserRole(req, res, next)
 );
 
 // Security audit logs

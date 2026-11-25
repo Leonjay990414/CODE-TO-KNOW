@@ -12,12 +12,14 @@ import {
   Users,
   Bookmark,
   Edit3,
+  Database,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { StudentClassJoinModal, getEnrolledClasses, EnrolledClass } from '../../components/StudentClassJoinModal';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { studentApi, StudentDashboardResponse } from '../../services/api';
 import { getWrongQuestionsStats } from '../../utils/wrongQuestionsStorage';
 import { getMockExamHistory, MockExamSession } from '../../utils/mockExamStorage';
 import { getPracticalProgress } from '../../utils/learningStorage';
@@ -32,6 +34,8 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
   const { goToHome, goToTheoryPractice, goToStudentPractical, goToMockExam, goToLearningProgress, goToGameCenter } = useNavigation();
 
   const userId = user?.id || 'guest-anonymous';
+  const [dashboardData, setDashboardData] = useState<StudentDashboardResponse | null>(null);
+
   const [wrongStats, setWrongStats] = useState(() => getWrongQuestionsStats(userId));
   const [mockExamHistory, setMockExamHistory] = useState<MockExamSession[]>(() => getMockExamHistory(userId));
   const [enrolledClasses, setEnrolledClasses] = useState<EnrolledClass[]>(() => getEnrolledClasses(userId));
@@ -39,14 +43,32 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
   const [notesCount, setNotesCount] = useState<number>(() => Object.keys(getAllQuestionNotes(userId)).length);
   const [isJoinClassOpen, setIsJoinClassOpen] = useState(false);
 
-  // 計算已進行實作題組數量
-  const practicalStartedCount = [1, 2, 3, 4, 5].filter((taskId) => {
-    const pA = getPracticalProgress(userId, taskId, 'A');
-    const pB = getPracticalProgress(userId, taskId, 'B');
-    return (pA.completedSteps && pA.completedSteps.length > 0) || (pB.completedSteps && pB.completedSteps.length > 0);
-  }).length;
+  // Fetch real database records from studentApi
+  useEffect(() => {
+    let isMounted = true;
 
-  const refreshDashboardData = () => {
+    studentApi
+      .getDashboard()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && res.data) {
+          setDashboardData(res.data);
+        } else {
+          // Graceful fallback to local storage
+          refreshLocalDashboardData();
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        refreshLocalDashboardData();
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, isJoinClassOpen]);
+
+  const refreshLocalDashboardData = () => {
     setWrongStats(getWrongQuestionsStats(userId));
     setMockExamHistory(getMockExamHistory(userId));
     setEnrolledClasses(getEnrolledClasses(userId));
@@ -54,9 +76,14 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
     setNotesCount(Object.keys(getAllQuestionNotes(userId)).length);
   };
 
-  useEffect(() => {
-    refreshDashboardData();
-  }, [userId, isJoinClassOpen]);
+  // 計算已進行實作題組數量
+  const practicalStartedCount = dashboardData
+    ? dashboardData.overview.startedPracticalTasksCount
+    : [1, 2, 3, 4, 5].filter((taskId) => {
+        const pA = getPracticalProgress(userId, taskId, 'A');
+        const pB = getPracticalProgress(userId, taskId, 'B');
+        return (pA.completedSteps && pA.completedSteps.length > 0) || (pB.completedSteps && pB.completedSteps.length > 0);
+      }).length;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -93,13 +120,26 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                     <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>
-                      {user ? user.displayName : '學員示範帳號'}
+                      {dashboardData ? dashboardData.student.displayName : user ? user.displayName : '學員示範帳號'}
                     </h1>
-                    <span className="badge badge-gold">一般學員</span>
-                    <span className="badge badge-neutral">已連續學習 12 天</span>
+                    <span className="badge badge-gold">
+                      {dashboardData?.student.roles.includes('TEACHER')
+                        ? '認證教師'
+                        : dashboardData?.student.roles.includes('ADMIN')
+                        ? '平台管理員'
+                        : '一般學員'}
+                    </span>
+                    {dashboardData ? (
+                      <span className="badge badge-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Database size={12} />
+                        <span>PostgreSQL 17 連線正常</span>
+                      </span>
+                    ) : (
+                      <span className="badge badge-neutral">離線示範模式</span>
+                    )}
                   </div>
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-                    登入信箱：{user ? user.email : 'student.demo@codetoknow.edu'}
+                    登入信箱：{dashboardData ? dashboardData.student.email : user ? user.email : 'student.demo@codetoknow.edu'}
                   </p>
                 </div>
               </div>
@@ -126,14 +166,23 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
           </div>
         </section>
 
-        {/* Demo Mode Notice */}
+        {/* Real Database Connection Notice */}
         <div className="container" style={{ marginTop: '20px' }}>
-          <div className="demo-banner">
-            <Sparkles size={16} />
-            <span>
-              <strong>學生中心示範模式：</strong>在此管理您目前準備中的技能檢定、各項作業評分與模擬考歷程。於後續完成正式資料庫整合後，將自動同步您的個人專屬進度。
-            </span>
-          </div>
+          {dashboardData ? (
+            <div className="demo-banner" style={{ backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }}>
+              <Database size={16} color="#15803D" />
+              <span style={{ color: '#166534' }}>
+                <strong>已連線 PostgreSQL 17 資料庫：</strong>目前呈現您個人的真實學習數據。模擬考 80 題歷程、錯題本掌握度及五大官方術科進度皆由後端伺服器安全持久化。
+              </span>
+            </div>
+          ) : (
+            <div className="demo-banner">
+              <Sparkles size={16} />
+              <span>
+                <strong>學生中心示範模式：</strong>在此管理您目前準備中的技能檢定、各項作業評分與模擬考歷程。於登入後將自動同步您的個人專屬進度。
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Main Dashboard Grid */}
@@ -159,10 +208,27 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
                     <span>整體準備進度</span>
-                    <strong style={{ color: 'var(--color-brand-deep-slate)' }}>45%</strong>
+                    <strong style={{ color: 'var(--color-brand-deep-slate)' }}>
+                      {dashboardData
+                        ? `${Math.round(
+                            ((dashboardData.overview.startedPracticalTasksCount / 5) * 50) +
+                            (dashboardData.overview.totalExamsTaken > 0 ? 50 : 0)
+                          )}%`
+                        : '45%'}
+                    </strong>
                   </div>
                   <div className="progress-track">
-                    <div className="progress-bar" style={{ width: '45%' }} />
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: dashboardData
+                          ? `${Math.round(
+                              ((dashboardData.overview.startedPracticalTasksCount / 5) * 50) +
+                              (dashboardData.overview.totalExamsTaken > 0 ? 50 : 0)
+                            )}%`
+                          : '45%',
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -186,7 +252,9 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <BookOpen size={20} color="var(--color-brand-deep-slate)" />
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700 }}>繼續學科練習</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>已作答 275 / 611 題</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        已作答 275 / 605 題
+                      </div>
                     </div>
                   </button>
 
@@ -232,7 +300,11 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <FileCheck size={20} color="#2E7D32" />
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700 }}>參加全真模擬考</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>限時 60 分鐘驗收</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {dashboardData && dashboardData.overview.totalExamsTaken > 0
+                          ? `累計 ${dashboardData.overview.totalExamsTaken} 次測驗（最高 ${dashboardData.overview.highestScore ?? 0} 分）`
+                          : '限時 60 分鐘驗收'}
+                      </div>
                     </div>
                   </button>
 
@@ -255,7 +327,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700 }}>錯題本與弱點複習</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        待複習 {wrongStats.unresolvedCount} 題 ｜ 已攻克 {wrongStats.resolvedCount} 題
+                        待複習 {dashboardData ? dashboardData.wrongStats.unresolved : wrongStats.unresolvedCount} 題 ｜ 已攻克 {dashboardData ? dashboardData.wrongStats.mastered : wrongStats.resolvedCount} 題
                       </div>
                     </div>
                   </button>
@@ -326,7 +398,8 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   </button>
                 </div>
 
-                {mockExamHistory.length === 0 ? (
+                {/* Mock Exam History Rendering */}
+                {(!dashboardData && mockExamHistory.length === 0) || (dashboardData && dashboardData.examHistory.length === 0) ? (
                   <div style={{ textAlign: 'center', padding: '36px 16px', backgroundColor: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)' }}>
                     <FileCheck size={36} color="var(--color-brand-gold)" style={{ margin: '0 auto 10px', opacity: 0.7 }} />
                     <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-brand-charcoal)', marginBottom: '6px' }}>
@@ -356,32 +429,61 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                         </tr>
                       </thead>
                       <tbody>
-                        {mockExamHistory.slice(0, 5).map((exam) => {
-                          const dateStr = exam.submittedAt
-                            ? new Date(exam.submittedAt).toLocaleDateString('zh-TW')
-                            : (exam.startedAt ? new Date(exam.startedAt).toLocaleDateString('zh-TW') : '-');
-                          const durationStr = exam.durationMinutes ? `${exam.durationMinutes} 分鐘` : '60 分鐘';
-                          const scoreVal = exam.score ?? 0;
-                          const isPassed = exam.isPassed ?? (scoreVal >= 60);
+                        {dashboardData
+                          ? dashboardData.examHistory.slice(0, 5).map((exam) => {
+                              const dateStr = exam.submittedAt
+                                ? new Date(exam.submittedAt).toLocaleDateString('zh-TW')
+                                : '-';
+                              const durationStr = exam.durationSeconds
+                                ? `${Math.ceil(exam.durationSeconds / 60)} 分鐘`
+                                : '60 分鐘';
+                              const scoreVal = exam.score ?? 0;
+                              const isPassed = exam.isPassed;
 
-                          return (
-                            <tr key={exam.sessionId} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                              <td style={{ padding: '12px 8px' }}>{dateStr}</td>
-                              <td style={{ padding: '12px 8px', fontWeight: 600 }}>
-                                {exam.mode === 'official_100' ? '17300 網頁設計丙級 (100題)' : '17300 網頁設計丙級 (80題全真)'}
-                              </td>
-                              <td style={{ padding: '12px 8px' }}>{durationStr}</td>
-                              <td style={{ padding: '12px 8px', fontWeight: 700, color: isPassed ? '#2E7D32' : '#C62828' }}>
-                                {scoreVal} 分
-                              </td>
-                              <td style={{ padding: '12px 8px' }}>
-                                <span style={{ color: isPassed ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
-                                  {isPassed ? '✓ 及格' : '✕ 未及格'}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                              return (
+                                <tr key={exam.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                  <td style={{ padding: '12px 8px' }}>{dateStr}</td>
+                                  <td style={{ padding: '12px 8px', fontWeight: 600 }}>
+                                    {exam.paperTitle || '17300 網頁設計丙級 (80題全真)'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px' }}>{durationStr}</td>
+                                  <td style={{ padding: '12px 8px', fontWeight: 700, color: isPassed ? '#2E7D32' : '#C62828' }}>
+                                    {scoreVal} 分
+                                  </td>
+                                  <td style={{ padding: '12px 8px' }}>
+                                    <span style={{ color: isPassed ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                      {isPassed ? '✓ 及格' : '✕ 未及格'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          : mockExamHistory.slice(0, 5).map((exam) => {
+                              const dateStr = exam.submittedAt
+                                ? new Date(exam.submittedAt).toLocaleDateString('zh-TW')
+                                : (exam.startedAt ? new Date(exam.startedAt).toLocaleDateString('zh-TW') : '-');
+                              const durationStr = exam.durationMinutes ? `${exam.durationMinutes} 分鐘` : '60 分鐘';
+                              const scoreVal = exam.score ?? 0;
+                              const isPassed = exam.isPassed ?? (scoreVal >= 60);
+
+                              return (
+                                <tr key={exam.sessionId} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                  <td style={{ padding: '12px 8px' }}>{dateStr}</td>
+                                  <td style={{ padding: '12px 8px', fontWeight: 600 }}>
+                                    {exam.mode === 'official_100' ? '17300 網頁設計丙級 (100題)' : '17300 網頁設計丙級 (80題全真)'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px' }}>{durationStr}</td>
+                                  <td style={{ padding: '12px 8px', fontWeight: 700, color: isPassed ? '#2E7D32' : '#C62828' }}>
+                                    {scoreVal} 分
+                                  </td>
+                                  <td style={{ padding: '12px 8px' }}>
+                                    <span style={{ color: isPassed ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                      {isPassed ? '✓ 及格' : '✕ 未及格'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                       </tbody>
                     </table>
                   </div>
@@ -396,7 +498,9 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Users size={16} color="var(--color-brand-deep-slate)" />
-                    <span>已加入班級 ({enrolledClasses.length})</span>
+                    <span>
+                      已加入班級 ({dashboardData ? dashboardData.enrolledClasses.length : enrolledClasses.length})
+                    </span>
                   </h3>
                   <button
                     type="button"
@@ -407,36 +511,61 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   </button>
                 </div>
 
-                {enrolledClasses.length === 0 ? (
+                {(!dashboardData && enrolledClasses.length === 0) || (dashboardData && dashboardData.enrolledClasses.length === 0) ? (
                   <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '14px', borderRadius: '4px', fontSize: '12px', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
                     尚未加入任何教學班級。點擊「管理 / 加入」輸入教師提供的 6 位代碼即可綁定班級並接收專屬公告。
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {enrolledClasses.map((cls) => (
-                      <div
-                        key={cls.id}
-                        style={{
-                          backgroundColor: 'var(--surface-sunken)',
-                          padding: '12px 14px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border-subtle)',
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-brand-deep-slate)' }}>
-                            {cls.name}
-                          </span>
-                          <span className="badge badge-slate" style={{ fontSize: '10px' }}>
-                            {cls.code}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>指導教師：{cls.teacherName || '任課教師'}</span>
-                          <span>{cls.semester || '本學期'}</span>
-                        </div>
-                      </div>
-                    ))}
+                    {dashboardData
+                      ? dashboardData.enrolledClasses.map((item) => (
+                          <div
+                            key={item.enrollmentId}
+                            style={{
+                              backgroundColor: 'var(--surface-sunken)',
+                              padding: '12px 14px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border-subtle)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-brand-deep-slate)' }}>
+                                {item.class.name}
+                              </span>
+                              <span className="badge badge-slate" style={{ fontSize: '10px' }}>
+                                {item.class.joinCode}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                              <span>指導教師：{item.class.teacherName || '任課教師'}</span>
+                              <span>加入時間：{new Date(item.joinedAt).toLocaleDateString('zh-TW')}</span>
+                            </div>
+                          </div>
+                        ))
+                      : enrolledClasses.map((cls) => (
+                          <div
+                            key={cls.id}
+                            style={{
+                              backgroundColor: 'var(--surface-sunken)',
+                              padding: '12px 14px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border-subtle)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-brand-deep-slate)' }}>
+                                {cls.name}
+                              </span>
+                              <span className="badge badge-slate" style={{ fontSize: '10px' }}>
+                                {cls.code}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                              <span>指導教師：{cls.teacherName || '任課教師'}</span>
+                              <span>{cls.semester || '本學期'}</span>
+                            </div>
+                          </div>
+                        ))}
                   </div>
                 )}
               </div>

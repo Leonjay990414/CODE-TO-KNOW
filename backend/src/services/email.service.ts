@@ -105,6 +105,14 @@ export class EmailService {
   }
 
   /**
+   * 驗證電子信箱格式基本有效性
+   */
+  public isValidEmail(email: string): boolean {
+    if (!email || typeof email !== 'string') return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  /**
    * 1. 寄送帳號註冊驗證郵件 (P10-EML-005)
    */
   public async sendVerificationEmail(
@@ -114,6 +122,20 @@ export class EmailService {
     options?: SendVerificationOptions
   ): Promise<EmailDeliveryResult> {
     const category = 'verification';
+
+    // 0. 驗證 Email 格式
+    if (!this.isValidEmail(email)) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: this.maskEmail(email || ''),
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'INVALID_INPUT: Invalid email address format.',
+      };
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const masked = this.maskEmail(normalizedEmail);
 
@@ -130,7 +152,20 @@ export class EmailService {
       };
     }
 
-    // 2. 檢查 Provider 是否停用 (DisabledEmailProvider)
+    // 2. 檢查每日配額
+    if (this.queue.isQuotaExceeded()) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: masked,
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'DAILY_QUOTA_EXCEEDED: Daily email quota limit reached.',
+      };
+    }
+
+    // 3. 檢查 Provider 是否停用 (DisabledEmailProvider)
     if (this.provider instanceof DisabledEmailProvider) {
       return {
         success: false,
@@ -177,9 +212,10 @@ export class EmailService {
       });
 
       if (!queueRes.success) {
+        const isSuppressed = queueRes.error === 'RECIPIENT_SUPPRESSED';
         return {
           success: false,
-          status: 'SUPPRESSED',
+          status: isSuppressed ? 'SUPPRESSED' : 'FAILED',
           recipientMasked: masked,
           category,
           attempts: 0,
@@ -217,6 +253,7 @@ export class EmailService {
           };
         }
 
+        this.queue.recordSent();
         return {
           success: true,
           status: 'MOCKED',
@@ -225,6 +262,10 @@ export class EmailService {
           attempts: 1,
           timestamp: Date.now(),
         };
+      }
+
+      if (isSent) {
+        this.queue.recordSent();
       }
 
       return {
@@ -260,6 +301,20 @@ export class EmailService {
     options?: SendPasswordResetOptions
   ): Promise<EmailDeliveryResult> {
     const category = 'password_reset';
+
+    // 0. 驗證 Email 格式
+    if (!this.isValidEmail(email)) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: this.maskEmail(email || ''),
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'INVALID_INPUT: Invalid email address format.',
+      };
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const masked = this.maskEmail(normalizedEmail);
 
@@ -272,6 +327,18 @@ export class EmailService {
         attempts: 0,
         timestamp: Date.now(),
         error: 'Recipient email is in suppression list.',
+      };
+    }
+
+    if (this.queue.isQuotaExceeded()) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: masked,
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'DAILY_QUOTA_EXCEEDED: Daily email quota limit reached.',
       };
     }
 
@@ -319,9 +386,10 @@ export class EmailService {
       });
 
       if (!queueRes.success) {
+        const isSuppressed = queueRes.error === 'RECIPIENT_SUPPRESSED';
         return {
           success: false,
-          status: 'SUPPRESSED',
+          status: isSuppressed ? 'SUPPRESSED' : 'FAILED',
           recipientMasked: masked,
           category,
           attempts: 0,
@@ -357,6 +425,7 @@ export class EmailService {
           };
         }
 
+        this.queue.recordSent();
         return {
           success: true,
           status: 'MOCKED',
@@ -365,6 +434,10 @@ export class EmailService {
           attempts: 1,
           timestamp: Date.now(),
         };
+      }
+
+      if (isSent) {
+        this.queue.recordSent();
       }
 
       return {
@@ -399,6 +472,20 @@ export class EmailService {
     options?: { useQueue?: boolean }
   ): Promise<EmailDeliveryResult> {
     const category = 'security_alert';
+
+    // 0. 驗證 Email 格式
+    if (!this.isValidEmail(email)) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: this.maskEmail(email || ''),
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'INVALID_INPUT: Invalid email address format.',
+      };
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const masked = this.maskEmail(normalizedEmail);
 
@@ -411,6 +498,18 @@ export class EmailService {
         attempts: 0,
         timestamp: Date.now(),
         error: 'Recipient email is in suppression list.',
+      };
+    }
+
+    if (this.queue.isQuotaExceeded()) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: masked,
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'DAILY_QUOTA_EXCEEDED: Daily email quota limit reached.',
       };
     }
 
@@ -451,10 +550,11 @@ export class EmailService {
         text: templateOutput.text,
       });
 
+      const isSuppressed = queueRes.error === 'RECIPIENT_SUPPRESSED';
       return {
         success: queueRes.success,
         jobId: queueRes.jobId,
-        status: queueRes.success ? 'QUEUED' : 'SUPPRESSED',
+        status: queueRes.success ? 'QUEUED' : (isSuppressed ? 'SUPPRESSED' : 'FAILED'),
         recipientMasked: masked,
         category,
         attempts: 0,
@@ -464,6 +564,7 @@ export class EmailService {
     }
 
     // 直接發送模式 (目前無專用 API，安全返回 MOCKED)
+    this.queue.recordSent();
     return {
       success: true,
       status: 'MOCKED',
@@ -479,6 +580,20 @@ export class EmailService {
    */
   public async send(options: SendEmailOptions): Promise<EmailDeliveryResult> {
     const category = options.category || 'announcement';
+
+    // 0. 驗證 Email 格式
+    if (!this.isValidEmail(options.to)) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: this.maskEmail(options.to || ''),
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'INVALID_INPUT: Invalid email address format.',
+      };
+    }
+
     const normalizedEmail = options.to.trim().toLowerCase();
     const masked = this.maskEmail(normalizedEmail);
 
@@ -491,6 +606,18 @@ export class EmailService {
         attempts: 0,
         timestamp: Date.now(),
         error: 'Recipient is in suppression list.',
+      };
+    }
+
+    if (this.queue.isQuotaExceeded()) {
+      return {
+        success: false,
+        status: 'FAILED',
+        recipientMasked: masked,
+        category,
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'DAILY_QUOTA_EXCEEDED: Daily email quota limit reached.',
       };
     }
 
@@ -515,10 +642,11 @@ export class EmailService {
         text: options.text,
       });
 
+      const isSuppressed = queueRes.error === 'RECIPIENT_SUPPRESSED';
       return {
         success: queueRes.success,
         jobId: queueRes.jobId,
-        status: queueRes.success ? 'QUEUED' : 'SUPPRESSED',
+        status: queueRes.success ? 'QUEUED' : (isSuppressed ? 'SUPPRESSED' : 'FAILED'),
         recipientMasked: masked,
         category,
         attempts: 0,
@@ -527,6 +655,7 @@ export class EmailService {
       };
     }
 
+    this.queue.recordSent();
     return {
       success: true,
       status: 'MOCKED',

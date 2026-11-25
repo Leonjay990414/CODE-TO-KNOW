@@ -56,36 +56,36 @@ export const PRISMA_MODEL_OWNERSHIP_INVENTORY: readonly ModelOwnershipEntry[] = 
   { model: 'AnnouncementRead', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN read aggregate', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
 
   // 3. Certifications & Question Bank (6 Models)
-  { model: 'Certification', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (public catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'Subject', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'certificationId -> Certification', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'Question', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'subjectId -> Subject', adminOverride: 'ADMIN / PLATFORM_ADMIN write; hide correctAnswer during live exam', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'QuestionOption', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'questionId -> Question', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
+  { model: 'Certification', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (public catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Certification catalog query (/api/certifications)' },
+  { model: 'Subject', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'certificationId -> Certification', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Subject categories for theory questions' },
+  { model: 'Question', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'subjectId -> Subject', adminOverride: 'ADMIN / PLATFORM_ADMIN write; hide correctAnswer during live exam', apiStatus: 'IMPLEMENTED', notes: 'Official 605 questions query (/api/questions)' },
+  { model: 'QuestionOption', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'questionId -> Question', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Question options query' },
   { model: 'QuestionTag', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
   { model: 'QuestionTagRelation', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'questionId -> Question', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
 
   // 4. Student Learning Progress (5 Models)
   { model: 'CertificationEnrollment', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
   { model: 'UnitProgress', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'WrongQuestionRecord', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
+  { model: 'WrongQuestionRecord', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'IMPLEMENTED', notes: 'Wrong question notebook with mastery state machine (/api/wrong-questions)' },
   { model: 'QuestionBookmark', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
   { model: 'StudyTimeLog', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
 
   // 5. Teacher & Class Management (4 Models)
   { model: 'TeacherProfile', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'ADMIN / PLATFORM_ADMIN moderate', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'Class', strategy: 'TEACHER_OR_ENROLLED', ownerFieldOrPath: 'creatorId (write) / enrollments[].studentId (read)', adminOverride: 'ADMIN / PLATFORM_ADMIN full override', apiStatus: 'NOT_IMPLEMENTED', notes: 'Uses creatorId instead of userId; no HTTP module implemented yet' },
-  { model: 'ClassEnrollment', strategy: 'TEACHER_OR_ENROLLED', ownerFieldOrPath: 'studentId OR class.creatorId', adminOverride: 'ADMIN / PLATFORM_ADMIN full override', apiStatus: 'NOT_IMPLEMENTED', notes: 'Uses studentId & parent Class.creatorId; no HTTP module implemented yet' },
+  { model: 'Class', strategy: 'TEACHER_OR_ENROLLED', ownerFieldOrPath: 'creatorId (write) / enrollments[].studentId (read)', adminOverride: 'ADMIN / PLATFORM_ADMIN full override', apiStatus: 'IMPLEMENTED', notes: 'Classroom management endpoints (/api/classrooms)' },
+  { model: 'ClassEnrollment', strategy: 'TEACHER_OR_ENROLLED', ownerFieldOrPath: 'studentId OR class.creatorId', adminOverride: 'ADMIN / PLATFORM_ADMIN full override', apiStatus: 'IMPLEMENTED', notes: 'Classroom student enrollment & roster management' },
   { model: 'ClassAssignment', strategy: 'NESTED_PARENT', ownerFieldOrPath: 'class.creatorId (write) / class.enrollments[].studentId (read)', adminOverride: 'ADMIN / PLATFORM_ADMIN full override', apiStatus: 'NOT_IMPLEMENTED', notes: 'No direct userId; scoped via Class; no HTTP module implemented yet' },
 
   // 6. Practical Exam System (4 Models)
-  { model: 'PracticalTask', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (public catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'PracticalStep', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'taskId -> PracticalTask', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'PracticalProgress', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN / class teacher read-only view if enrolled', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'PracticalStepProgress', strategy: 'NESTED_PARENT', ownerFieldOrPath: 'progress.userId (via PracticalProgress)', adminOverride: 'Optional ADMIN support read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No direct userId; owned via progressId -> PracticalProgress.userId' },
+  { model: 'PracticalTask', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (public catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Five official practical task sets catalog (/api/practical-tasks)' },
+  { model: 'PracticalStep', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'taskId -> PracticalTask', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Version A and B step guide catalog' },
+  { model: 'PracticalProgress', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN / class teacher read-only view if enrolled', apiStatus: 'IMPLEMENTED', notes: 'Student code persistence and progress per version' },
+  { model: 'PracticalStepProgress', strategy: 'NESTED_PARENT', ownerFieldOrPath: 'progress.userId (via PracticalProgress)', adminOverride: 'Optional ADMIN support read', apiStatus: 'IMPLEMENTED', notes: 'Owned via progressId -> PracticalProgress.userId' },
 
   // 7. Mock Exam System (3 Models)
-  { model: 'ExamPaper', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'ExamAttempt', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN / class teacher read-only review', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },
-  { model: 'ExamAnswerSnapshot', strategy: 'NESTED_PARENT', ownerFieldOrPath: 'attempt.userId (via ExamAttempt)', adminOverride: 'Optional ADMIN / class teacher read-only review', apiStatus: 'NOT_IMPLEMENTED', notes: 'No direct userId; owned via attemptId -> ExamAttempt.userId' },
+  { model: 'ExamPaper', strategy: 'ADMIN_MANAGED_CATALOG', ownerFieldOrPath: 'N/A (catalog)', adminOverride: 'ADMIN / PLATFORM_ADMIN write', apiStatus: 'IMPLEMENTED', notes: 'Official 80-question mock exam catalog' },
+  { model: 'ExamAttempt', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN / class teacher read-only review', apiStatus: 'IMPLEMENTED', notes: 'Generated & submitted via /api/exams' },
+  { model: 'ExamAnswerSnapshot', strategy: 'NESTED_PARENT', ownerFieldOrPath: 'attempt.userId (via ExamAttempt)', adminOverride: 'Optional ADMIN / class teacher read-only review', apiStatus: 'IMPLEMENTED', notes: 'Immutable snapshot created upon exam submission' },
 
   // 8. AI Coach & Scaffolding (3 Models)
   { model: 'AIChatSession', strategy: 'DIRECT_USER_ID', ownerFieldOrPath: 'userId', adminOverride: 'Optional ADMIN moderation read', apiStatus: 'NOT_IMPLEMENTED', notes: 'No HTTP module implemented yet' },

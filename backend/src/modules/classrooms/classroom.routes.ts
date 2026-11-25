@@ -8,6 +8,7 @@ import {
   joinClassroomSchema,
   classroomIdParamSchema,
   removeMemberParamSchema,
+  studentProgressParamSchema,
 } from './classroom.schema.js';
 import { rejectForgedOwnerFields } from '../../utils/ownership.js';
 
@@ -62,6 +63,22 @@ router.delete(
   requireRoles(['TEACHER', 'ADMIN']),
   validateParams(removeMemberParamSchema),
   (req, res, next) => classroomController.removeMember(req, res, next)
+);
+
+// 7. Teacher query classroom analytics (Scoped by ownership)
+router.get(
+  '/:id/analytics',
+  requireRoles(['TEACHER', 'ADMIN']),
+  validateParams(classroomIdParamSchema),
+  (req, res, next) => classroomController.getClassroomAnalytics(req, res, next)
+);
+
+// 8. Teacher query specific student classroom progress (Strict class boundary enforcement)
+router.get(
+  '/:id/students/:studentId/progress',
+  requireRoles(['TEACHER', 'ADMIN']),
+  validateParams(studentProgressParamSchema),
+  (req, res, next) => classroomController.getStudentClassroomProgress(req, res, next)
 );
 
 export const classroomRoutes = router;

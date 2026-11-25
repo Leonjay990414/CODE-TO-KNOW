@@ -158,4 +158,145 @@ describe('P10 Stage A: Email Core Service Specification & Integration Suite (NEX
       expect(queueService.getMetrics().queuedCount).toBe(1);
     });
   });
+
+  describe('5. Quota Mechanism & Rate Limiting (Task 05 & P10-EML-010)', () => {
+    it('11. Direct dispatch increments sent count and blocks when daily quota is exceeded', async () => {
+      // Configure low quota for testing
+      const smallQueue = new EmailQueueService({ dailyQuotaLimit: 2 });
+      const limitedService = new EmailService(mockProvider, smallQueue);
+
+      // Send 1st email - success
+      const res1 = await limitedService.sendVerificationEmail('user1@example.com', 'T1');
+      expect(res1.success).toBe(true);
+      expect(res1.status).toBe('MOCKED');
+      expect(smallQueue.getMetrics().dailySentCount).toBe(1);
+
+      // Send 2nd email - success
+      const res2 = await limitedService.sendVerificationEmail('user2@example.com', 'T2');
+      expect(res2.success).toBe(true);
+      expect(res2.status).toBe('MOCKED');
+      expect(smallQueue.getMetrics().dailySentCount).toBe(2);
+
+      // Send 3rd email - quota exceeded!
+      const res3 = await limitedService.sendVerificationEmail('user3@example.com', 'T3');
+      expect(res3.success).toBe(false);
+      expect(res3.status).toBe('FAILED');
+      expect(res3.error).toContain('DAILY_QUOTA_EXCEEDED');
+      expect(smallQueue.getMetrics().dailySentCount).toBe(2); // does not increment further
+    });
+
+    it('12. Enqueue mode rejects job with DAILY_QUOTA_EXCEEDED when quota is full', async () => {
+      const smallQueue = new EmailQueueService({ dailyQuotaLimit: 1 });
+      const limitedService = new EmailService(mockProvider, smallQueue);
+
+      await limitedService.sendVerificationEmail('first@example.com', 'T1', 'User', { useQueue: false });
+      expect(smallQueue.getMetrics().dailySentCount).toBe(1);
+
+      // Queueing when quota exceeded
+      const queueRes = await limitedService.sendVerificationEmail('second@example.com', 'T2', 'User', { useQueue: true });
+      expect(queueRes.success).toBe(false);
+      expect(queueRes.status).toBe('FAILED');
+      expect(queueRes.error).toContain('DAILY_QUOTA_EXCEEDED');
+    });
+
+    it('13. Failed email deliveries do not increment the daily sent quota count', async () => {
+      mockProvider.shouldSucceed = false;
+      const initialCount = queueService.getMetrics().dailySentCount;
+
+      const res = await emailService.sendVerificationEmail('fail-count@example.com', 'T1');
+      expect(res.success).toBe(false);
+      expect(res.status).toBe('FAILED');
+      expect(queueService.getMetrics().dailySentCount).toBe(initialCount);
+    });
+
+    it('14. Quota reset restores delivery capability', async () => {
+      const smallQueue = new EmailQueueService({ dailyQuotaLimit: 1 });
+      const limitedService = new EmailService(mockProvider, smallQueue);
+
+      await limitedService.sendVerificationEmail('u1@example.com', 'T1');
+      expect(smallQueue.isQuotaExceeded()).toBe(true);
+
+      // Reset quota
+      smallQueue.resetDailyQuota();
+      expect(smallQueue.isQuotaExceeded()).toBe(false);
+
+      const resAfterReset = await limitedService.sendVerificationEmail('u2@example.com', 'T2');
+      expect(resAfterReset.success).toBe(true);
+      expect(resAfterReset.status).toBe('MOCKED');
+    });
+  });
+
+  describe('6. Input Validation & Injection Prevention (Tasks 03, 07)', () => {
+    it('15. Rejects invalid email addresses with INVALID_INPUT status', async () => {
+      const invalidEmails = ['', '   ', 'not-an-email', 'missing@domain', '@no-local.com', 'spaces in@email.com'];
+
+      for (const email of invalidEmails) {
+        const res = await emailService.sendVerificationEmail(email, 'TOKEN');
+        expect(res.success).toBe(false);
+        expect(res.status).toBe('FAILED');
+        expect(res.error).toContain('INVALID_INPUT');
+      }
+    });
+
+    it('16. Sanitizes dangerous URL schemes and CRLF headers in rendered templates', async () => {
+      const customRender = templates.renderVerificationEmail({
+        displayName: '惡意使用者 <script>alert(1)</script>',
+        verificationUrl: 'javascript:alert(document.cookie)',
+        expiresInMinutes: 30,
+      });
+
+      expect(customRender.html).not.toContain('javascript:alert');
+      expect(customRender.html).toContain('href="#"');
+      expect(customRender.html).not.toContain('<script>');
+      expect(customRender.subject).not.toContain('\r');
+      expect(customRender.subject).not.toContain('\n');
+    });
+  });
+
+  describe('7. Suppression List Normalization & Case Insensitivity (Task 04)', () => {
+    it('17. Normalizes email case and trimming in suppression list check', async () => {
+      queueService.addToSuppressionList('  UnSub-User@Example.COM  ');
+
+      expect(queueService.isSuppressed('unsub-user@example.com')).toBe(true);
+      expect(queueService.isSuppressed('UNSUB-USER@EXAMPLE.COM')).toBe(true);
+      expect(queueService.isSuppressed('  unsub-user@example.com ')).toBe(true);
+
+      const res = await emailService.sendVerificationEmail('UNSUB-USER@EXAMPLE.COM', 'TOKEN');
+      expect(res.success).toBe(false);
+      expect(res.status).toBe('SUPPRESSED');
+      expect(mockProvider.sentMails.length).toBe(0);
+    });
+
+    it('18. Removing from suppression list re-enables delivery', async () => {
+      queueService.addToSuppressionList('temporary-block@example.com');
+      expect(queueService.isSuppressed('temporary-block@example.com')).toBe(true);
+
+      queueService.removeFromSuppressionList('temporary-block@example.com');
+      expect(queueService.isSuppressed('temporary-block@example.com')).toBe(false);
+
+      const res = await emailService.sendVerificationEmail('temporary-block@example.com', 'TOKEN');
+      expect(res.success).toBe(true);
+      expect(res.status).toBe('MOCKED');
+    });
+  });
+
+  describe('8. Concurrency & High Volume Stability (Task 07)', () => {
+    it('19. Safely handles multiple concurrent dispatch requests without state corruption', async () => {
+      const concurrentRequests = Array.from({ length: 10 }, (_, i) =>
+        emailService.sendVerificationEmail(`concurrent${i}@example.com`, `TOKEN_${i}`, `User ${i}`)
+      );
+
+      const results = await Promise.all(concurrentRequests);
+
+      expect(results.length).toBe(10);
+      results.forEach((res, i) => {
+        expect(res.success).toBe(true);
+        expect(res.status).toBe('MOCKED');
+        expect(res.recipientMasked).toBe(`c***${i}@example.com`);
+      });
+
+      expect(mockProvider.sentMails.length).toBe(10);
+      expect(queueService.getMetrics().dailySentCount).toBe(10);
+    });
+  });
 });

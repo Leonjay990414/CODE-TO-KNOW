@@ -29,6 +29,27 @@ export function escapeHtml(unsafe: string): string {
 }
 
 /**
+ * URL Scheme 安全過濾函數，阻擋 javascript:、data: 等危險協定注入
+ */
+export function sanitizeUrl(url: string): string {
+  if (!url) return '#';
+  const trimmed = url.trim();
+  // 僅允許 http:// 與 https:// 協定
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  return '#';
+}
+
+/**
+ * 標頭防注入函數，移除 CRLF (\r, \n) 防止 Email Header Injection
+ */
+export function sanitizeHeader(value: string): string {
+  if (!value) return '';
+  return value.replace(/[\r\n]+/g, ' ').trim();
+}
+
+/**
  * 官方通用 Email HTML 骨架外框
  */
 function wrapBrandEmailLayout(title: string, bodyContent: string, footerNote?: string): string {
@@ -82,23 +103,23 @@ export interface VerificationEmailParams {
 
 export function renderVerificationEmail(params: VerificationEmailParams): EmailRenderOutput {
   const name = escapeHtml(params.displayName || '親愛的學員');
-  const url = params.verificationUrl;
+  const safeUrl = sanitizeUrl(params.verificationUrl);
   const exp = params.expiresInMinutes || 30;
 
-  const subject = `【碼上學】請完成電子信箱驗證，開啟 AI 智慧學習之旅`;
+  const subject = sanitizeHeader(`【碼上學】請完成電子信箱驗證，開啟 AI 智慧學習之旅`);
 
-  const text = `您好，${name}：\n\n感謝您註冊「碼上學 CODE TO KNOW」AI 智慧學習平台！\n請於 ${exp} 分鐘內點擊下方連結以啟用您的帳號：\n${url}\n\n若您未曾申請註冊，請忽略此信件。\n\n碼上學團隊 敬上`;
+  const text = `您好，${name}：\n\n感謝您註冊「碼上學 CODE TO KNOW」AI 智慧學習平台！\n請於 ${exp} 分鐘內點擊下方連結以啟用您的帳號：\n${safeUrl}\n\n若您未曾申請註冊，請忽略此信件。\n\n碼上學團隊 敬上`;
 
   const bodyContent = `
     <h2 style="font-size: 18px; color: #26343D; margin-top: 0;">歡迎加入碼上學！</h2>
     <p>親愛的 <strong>${name}</strong> 您好：</p>
     <p>感謝您註冊「碼上學 CODE TO KNOW」AI 智慧學習平台。為了保護您的帳號安全性，請於 <strong>${exp} 分鐘內</strong> 點擊下方按鈕以啟用帳號：</p>
     <div style="text-align: center;">
-      <a href="${escapeHtml(url)}" class="btn-action" target="_blank" rel="noopener noreferrer">驗證我的電子郵件信箱</a>
+      <a href="${escapeHtml(safeUrl)}" class="btn-action" target="_blank" rel="noopener noreferrer">驗證我的電子郵件信箱</a>
     </div>
     <div class="info-card">
       <strong>連結無法點擊？</strong> 請複製以下網址至瀏覽器網址列開啟：<br>
-      <span style="word-break: break-all; color: #526B7B;">${escapeHtml(url)}</span>
+      <span style="word-break: break-all; color: #526B7B;">${escapeHtml(safeUrl)}</span>
     </div>
     <p class="security-notice">⚠️ 若您並未註冊碼上學帳號，可能是他人誤填您的信箱，請忽略本信，您的帳號將不會被啟用。</p>
   `;
@@ -118,19 +139,19 @@ export interface PasswordResetEmailParams {
 
 export function renderPasswordResetEmail(params: PasswordResetEmailParams): EmailRenderOutput {
   const name = escapeHtml(params.displayName || '使用者');
-  const url = params.resetUrl;
+  const safeUrl = sanitizeUrl(params.resetUrl);
   const exp = params.expiresInMinutes || 15;
 
-  const subject = `【碼上學】重設您的帳號密碼請求`;
+  const subject = sanitizeHeader(`【碼上學】重設您的帳號密碼請求`);
 
-  const text = `您好，${name}：\n\n我們收到了重設您在碼上學帳號密碼的請求。\n請於 ${exp} 分鐘內點擊下方連結以設定新密碼：\n${url}\n\n若非您本人申請，請立即登入平台檢查帳號安全或聯繫客服。\n\n碼上學團隊 敬上`;
+  const text = `您好，${name}：\n\n我們收到了重設您在碼上學帳號密碼的請求。\n請於 ${exp} 分鐘內點擊下方連結以設定新密碼：\n${safeUrl}\n\n若非您本人申請，請立即登入平台檢查帳號安全或聯繫客服。\n\n碼上學團隊 敬上`;
 
   const bodyContent = `
     <h2 style="font-size: 18px; color: #26343D; margin-top: 0;">密碼重設通知</h2>
     <p>親愛的 <strong>${name}</strong> 您好：</p>
     <p>我們收到了您要求重設「碼上學」帳號密碼的申請。請於 <strong>${exp} 分鐘內</strong> 點擊下方按鈕以重設新密碼：</p>
     <div style="text-align: center;">
-      <a href="${escapeHtml(url)}" class="btn-action" target="_blank" rel="noopener noreferrer">前往重設帳號密碼</a>
+      <a href="${escapeHtml(safeUrl)}" class="btn-action" target="_blank" rel="noopener noreferrer">前往重設帳號密碼</a>
     </div>
     <div class="info-card">
       <strong>安全提示：</strong> 密碼重設完成後，既有的所有裝置登入 Session 將自動失效以維護帳號安全。
@@ -206,11 +227,11 @@ export function renderExamScheduledEmail(params: ExamScheduledNotificationParams
   const course = escapeHtml(params.courseName);
   const time = escapeHtml(params.startTime);
   const dur = params.durationMinutes;
-  const url = params.examUrl;
+  const safeUrl = sanitizeUrl(params.examUrl);
 
-  const subject = `【測驗通知】${exam} 即將開始，請準時應考`;
+  const subject = sanitizeHeader(`【測驗通知】${params.examTitle || ''} 即將開始，請準時應考`);
 
-  const text = `同學 ${name} 您好：\n\n您所修習的「${course}」已發布正式測驗：\n- 測驗名稱：${exam}\n- 開始時間：${time}\n- 作答限時：${dur} 分鐘\n\n應考連結：${url}\n請提早準備並確認網路連線穩定。\n\n碼上學教學團隊 敬上`;
+  const text = `同學 ${name} 您好：\n\n您所修習的「${course}」已發布正式測驗：\n- 測驗名稱：${exam}\n- 開始時間：${time}\n- 作答限時：${dur} 分鐘\n\n應考連結：${safeUrl}\n請提早準備並確認網路連線穩定。\n\n碼上學教學團隊 敬上`;
 
   const bodyContent = `
     <h2 style="font-size: 18px; color: #26343D; margin-top: 0;">班級測驗發布通知</h2>
@@ -224,7 +245,7 @@ export function renderExamScheduledEmail(params: ExamScheduledNotificationParams
       </ul>
     </div>
     <div style="text-align: center;">
-      <a href="${escapeHtml(url)}" class="btn-action" target="_blank" rel="noopener noreferrer">前往線上測驗大廳</a>
+      <a href="${escapeHtml(safeUrl)}" class="btn-action" target="_blank" rel="noopener noreferrer">前往線上測驗大廳</a>
     </div>
     <p style="font-size: 13px; color: #6C7F8C;">💡 考前叮嚀：測驗時請避免隨意切換分頁，系統具備切頁偵測與異常防作弊紀錄。</p>
   `;
@@ -253,9 +274,10 @@ export function renderTeacherAnnouncementEmail(params: TeacherAnnouncementNotifi
   const content = escapeHtml(params.announcementContent).replace(/\n/g, '<br>');
   const date = escapeHtml(params.publishDate);
 
-  const subject = `【班級公告】${cls} - ${params.announcementTitle}`;
+  const cleanTitle = sanitizeHeader(params.announcementTitle || '');
+  const subject = sanitizeHeader(`【班級公告】${params.className || ''} - ${cleanTitle}`);
 
-  const text = `${name} 同學您好：\n\n指導教師 ${params.teacherName} 在「${params.className}」發布了重要公告：\n【${params.announcementTitle}】\n${params.announcementContent}\n\n發布日期：${date}\n\n碼上學班級學習中心`;
+  const text = `${name} 同學您好：\n\n指導教師 ${params.teacherName} 在「${params.className}」發布了重要公告：\n【${cleanTitle}】\n${params.announcementContent}\n\n發布日期：${date}\n\n碼上學班級學習中心`;
 
   const bodyContent = `
     <h2 style="font-size: 18px; color: #26343D; margin-top: 0;">班級教師重要公告</h2>
@@ -291,7 +313,8 @@ export function renderMaintenanceNotificationEmail(params: MaintenanceNotificati
   const end = escapeHtml(params.endTime);
   const services = escapeHtml(params.affectedServices);
 
-  const subject = `【系統維護公告】${params.maintenanceTitle}`;
+  const cleanTitle = sanitizeHeader(params.maintenanceTitle || '');
+  const subject = sanitizeHeader(`【系統維護公告】${cleanTitle}`);
 
   const text = `親愛的會員 ${params.recipientName} 您好：\n\n為了提供更優質的學習體驗，碼上學平台將進行預定系統維護作業：\n- 維護時間：${start} 至 ${end}\n- 影響範圍：${services}\n\n維護期間相關服務可能暫時中斷，造成不便敬請見諒。\n\n碼上學營運團隊 敬上`;
 

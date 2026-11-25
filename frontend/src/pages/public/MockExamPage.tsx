@@ -16,11 +16,13 @@ import {
   BarChart2,
   TrendingUp,
   LayoutDashboard,
+  Database,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { examApi } from '../../services/api';
 import {
   MockExamSession,
   createMockExamSession,
@@ -54,6 +56,8 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [reviewFilter, setReviewFilter] = useState<'all' | 'wrong' | 'unanswered'>('all');
   const [syncedWrongCount, setSyncedWrongCount] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Initialize or restore active session on mount or userId change
   useEffect(() => {
@@ -69,27 +73,6 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
     }
   }, [userId]);
 
-  // Countdown timer based on actual expiry time
-  useEffect(() => {
-    if (!session || session.isSubmitted) return;
-
-    const interval = setInterval(() => {
-      const remaining = calculateRemainingSeconds(session);
-      setSecondsRemaining(remaining);
-
-      if (remaining <= 0) {
-        clearInterval(interval);
-        // Time is up: auto-submit
-        const evaluated = evaluateMockExam(session);
-        setSession(evaluated);
-        const synced = syncMockExamWrongQuestions(userId, evaluated);
-        setSyncedWrongCount(synced);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [session, userId]);
-
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
@@ -100,7 +83,72 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleStartExam = () => {
+  const handleStartExam = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await examApi.generateExam({
+        mode: selectedDuration,
+        strategy: selectedStrategy,
+      });
+
+      if (res.success && res.data?.questions && res.data.questions.length === 80) {
+        const now = new Date();
+        const durationMins = res.data.timeLimitMinutes || (selectedDuration === 'official_100' ? 100 : 60);
+        const expires = new Date(now.getTime() + durationMins * 60 * 1000);
+
+        const mappedQuestions = res.data.questions.map((q) => {
+          const secCode = (q.subject.code.split('-')[1] || '01') as '01' | '02' | '03' | '04';
+          return {
+            id: q.id,
+            officialNumber: q.officialNumber,
+            officialSection: secCode,
+            sectionName: q.subject.title,
+            category: q.subject.title,
+            question: q.questionText,
+            codeSnippet: q.codeSnippet || undefined,
+            difficulty: (q.difficulty.toLowerCase() as any) || 'medium',
+            options: q.options.map((opt) => ({ key: opt.key as 'A' | 'B' | 'C' | 'D', text: opt.text })),
+            correctAnswer: 'A' as const, // Placeholder until server submission
+            explanation: '',
+            officialPage: 1,
+            isVerified: true,
+            hasDetailedExplanation: true,
+          };
+        });
+
+        const newSession: MockExamSession = {
+          schemaVersion: 1,
+          sessionId: `exam_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+          attemptId: res.data.attemptId,
+          isLiveDatabase: true,
+          userId: userId && userId.trim() !== '' ? userId.trim() : 'guest-anonymous',
+          mode: selectedDuration,
+          strategy: selectedStrategy,
+          durationMinutes: durationMins,
+          startedAt: now.toISOString(),
+          expiresAt: expires.toISOString(),
+          questions: mappedQuestions,
+          answers: {},
+          markedForReview: {},
+          isSubmitted: false,
+        };
+
+        saveActiveMockExam(newSession);
+        setSession(newSession);
+        setActiveQuestionIdx(0);
+        setSecondsRemaining(calculateRemainingSeconds(newSession));
+        setShowConfirmModal(false);
+        setSyncedWrongCount(null);
+        setIsGenerating(false);
+        return;
+      }
+    } catch (err) {
+      console.warn('[MockExam] Online paper generation failed, using local offline generator:', err);
+    } finally {
+      setIsGenerating(false);
+    }
+
+    // Fallback offline session
     const newSession = createMockExamSession(userId, selectedDuration, selectedStrategy);
     setSession(newSession);
     setActiveQuestionIdx(0);
@@ -132,14 +180,96 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
     saveActiveMockExam(updatedSession);
   };
 
-  const handleSubmitExam = useCallback(() => {
-    if (!session) return;
+  const handleSubmitExam = useCallback(async () => {
+    if (!session || isSubmitting) return;
     setShowConfirmModal(false);
+    setIsSubmitting(true);
+
+    if (session.attemptId && session.isLiveDatabase) {
+      try {
+        const durationSecs = Math.max(0, session.durationMinutes * 60 - secondsRemaining);
+        const res = await examApi.submitExam(session.attemptId, {
+          answers: session.answers,
+          durationSeconds: durationSecs,
+        });
+
+        if (res.success && res.data) {
+          const report = res.data;
+          const snapshotMap = new Map(report.snapshots.map((s) => [s.questionId, s]));
+          const updatedQuestions = session.questions.map((q) => {
+            const snap = snapshotMap.get(q.id);
+            if (snap) {
+              return {
+                ...q,
+                correctAnswer: snap.correctAnswer as any,
+                explanation: snap.explanation || '',
+              };
+            }
+            return q;
+          });
+
+          const breakdownMap: Record<string, any> = {};
+          report.sectionBreakdown.forEach((sec) => {
+            breakdownMap[sec.sectionCode] = {
+              sectionId: sec.sectionCode,
+              sectionName: sec.sectionTitle,
+              total: sec.total,
+              correct: sec.correct,
+              percentage: sec.percentage,
+            };
+          });
+
+          const evaluated: MockExamSession = {
+            ...session,
+            questions: updatedQuestions,
+            isSubmitted: true,
+            submittedAt: report.submittedAt,
+            score: report.score,
+            correctCount: report.correctCount,
+            wrongCount: report.wrongCount,
+            unansweredCount: report.unansweredCount,
+            isPassed: report.isPassed,
+            sectionBreakdown: breakdownMap,
+            wrongSynced: true,
+          };
+
+          setSession(evaluated);
+          saveActiveMockExam(evaluated);
+          const synced = syncMockExamWrongQuestions(userId, evaluated);
+          setSyncedWrongCount(synced);
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('[MockExam] Online submit failed, falling back to local scoring:', err);
+      }
+    }
+
+    // Local evaluation fallback
     const evaluated = evaluateMockExam(session);
     setSession(evaluated);
     const synced = syncMockExamWrongQuestions(userId, evaluated);
     setSyncedWrongCount(synced);
-  }, [session, userId]);
+    setIsSubmitting(false);
+  }, [session, userId, secondsRemaining, isSubmitting]);
+
+  // Countdown timer based on actual expiry time
+  useEffect(() => {
+    if (!session || session.isSubmitted) return;
+
+    const interval = setInterval(() => {
+      const remaining = calculateRemainingSeconds(session);
+      setSecondsRemaining(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        // Time is up: auto-submit
+        handleSubmitExam();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [session, handleSubmitExam]);
 
   const handleResetExam = () => {
     clearActiveMockExam(userId);
@@ -351,10 +481,20 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
                   type="button"
                   className="btn btn-primary btn-lg"
                   onClick={handleStartExam}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  disabled={isGenerating}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: isGenerating ? 0.7 : 1 }}
                 >
-                  <span>抽取試卷並開始考試</span>
-                  <ArrowRight size={18} />
+                  {isGenerating ? (
+                    <>
+                      <span>題庫抽卷中...</span>
+                      <Sparkles size={18} className="animate-spin" />
+                    </>
+                  ) : (
+                    <>
+                      <span>抽取試卷並開始考試</span>
+                      <ArrowRight size={18} />
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -427,6 +567,12 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       【{currentQ.sectionName}】(官方第 {currentQ.officialPage} 頁)
                     </span>
+                    {session.isLiveDatabase && (
+                      <span className="badge badge-success" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Database size={11} />
+                        資料庫連線
+                      </span>
+                    )}
                   </div>
 
                   <button
@@ -690,8 +836,14 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
                 <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '6px' }}>
                   {session.isPassed ? '恭喜通過！達到國家檢定 60 分及格標準' : '本次測驗未達 60 分及格門檻，請再接再厲！'}
                 </h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  勞動部 17300 網頁設計丙級學科全真模擬考成績單 ｜ 測驗時間：{session.submittedAt ? new Date(session.submittedAt).toLocaleString() : ''}
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>勞動部 17300 網頁設計丙級學科全真模擬考成績單 ｜ 測驗時間：{session.submittedAt ? new Date(session.submittedAt).toLocaleString() : ''}</span>
+                  {session.isLiveDatabase && (
+                    <span className="badge badge-success" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Database size={11} />
+                      伺服器端核分認證 (防竄改快照)
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -945,8 +1097,9 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
                   type="button"
                   className="btn btn-primary btn-sm"
                   onClick={handleSubmitExam}
+                  disabled={isSubmitting}
                 >
-                  確認結算成績
+                  {isSubmitting ? '正在核算成績...' : '確認結算成績'}
                 </button>
               </div>
             </div>

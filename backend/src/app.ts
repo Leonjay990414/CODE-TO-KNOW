@@ -10,6 +10,11 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { teacherRoutes } from './modules/teachers/teacher.routes.js';
 import { adminRoutes } from './modules/admin/admin.routes.js';
 import { classroomRoutes } from './modules/classrooms/classroom.routes.js';
+import { questionRoutes, certificationRoutes } from './modules/questions/question.routes.js';
+import { examRoutes } from './modules/exams/exam.routes.js';
+import { wrongQuestionRoutes } from './modules/wrong-questions/wrongQuestion.routes.js';
+import { practicalRoutes } from './modules/practicals/practical.routes.js';
+import { studentRoutes } from './modules/students/student.routes.js';
 import { prisma } from './config/database.js';
 import { NotFoundError } from './utils/errors.js';
 
@@ -80,6 +85,13 @@ export function createApp(): Express {
   app.use('/api/teachers', teacherRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/classrooms', classroomRoutes);
+  app.use('/api/certifications', certificationRoutes);
+  app.use('/api/questions', questionRoutes);
+  app.use('/api/exams', examRoutes);
+  app.use('/api/wrong-questions', wrongQuestionRoutes);
+  app.use('/api/practical-tasks', practicalRoutes);
+  app.use('/api/practicals', practicalRoutes);
+  app.use('/api/student', studentRoutes);
 
   // 404 Handler
   app.use((_req: Request, _res: Response, next) => {

@@ -290,6 +290,286 @@ export class ClassroomService {
 
     return { success: true, message: '已成功將該學員自班級移除' };
   }
+
+  /**
+   * 教師查詢所轄班級總體學習分析數據（僅能查閱自己班級，防 IDOR）
+   * 統計由實際資料計算，無資料時提供乾淨空狀態，無假數據
+   */
+  async getClassroomAnalytics(actorId: string, actorRoles: string[], classId: string) {
+    const targetClass = await prisma.class.findUnique({
+      where: { id: classId },
+      include: {
+        certification: {
+          select: { id: true, name: true, code: true },
+        },
+      },
+    });
+
+    if (!targetClass) {
+      throw new NotFoundError('指定的班級不存在');
+    }
+
+    const isOwner = targetClass.creatorId === actorId;
+    const isAdmin = hasAdminOverrideRole(actorRoles);
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenError('權限不足：您只能查閱自己管理的班級學習分析');
+    }
+
+    const enrollments = await prisma.classEnrollment.findMany({
+      where: {
+        classId,
+        status: 'JOINED',
+      },
+      select: { studentId: true },
+    });
+
+    const studentIds = enrollments.map((e) => e.studentId);
+    const totalStudents = studentIds.length;
+
+    if (totalStudents === 0) {
+      return {
+        classId: targetClass.id,
+        className: targetClass.name,
+        certificationName: targetClass.certification.name,
+        totalStudents: 0,
+        activeStudentsCount: 0,
+        examStats: {
+          totalExamsTaken: 0,
+          passedExamsCount: 0,
+          passRate: 0,
+          averageScore: null,
+          highestScore: null,
+          lowestScore: null,
+        },
+        practicalStats: {
+          averageCompletedStepsVA: 0,
+          averageCompletedStepsVB: 0,
+          studentsWithPracticalRecords: 0,
+        },
+        wrongQuestionStats: {
+          totalUnresolved: 0,
+          totalMastered: 0,
+        },
+      };
+    }
+
+    // 1. Exam attempts for enrolled students
+    const examAttempts = await prisma.examAttempt.findMany({
+      where: {
+        userId: { in: studentIds },
+        submittedAt: { not: null },
+        score: { not: null },
+      },
+      select: {
+        userId: true,
+        score: true,
+        isPassed: true,
+      },
+    });
+
+    const totalExamsTaken = examAttempts.length;
+    const passedExamsCount = examAttempts.filter((e) => e.isPassed).length;
+    let averageScore: number | null = null;
+    let highestScore: number | null = null;
+    let lowestScore: number | null = null;
+    let passRate = 0;
+
+    if (totalExamsTaken > 0) {
+      const scores = examAttempts.map((e) => Number(e.score));
+      averageScore = Math.round((scores.reduce((a, b) => a + b, 0) / totalExamsTaken) * 100) / 100;
+      highestScore = Math.max(...scores);
+      lowestScore = Math.min(...scores);
+      passRate = Math.round((passedExamsCount / totalExamsTaken) * 100);
+    }
+
+    // 2. Practical progress for enrolled students
+    const practicalProgress = await prisma.practicalProgress.findMany({
+      where: {
+        userId: { in: studentIds },
+      },
+      include: {
+        stepProgresses: {
+          where: { isCompleted: true },
+          select: { id: true },
+        },
+      },
+    });
+
+    const vARecords = practicalProgress.filter((p) => p.version === 'VERSION_A');
+    const vBRecords = practicalProgress.filter((p) => p.version === 'VERSION_B');
+
+    const totalStepsVA = vARecords.reduce((sum, p) => sum + (p.stepProgresses?.length || 0), 0);
+    const totalStepsVB = vBRecords.reduce((sum, p) => sum + (p.stepProgresses?.length || 0), 0);
+
+    const practicalStudents = new Set(practicalProgress.map((p) => p.userId));
+    const averageCompletedStepsVA = totalStudents > 0 ? Math.round((totalStepsVA / totalStudents) * 10) / 10 : 0;
+    const averageCompletedStepsVB = totalStudents > 0 ? Math.round((totalStepsVB / totalStudents) * 10) / 10 : 0;
+
+    // 3. Wrong questions for enrolled students
+    const wrongQuestions = await prisma.wrongQuestionRecord.findMany({
+      where: {
+        userId: { in: studentIds },
+      },
+      select: { masteryStatus: true },
+    });
+
+    const totalUnresolved = wrongQuestions.filter((q) => q.masteryStatus === 'UNRESOLVED').length;
+    const totalMastered = wrongQuestions.filter((q) => q.masteryStatus === 'MASTERED').length;
+
+    // 4. Distinct Active Students
+    const activeStudentIds = new Set([
+      ...examAttempts.map((e) => e.userId),
+      ...practicalProgress.map((p) => p.userId),
+    ]);
+
+    return {
+      classId: targetClass.id,
+      className: targetClass.name,
+      certificationName: targetClass.certification.name,
+      totalStudents,
+      activeStudentsCount: activeStudentIds.size,
+      examStats: {
+        totalExamsTaken,
+        passedExamsCount,
+        passRate,
+        averageScore,
+        highestScore,
+        lowestScore,
+      },
+      practicalStats: {
+        averageCompletedStepsVA,
+        averageCompletedStepsVB,
+        studentsWithPracticalRecords: practicalStudents.size,
+      },
+      wrongQuestionStats: {
+        totalUnresolved,
+        totalMastered,
+      },
+    };
+  }
+
+  /**
+   * 教師查閱所轄班級中特定學生的學習歷程
+   * 嚴格防禦：必須為該班級目前已加入之學員，禁止越權查看班級以外的學員資料
+   */
+  async getStudentClassroomProgress(
+    actorId: string,
+    actorRoles: string[],
+    classId: string,
+    studentId: string
+  ) {
+    const targetClass = await prisma.class.findUnique({
+      where: { id: classId },
+    });
+
+    if (!targetClass) {
+      throw new NotFoundError('指定的班級不存在');
+    }
+
+    const isOwner = targetClass.creatorId === actorId;
+    const isAdmin = hasAdminOverrideRole(actorRoles);
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenError('權限不足：您只能查閱自己管理的班級學員學習進度');
+    }
+
+    // Verify student is actually enrolled in this class
+    const enrollment = await prisma.classEnrollment.findFirst({
+      where: {
+        classId,
+        studentId,
+        status: 'JOINED',
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            avatarUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new ForbiddenError('權限不足：該學生並未加入此班級，禁止跨班級查閱學員資料');
+    }
+
+    // Query this student's exam attempts
+    const examAttempts = await prisma.examAttempt.findMany({
+      where: { userId: studentId, submittedAt: { not: null } },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        score: true,
+        isPassed: true,
+        correctCount: true,
+        wrongCount: true,
+        durationSeconds: true,
+        submittedAt: true,
+        examPaper: { select: { title: true } },
+      },
+    });
+
+    // Query this student's practical progress
+    const practicalProgress = await prisma.practicalProgress.findMany({
+      where: { userId: studentId },
+      include: {
+        task: { select: { taskNumber: true, taskCode: true, title: true } },
+        stepProgresses: { where: { isCompleted: true } },
+      },
+    });
+
+    // Query this student's wrong questions summary
+    const wrongCount = await prisma.wrongQuestionRecord.count({
+      where: { userId: studentId },
+    });
+    const unresolvedCount = await prisma.wrongQuestionRecord.count({
+      where: { userId: studentId, masteryStatus: 'UNRESOLVED' },
+    });
+
+    return {
+      student: {
+        id: enrollment.student.id,
+        email: enrollment.student.email,
+        displayName: enrollment.student.displayName,
+        seatNumber: enrollment.seatNumber,
+        joinedAt: enrollment.joinedAt.toISOString(),
+      },
+      class: {
+        id: targetClass.id,
+        name: targetClass.name,
+      },
+      exams: {
+        totalTaken: examAttempts.length,
+        history: examAttempts.map((e) => ({
+          id: e.id,
+          paperTitle: e.examPaper.title,
+          score: e.score !== null ? Number(e.score) : null,
+          isPassed: e.isPassed,
+          correctCount: e.correctCount,
+          wrongCount: e.wrongCount,
+          submittedAt: e.submittedAt?.toISOString() || null,
+        })),
+      },
+      practicals: practicalProgress.map((p) => ({
+        taskId: p.taskId,
+        taskNumber: p.task.taskNumber,
+        taskTitle: p.task.title,
+        version: p.version,
+        completedStepsCount: p.stepProgresses.length,
+        hasSavedCode: Boolean(p.savedHtmlCode || p.savedCssCode || p.savedJsCode),
+        lastPracticedAt: p.lastPracticedAt?.toISOString() || null,
+      })),
+      wrongQuestions: {
+        total: wrongCount,
+        unresolved: unresolvedCount,
+      },
+    };
+  }
 }
 
 export const classroomService = new ClassroomService();
