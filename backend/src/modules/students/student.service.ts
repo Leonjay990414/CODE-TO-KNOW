@@ -2,7 +2,7 @@ import { prisma } from '../../config/database.js';
 import { OwnershipActor } from '../../utils/ownership.js';
 import { NotFoundError } from '../../utils/errors.js';
 import { logAuditEvent } from '../../utils/audit.js';
-import { UpdateStudentProfileInput } from './student.schema.js';
+import { UpdateStudentProfileInput, RecordStudyTimeInput } from './student.schema.js';
 
 export class StudentService {
   /**
@@ -334,6 +334,393 @@ export class StudentService {
     });
 
     return updatedUser;
+  }
+
+  /**
+   * Records student active study time with atomic increment to prevent overwrite/overflow.
+   * Clamped to a maximum of 86,400 seconds (24 hours) per day to prevent overflow/abuse.
+   */
+  async recordStudyTime(actor: OwnershipActor, input: RecordStudyTimeInput) {
+    const studyDate = input.date || new Date().toISOString().slice(0, 10);
+    const moduleType = input.moduleType;
+    const durationSeconds = input.durationSeconds;
+    const MAX_DAILY_SECONDS = 86400;
+
+    // Check existing daily total for this module to enforce daily ceiling
+    const existing = await prisma.studyTimeLog.findUnique({
+      where: {
+        userId_studyDate_moduleType: {
+          userId: actor.id,
+          studyDate,
+          moduleType,
+        },
+      },
+    });
+
+    const currentSeconds = existing?.durationSeconds || 0;
+    const allowedIncrement = Math.max(0, Math.min(durationSeconds, MAX_DAILY_SECONDS - currentSeconds));
+
+    let record;
+    if (existing) {
+      record = await prisma.studyTimeLog.update({
+        where: { id: existing.id },
+        data: {
+          durationSeconds: currentSeconds + allowedIncrement,
+        },
+      });
+    } else {
+      record = await prisma.studyTimeLog.create({
+        data: {
+          userId: actor.id,
+          studyDate,
+          moduleType,
+          durationSeconds: allowedIncrement,
+        },
+      });
+    }
+
+    const summary = await this.getStudyTimeSummary(actor);
+
+    return {
+      record: {
+        id: record.id,
+        studyDate: record.studyDate,
+        moduleType: record.moduleType,
+        durationSeconds: record.durationSeconds,
+      },
+      summary,
+    };
+  }
+
+  /**
+   * Retrieves aggregated study time summary across modules, daily logs, and 7-day window.
+   */
+  async getStudyTimeSummary(actor: OwnershipActor) {
+    const logs = await prisma.studyTimeLog.findMany({
+      where: { userId: actor.id },
+      orderBy: { studyDate: 'desc' },
+    });
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    let totalSeconds = 0;
+    let weeklySeconds = 0;
+    const byModule: Record<string, number> = {
+      THEORY: 0,
+      PRACTICAL: 0,
+      MOCK_EXAM: 0,
+      AI_COACH: 0,
+    };
+
+    const dailyMap = new Map<string, number>();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      dailyMap.set(d, 0);
+    }
+
+    logs.forEach((log) => {
+      totalSeconds += log.durationSeconds;
+      if (log.studyDate >= sevenDaysAgo) {
+        weeklySeconds += log.durationSeconds;
+      }
+      if (byModule[log.moduleType] !== undefined) {
+        byModule[log.moduleType] += log.durationSeconds;
+      } else {
+        byModule[log.moduleType] = log.durationSeconds;
+      }
+
+      if (dailyMap.has(log.studyDate)) {
+        dailyMap.set(log.studyDate, (dailyMap.get(log.studyDate) || 0) + log.durationSeconds);
+      }
+    });
+
+    const dailyLogs = Array.from(dailyMap.entries()).map(([date, seconds]) => ({
+      date,
+      seconds,
+      minutes: Math.round((seconds / 60) * 10) / 10,
+    }));
+
+    return {
+      totalSeconds,
+      totalHours: Math.round((totalSeconds / 3600) * 10) / 10,
+      weeklySeconds,
+      weeklyHours: Math.round((weeklySeconds / 3600) * 10) / 10,
+      byModule,
+      dailyLogs,
+    };
+  }
+
+  /**
+   * Dynamic learning progress & analytics across the 4 official work items (605 questions),
+   * study time breakdown, mock exam readiness, and real wrong questions state.
+   */
+  async getProgressAnalytics(actor: OwnershipActor) {
+    // 1. Fetch official subjects with questions count
+    const subjects = await prisma.subject.findMany({
+      orderBy: { code: 'asc' },
+      include: {
+        _count: {
+          select: { questions: true },
+        },
+      },
+    });
+
+    // 2. Fetch student's persisted unit progress
+    const unitProgresses = await prisma.unitProgress.findMany({
+      where: { userId: actor.id },
+    });
+    const unitProgressMap = new Map<string, (typeof unitProgresses)[0]>();
+    unitProgresses.forEach((up) => unitProgressMap.set(up.subjectId, up));
+
+    // 3. Fetch student's exam question answers
+    const examAttempts = await prisma.examAttempt.findMany({
+      where: { userId: actor.id, submittedAt: { not: null } },
+      select: {
+        id: true,
+        score: true,
+        isPassed: true,
+        answerSnapshots: {
+          select: {
+            questionId: true,
+            isCorrect: true,
+            question: {
+              select: {
+                subjectId: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 4. Fetch wrong questions
+    const wrongQuestions = await prisma.wrongQuestionRecord.findMany({
+      where: { userId: actor.id },
+      include: {
+        question: {
+          select: { subjectId: true },
+        },
+      },
+    });
+
+    // Track unique question outcomes per subject to guarantee strict consistency
+    const subjectStatsMap = new Map<
+      string,
+      {
+        attemptedQuestionIds: Set<string>;
+        correctQuestionIds: Set<string>;
+        wrongQuestionIds: Set<string>;
+      }
+    >();
+
+    subjects.forEach((s) => {
+      subjectStatsMap.set(s.id, {
+        attemptedQuestionIds: new Set<string>(),
+        correctQuestionIds: new Set<string>(),
+        wrongQuestionIds: new Set<string>(),
+      });
+    });
+
+    // Map each question to its subjectId
+    const questionSubjectMap = new Map<string, string>();
+    const activeUnresolvedWrongSet = new Set<string>();
+    const masteredWrongSet = new Set<string>();
+
+    wrongQuestions.forEach((wq) => {
+      questionSubjectMap.set(wq.questionId, wq.question.subjectId);
+      if (wq.masteryStatus === 'MASTERED') {
+        masteredWrongSet.add(wq.questionId);
+      } else {
+        activeUnresolvedWrongSet.add(wq.questionId);
+      }
+    });
+
+    const examCorrectSet = new Set<string>();
+    const examAttemptedSet = new Set<string>();
+
+    examAttempts.forEach((attempt) => {
+      attempt.answerSnapshots.forEach((ans: any) => {
+        examAttemptedSet.add(ans.questionId);
+        questionSubjectMap.set(ans.questionId, ans.question.subjectId);
+        if (ans.isCorrect) {
+          examCorrectSet.add(ans.questionId);
+        }
+      });
+    });
+
+    // Merge all unique attempted questions
+    const allAttemptedQuestionIds = new Set<string>([
+      ...Array.from(activeUnresolvedWrongSet),
+      ...Array.from(masteredWrongSet),
+      ...Array.from(examAttemptedSet),
+    ]);
+
+    allAttemptedQuestionIds.forEach((qId) => {
+      const subjectId = questionSubjectMap.get(qId);
+      if (!subjectId) return;
+      const stats = subjectStatsMap.get(subjectId);
+      if (!stats) return;
+
+      stats.attemptedQuestionIds.add(qId);
+
+      // Mutually exclusive status determination:
+      // If actively in wrong questions as UNRESOLVED or REVIEWING -> marked wrong/weakness
+      // Else if MASTERED or answered correctly in exams -> marked correct
+      // Else -> marked wrong
+      if (activeUnresolvedWrongSet.has(qId)) {
+        stats.wrongQuestionIds.add(qId);
+      } else if (masteredWrongSet.has(qId) || examCorrectSet.has(qId)) {
+        stats.correctQuestionIds.add(qId);
+      } else {
+        stats.wrongQuestionIds.add(qId);
+      }
+    });
+
+    let totalOfficialQuestions = 0;
+    let totalUniqueAttempted = 0;
+    let totalUniqueCorrect = 0;
+
+    const subjectsAnalytics = subjects.map((sub) => {
+      const totalQuestions = sub._count.questions;
+      totalOfficialQuestions += totalQuestions;
+
+      const stats = subjectStatsMap.get(sub.id) || {
+        attemptedQuestionIds: new Set<string>(),
+        correctQuestionIds: new Set<string>(),
+        wrongQuestionIds: new Set<string>(),
+      };
+
+      const up = unitProgressMap.get(sub.id);
+      // Take the higher value between calculated unique attempted questions and unit progress count
+      const completedQuestions = Math.max(stats.attemptedQuestionIds.size, up?.completedQuestions || 0);
+      const correctCount = stats.correctQuestionIds.size;
+      const wrongCount = stats.wrongQuestionIds.size;
+
+      totalUniqueAttempted += completedQuestions;
+      totalUniqueCorrect += correctCount;
+
+      let accuracyRate = 0;
+      if (completedQuestions > 0) {
+        accuracyRate = Math.round((correctCount / completedQuestions) * 100) / 100;
+      } else if (up && up.accuracyRate > 0) {
+        accuracyRate = up.accuracyRate;
+      }
+
+      // Mastery rate is percentage of total questions in this subject that have been mastered/completed accurately
+      const masteryRate =
+        totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 1000) / 10 : 0;
+
+      let status = 'NOT_STARTED';
+      if (completedQuestions >= totalQuestions && accuracyRate >= 0.8) {
+        status = 'MASTERED';
+      } else if (completedQuestions > 0) {
+        status = 'IN_PROGRESS';
+      }
+
+      const workNumber = sub.code.split('-')[1] || '01';
+
+      return {
+        id: sub.id,
+        code: sub.code,
+        workNumber,
+        title: sub.title,
+        totalQuestions,
+        completedQuestions,
+        correctCount,
+        wrongCount,
+        accuracyRate,
+        masteryRate,
+        status,
+        lastStudiedAt: up?.lastStudiedAt?.toISOString() || null,
+      };
+    });
+
+    const completionRate =
+      totalOfficialQuestions > 0
+        ? Math.round((totalUniqueAttempted / totalOfficialQuestions) * 1000) / 10
+        : 0;
+
+    const overallAccuracy =
+      totalUniqueAttempted > 0
+        ? Math.round((totalUniqueCorrect / totalUniqueAttempted) * 1000) / 10
+        : null;
+
+    // Study Time
+    const studyTime = await this.getStudyTimeSummary(actor);
+
+    // Exam statistics
+    const completedExams = examAttempts.filter((e) => e.score !== null);
+    const scores = completedExams.map((e) => Number(e.score));
+    const highestExamScore = scores.length > 0 ? Math.max(...scores) : null;
+    const recentScore = scores.length > 0 ? scores[0] : null;
+    const passedExamsCount = completedExams.filter((e) => e.isPassed).length;
+
+    // Practical tasks completion
+    const practicalProgress = await prisma.practicalProgress.findMany({
+      where: { userId: actor.id },
+      include: {
+        stepProgresses: { select: { isCompleted: true } },
+      },
+    });
+
+    const practicalTasksCompletedVA = practicalProgress.filter(
+      (p) => p.version === 'VERSION_A' && p.status === 'COMPLETED'
+    ).length;
+    const practicalTasksCompletedVB = practicalProgress.filter(
+      (p) => p.version === 'VERSION_B' && p.status === 'COMPLETED'
+    ).length;
+
+    // Wrong questions stats
+    const wrongStats = {
+      total: wrongQuestions.length,
+      unresolved: wrongQuestions.filter((q) => q.masteryStatus === 'UNRESOLVED').length,
+      reviewing: wrongQuestions.filter((q) => q.masteryStatus === 'REVIEWING').length,
+      mastered: wrongQuestions.filter((q) => q.masteryStatus === 'MASTERED').length,
+    };
+
+    // Recommended focus
+    let recommendedSubject = subjectsAnalytics.find((s) => s.status === 'IN_PROGRESS' && s.accuracyRate < 0.7);
+    if (!recommendedSubject) {
+      recommendedSubject = subjectsAnalytics.find((s) => s.status === 'NOT_STARTED');
+    }
+    if (!recommendedSubject) {
+      recommendedSubject = [...subjectsAnalytics].sort((a, b) => a.masteryRate - b.masteryRate)[0];
+    }
+
+    return {
+      overview: {
+        totalOfficialQuestions,
+        totalAttempted: totalUniqueAttempted,
+        completionRate,
+        overallAccuracy,
+        totalStudyHours: studyTime.totalHours,
+        weeklyStudyHours: studyTime.weeklyHours,
+        highestExamScore,
+        recentScore,
+        totalExamsTaken: completedExams.length,
+        passedExamsCount,
+        practicalTasksCompletedVA,
+        practicalTasksCompletedVB,
+      },
+      subjects: subjectsAnalytics,
+      studyTime,
+      wrongStats,
+      recommendedFocus: recommendedSubject
+        ? {
+            subjectId: recommendedSubject.id,
+            subjectCode: recommendedSubject.code,
+            subjectTitle: recommendedSubject.title,
+            workNumber: recommendedSubject.workNumber,
+            reason:
+              recommendedSubject.status === 'NOT_STARTED'
+                ? '此工作項目尚未開始研讀，建議優先展開練習'
+                : `目前正確率為 ${Math.round(recommendedSubject.accuracyRate * 100)}%，建議加強練習以消除盲點`,
+          }
+        : null,
+    };
   }
 }
 

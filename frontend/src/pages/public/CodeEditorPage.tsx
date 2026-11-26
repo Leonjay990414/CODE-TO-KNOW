@@ -18,6 +18,7 @@ import { useNavigation } from '../../context/NavigationContext';
 import { OFFICIAL_PRACTICAL_TASKS, PracticalTaskDetail } from '../../data/practicalTasksData';
 import { practicalApi } from '../../services/api';
 import { PracticalSandboxPage } from '../student/practical';
+import { useStudyTimer } from '../../hooks/useStudyTimer';
 
 interface CodeEditorPageProps {
   onOpenTeacherApply?: () => void;
@@ -26,6 +27,9 @@ interface CodeEditorPageProps {
 export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApply }) => {
   const { openAuth } = useAuth();
   const { route, goToHome, goToCertifications, goToPracticalLearning } = useNavigation();
+
+  // Track active study time for practical exercises
+  useStudyTimer({ moduleType: 'PRACTICAL' });
 
   // Selected task id from route or default to 1
   const initialTaskId = route.taskId || 1;

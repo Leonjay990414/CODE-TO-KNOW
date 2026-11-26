@@ -20,3 +20,14 @@ export const WrongQuestionIdParamSchema = z.object({
 });
 
 export type WrongQuestionIdParam = z.infer<typeof WrongQuestionIdParamSchema>;
+
+export const RecordWrongQuestionInputSchema = z
+  .object({
+    questionId: z.string().uuid('題目 ID 必須為有效的 UUID'),
+    selectedAnswer: z.string().trim().max(10).optional(),
+    source: z.enum(['THEORY_PRACTICE', 'MOCK_EXAM', 'MANUAL']).default('THEORY_PRACTICE'),
+  })
+  .strict();
+
+export type RecordWrongQuestionInput = z.infer<typeof RecordWrongQuestionInputSchema>;
+

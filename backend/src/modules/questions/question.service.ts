@@ -33,14 +33,14 @@ export class QuestionService {
       orderBy: { code: 'asc' },
     });
 
-    return certifications.map((c) => ({
+    return certifications.map((c: any) => ({
       id: c.id,
       code: c.code,
       name: c.name,
       level: c.level,
       category: c.category,
       officialVersion: c.officialVersion,
-      subjects: c.subjects.map((s) => ({
+      subjects: c.subjects.map((s: any) => ({
         id: s.id,
         code: s.code,
         title: s.title,
@@ -258,7 +258,7 @@ export class QuestionService {
       sourceName: question.sourceName,
       sourceVersion: question.sourceVersion,
       certification: question.subject.certification,
-      options: question.options.map((opt) => ({
+      options: question.options.map((opt: any) => ({
         key: opt.key,
         text: opt.text,
       })),

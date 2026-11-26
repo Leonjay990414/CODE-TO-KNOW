@@ -1,7 +1,7 @@
 import { prisma } from '../../config/database.js';
 import { NotFoundError } from '../../utils/errors.js';
 import { assertResourceOwnership, OwnershipActor } from '../../utils/ownership.js';
-import { GetWrongQuestionsQuery } from './wrongQuestion.schema.js';
+import { GetWrongQuestionsQuery, RecordWrongQuestionInput } from './wrongQuestion.schema.js';
 
 export const MASTERY_CONSECUTIVE_THRESHOLD = 2;
 
@@ -218,6 +218,100 @@ export class WrongQuestionService {
       resolvedAt: updated.resolvedAt?.toISOString() || null,
       wrongCount: updated.wrongCount,
       lastAttemptAt: updated.lastAttemptAt.toISOString(),
+    };
+  }
+
+  /**
+   * Directly records a wrong question from theory practice, mock exam, or manual review.
+   * If record exists for (userId, questionId), increments wrongCount, resets consecutiveCorrectCount to 0,
+   * sets status to UNRESOLVED, isResolved to false, and updates lastUserAnswer.
+   * If new, creates record with initial count 1 and status UNRESOLVED.
+   */
+  async recordWrongQuestion(actor: OwnershipActor, input: RecordWrongQuestionInput) {
+    const question = await prisma.question.findUnique({
+      where: { id: input.questionId },
+      include: {
+        subject: true,
+        options: { orderBy: { displayOrder: 'asc' } },
+      },
+    });
+
+    if (!question) {
+      throw new NotFoundError('找不到指定的考題');
+    }
+
+    const now = new Date();
+    const normalizedAnswer = input.selectedAnswer ? input.selectedAnswer.trim().toUpperCase() : '';
+
+    const record = await prisma.wrongQuestionRecord.upsert({
+      where: {
+        userId_questionId: {
+          userId: actor.id,
+          questionId: question.id,
+        },
+      },
+      update: {
+        wrongCount: { increment: 1 },
+        consecutiveCorrectCount: 0,
+        masteryStatus: 'UNRESOLVED',
+        isResolved: false,
+        resolvedAt: null,
+        lastUserAnswer: normalizedAnswer,
+        lastAttemptAt: now,
+      },
+      create: {
+        userId: actor.id,
+        questionId: question.id,
+        wrongCount: 1,
+        consecutiveCorrectCount: 0,
+        masteryStatus: 'UNRESOLVED',
+        isResolved: false,
+        lastUserAnswer: normalizedAnswer,
+        firstWrongAt: now,
+        lastAttemptAt: now,
+      },
+    });
+
+    // Also update UnitProgress for this subject to record activity
+    try {
+      await prisma.unitProgress.upsert({
+        where: {
+          userId_subjectId: {
+            userId: actor.id,
+            subjectId: question.subjectId,
+          },
+        },
+        update: {
+          lastStudiedAt: now,
+        },
+        create: {
+          userId: actor.id,
+          subjectId: question.subjectId,
+          status: 'IN_PROGRESS',
+          completedQuestions: 1,
+          accuracyRate: 0.0,
+          lastStudiedAt: now,
+        },
+      });
+    } catch {
+      // Non-blocking for unit progress sync
+    }
+
+    return {
+      recordId: record.id,
+      questionId: record.questionId,
+      officialNumber: question.officialNumber,
+      sectionCode: question.subject.code.split('-')[1] || '01',
+      sectionTitle: question.subject.title,
+      questionText: question.questionText,
+      wrongCount: record.wrongCount,
+      consecutiveCorrectCount: record.consecutiveCorrectCount,
+      masteryStatus: record.masteryStatus,
+      isResolved: record.isResolved,
+      lastUserAnswer: record.lastUserAnswer,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      lastAttemptAt: record.lastAttemptAt.toISOString(),
     };
   }
 }

@@ -6,7 +6,9 @@ import {
   GetWrongQuestionsQuerySchema,
   PracticeWrongQuestionInputSchema,
   WrongQuestionIdParamSchema,
+  RecordWrongQuestionInputSchema,
 } from './wrongQuestion.schema.js';
+import { rejectForgedOwnerFields } from '../../utils/ownership.js';
 
 export const wrongQuestionRoutes = Router();
 
@@ -18,6 +20,14 @@ wrongQuestionRoutes.get(
   '/',
   validateQuery(GetWrongQuestionsQuerySchema),
   (req, res, next) => wrongQuestionController.getWrongQuestions(req, res, next)
+);
+
+// Record a wrong question from practice or exams
+wrongQuestionRoutes.post(
+  '/record',
+  rejectForgedOwnerFields(['id', 'userId', 'user'], { resourceName: '錯題紀錄' }),
+  validateBody(RecordWrongQuestionInputSchema),
+  (req, res, next) => wrongQuestionController.recordWrongQuestion(req, res, next)
 );
 
 // Practice/review a wrong question and update mastery state machine

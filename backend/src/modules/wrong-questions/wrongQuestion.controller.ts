@@ -31,6 +31,20 @@ export class WrongQuestionController {
       return next(error);
     }
   }
+
+  async recordWrongQuestion(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor = resolveExamActor(req);
+      const result = await wrongQuestionService.recordWrongQuestion(actor, req.body);
+      return res.status(201).json({
+        success: true,
+        data: result,
+        message: '錯題已成功收錄於錯題本',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export const wrongQuestionController = new WrongQuestionController();

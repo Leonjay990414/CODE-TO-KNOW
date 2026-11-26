@@ -137,7 +137,26 @@
 ### 2. 任務狀態總結
 - **已完成任務 (PASS)：** 12 項 (`DISC-001`, `PLAN-001`, `DB-001`, `DB-002`, `DB-003`, `DB-004`, `BE-006`, `BE-007`, `FE-005`, `FE-006`, `SEC-001`, `INT-001`～`INT-005`, `INT-005-R`, `INT-005-R 補充稽核`)。
 - **衝刺中垂直整合任務 (IN_PROGRESS)：** 0 項。
-- **五大垂直整合批次：** **全數圓滿交付 (100% 達成)**。
+- **六大垂直整合批次：** **全數圓滿交付 (100% 達成，INT-001 ~ INT-006 全數通過)**。
 - **預先標記 PASS 數量：** **0 項（嚴格遵守治理守則）**。
 - **任務代號重複數量：** **0 項（各分類獨立編號且唯一）**。
-- **INT-006 狀態宣告：** `INT-006`（個人化智慧學習教練）僅列為候選任務，**尚未開始、尚未核准、尚未完成**。明日工作方針應先全面盤點剩餘核心需求，再決定下一項正式任務。
+- **INT-006 狀態宣告：** `CTK-CORE-01-INT-006` 於 2026-11-26 圓滿完成垂直整合與端對端驗收，正式標記為 **PASS**。
+
+### 3. 2026-11-26 垂直整合第六批次成果紀錄 (CTK-CORE-01-INT-006)
+
+- **任務代號：** `CTK-CORE-01-INT-006`
+- **任務名稱：** 學生學習數據中心、研讀時長追蹤、工作項目進度與錯題本閉環整合
+- **治理狀態：** **PASS (100% 通過驗收)**
+- **交付與驗收詳情：**
+  - **INT-006-A (研讀時長真實追蹤)：** 實作 `POST /api/student/study-time`（防溢位 1~7200s、原子累加）與 `GET /api/student/study-time`（總時長、7 日分佈、模組拆解）；前端自訂 Hook `useStudyTimer` 追蹤活躍標籤並非同步回報。
+  - **INT-006-B (四大工作項目動態進度)：** 串接官方 17300 考科四項工作項目（236, 233, 71, 65 題，全量 605 題），動態核算答題數與掌握度，徹底拔除硬編碼假數值。
+  - **INT-006-C (錯題本閉環)：** 實作 `POST /api/wrong-questions/record`，刷題與模考答錯自動收錄至 PostgreSQL 錯題本；流轉狀態機（UNRESOLVED → REVIEWING → 2連對 MASTERED 攻克）。
+  - **INT-006-D (學習歷程頁面整合)：** 全面重構 `LearningProgressPage.tsx`，支援骨架載入、空狀態、錯誤重試與在線即時複習核分 Modal。
+  - **安全與測試指標：**
+    - `int006-student-analytics-and-wrong-questions.test.ts`：7/7 測試 PASS (含 IDOR 防禦)。
+    - `int006-live-verification.ts`：PostgreSQL 17 容器實體驗證 100% 通過。
+    - 後端離線全量測試：27 個檔案、343 個測試案例全數 PASS。
+    - 前端 Vite Production Build 0 錯誤通過 (2.29s)。
+  - **詳細報告：** [CTK_CORE_01_INT_006_FINAL_ACCEPTANCE_REPORT.md](file:///c:/Users/user/Documents/CODE-TO-KNOW/docs/quality/CTK_CORE_01_INT_006_FINAL_ACCEPTANCE_REPORT.md)。
+
+

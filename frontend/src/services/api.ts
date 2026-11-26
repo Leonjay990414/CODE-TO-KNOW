@@ -1366,6 +1366,17 @@ export const wrongQuestionApi = {
       body: JSON.stringify({ answer }),
     });
   },
+
+  recordWrongQuestion: async (data: {
+    questionId: string;
+    selectedAnswer?: string;
+    source?: 'THEORY_PRACTICE' | 'MOCK_EXAM' | 'MANUAL';
+  }) => {
+    return request<WrongQuestionRecordItem>('/wrong-questions/record', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 export interface PracticalTaskSummaryItem {
@@ -1599,6 +1610,76 @@ export interface UpdateStudentProfileBody {
   bio?: string | null;
 }
 
+export interface StudyTimeSummaryResponse {
+  totalSeconds: number;
+  totalHours: number;
+  weeklySeconds: number;
+  weeklyHours: number;
+  byModule: Record<string, number>;
+  dailyLogs: Array<{
+    date: string;
+    seconds: number;
+    minutes: number;
+  }>;
+}
+
+export interface StudyTimeRecordResponse {
+  record: {
+    id: string;
+    studyDate: string;
+    moduleType: string;
+    durationSeconds: number;
+  };
+  summary: StudyTimeSummaryResponse;
+}
+
+export interface SubjectAnalyticsItem {
+  id: string;
+  code: string;
+  workNumber: string;
+  title: string;
+  totalQuestions: number;
+  completedQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  accuracyRate: number;
+  masteryRate: number;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'MASTERED' | string;
+  lastStudiedAt: string | null;
+}
+
+export interface StudentProgressAnalyticsResponse {
+  overview: {
+    totalOfficialQuestions: number;
+    totalAttempted: number;
+    completionRate: number;
+    overallAccuracy: number | null;
+    totalStudyHours: number;
+    weeklyStudyHours: number;
+    highestExamScore: number | null;
+    recentScore: number | null;
+    totalExamsTaken: number;
+    passedExamsCount: number;
+    practicalTasksCompletedVA: number;
+    practicalTasksCompletedVB: number;
+  };
+  subjects: SubjectAnalyticsItem[];
+  studyTime: StudyTimeSummaryResponse;
+  wrongStats: {
+    total: number;
+    unresolved: number;
+    reviewing: number;
+    mastered: number;
+  };
+  recommendedFocus: {
+    subjectId: string;
+    subjectCode: string;
+    subjectTitle: string;
+    workNumber: string;
+    reason: string;
+  } | null;
+}
+
 export const studentApi = {
   getDashboard: async () => {
     return request<StudentDashboardResponse>('/student/dashboard', {
@@ -1610,6 +1691,29 @@ export const studentApi = {
     return request<{ id: string; email: string; displayName: string; avatarUrl?: string | null }>('/student/profile', {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  },
+
+  recordStudyTime: async (data: {
+    durationSeconds: number;
+    moduleType?: 'THEORY' | 'PRACTICAL' | 'MOCK_EXAM' | 'AI_COACH';
+    date?: string;
+  }) => {
+    return request<StudyTimeRecordResponse>('/student/study-time', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getStudyTime: async () => {
+    return request<StudyTimeSummaryResponse>('/student/study-time', {
+      method: 'GET',
+    });
+  },
+
+  getProgressAnalytics: async () => {
+    return request<StudentProgressAnalyticsResponse>('/student/progress-analytics', {
+      method: 'GET',
     });
   },
 };

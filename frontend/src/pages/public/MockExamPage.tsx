@@ -23,6 +23,7 @@ import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { examApi } from '../../services/api';
+import { useStudyTimer } from '../../hooks/useStudyTimer';
 import {
   MockExamSession,
   createMockExamSession,
@@ -51,6 +52,9 @@ export const MockExamPage: React.FC<MockExamPageProps> = ({ onOpenTeacherApply }
 
   // Exam session state
   const [session, setSession] = useState<MockExamSession | null>(null);
+
+  // Track active study time during mock exam
+  useStudyTimer({ moduleType: 'MOCK_EXAM', enabled: Boolean(session && !session.isSubmitted) });
   const [activeQuestionIdx, setActiveQuestionIdx] = useState<number>(0);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(6000);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);

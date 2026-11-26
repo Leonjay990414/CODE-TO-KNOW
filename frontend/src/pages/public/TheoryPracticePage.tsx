@@ -31,7 +31,8 @@ import {
   THEORY_QUESTIONS_NOTE,
 } from '../../data/theoryQuestionsData';
 import { SourceBadge } from '../../components/SourceBadge';
-import { questionApi } from '../../services/api';
+import { questionApi, wrongQuestionApi, isDemoMode } from '../../services/api';
+import { useStudyTimer } from '../../hooks/useStudyTimer';
 import {
   recordWrongAttempt,
   recordCorrectAttempt,
@@ -58,6 +59,9 @@ interface TheoryPracticePageProps {
 export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTeacherApply }) => {
   const { user, openAuth } = useAuth();
   const { goToHome, goToStudentDashboard, goToCertifications, goToMockExam } = useNavigation();
+
+  // Track active learning time on theory practice
+  useStudyTimer({ moduleType: 'THEORY' });
 
   const userId = user?.id || 'guest-anonymous';
 
@@ -200,6 +204,15 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
     if (isAnsCorrect) {
       recordCorrectAttempt(userId, currentQ.id);
     } else {
+      if (user && user.id !== 'demo-student' && !isDemoMode) {
+        void wrongQuestionApi
+          .recordWrongQuestion({
+            questionId: currentQ.id,
+            selectedAnswer: selected,
+            source: 'THEORY_PRACTICE',
+          })
+          .catch((err) => console.warn('後端錯題本寫入跳過：', err));
+      }
       const optMap: { A: string; B: string; C: string; D: string } = {
         A: currentQ.options.find((o) => o.key === 'A')?.text || '',
         B: currentQ.options.find((o) => o.key === 'B')?.text || '',
@@ -289,6 +302,15 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
     if (isAnsCorrect) {
       recordCorrectAttempt(userId, item.questionId);
     } else {
+      if (user && user.id !== 'demo-student' && !isDemoMode) {
+        void wrongQuestionApi
+          .recordWrongQuestion({
+            questionId: item.questionId,
+            selectedAnswer: chosen,
+            source: 'THEORY_PRACTICE',
+          })
+          .catch((err) => console.warn('後端錯題本寫入跳過：', err));
+      }
       recordWrongAttempt(userId, {
         questionId: item.questionId,
         certificationId: item.certificationId,
@@ -336,6 +358,15 @@ export const TheoryPracticePage: React.FC<TheoryPracticePageProps> = ({ onOpenTe
     if (chosen === currentReviewQ.correctAnswer) {
       recordCorrectAttempt(userId, currentReviewQ.questionId);
     } else {
+      if (user && user.id !== 'demo-student' && !isDemoMode) {
+        void wrongQuestionApi
+          .recordWrongQuestion({
+            questionId: currentReviewQ.questionId,
+            selectedAnswer: chosen,
+            source: 'THEORY_PRACTICE',
+          })
+          .catch((err) => console.warn('後端錯題本寫入跳過：', err));
+      }
       recordWrongAttempt(userId, {
         questionId: currentReviewQ.questionId,
         certificationId: currentReviewQ.certificationId,

@@ -43,6 +43,58 @@ export class StudentController {
       next(err);
     }
   }
+
+  async recordStudyTime(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const result = await studentService.recordStudyTime(actor, req.body);
+      return res.status(200).json({
+        success: true,
+        data: result,
+        message: '研讀時長已成功記錄',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getStudyTime(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const data = await studentService.getStudyTimeSummary(actor);
+      return res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getProgressAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const data = await studentService.getProgressAnalytics(actor);
+      return res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const studentController = new StudentController();
