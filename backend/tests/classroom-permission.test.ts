@@ -31,14 +31,14 @@ describe('Phase 9: Classroom Management Permission & Security Scoping Audit', ()
       const classEntry = PRISMA_MODEL_OWNERSHIP_INVENTORY.find((entry) => entry.model === 'Class');
       expect(classEntry).toBeDefined();
       expect(classEntry?.strategy).toBe('TEACHER_OR_ENROLLED');
-      expect(classEntry?.apiStatus).toBe('NOT_IMPLEMENTED');
+      expect(classEntry?.apiStatus).toBe('IMPLEMENTED');
     });
 
     it('verifies ClassEnrollment model is classified under TEACHER_OR_ENROLLED strategy', () => {
       const enrollmentEntry = PRISMA_MODEL_OWNERSHIP_INVENTORY.find((entry) => entry.model === 'ClassEnrollment');
       expect(enrollmentEntry).toBeDefined();
       expect(enrollmentEntry?.strategy).toBe('TEACHER_OR_ENROLLED');
-      expect(enrollmentEntry?.apiStatus).toBe('NOT_IMPLEMENTED');
+      expect(enrollmentEntry?.apiStatus).toBe('IMPLEMENTED');
     });
 
     it('prevents cross-tenant class manipulation: Teacher A cannot mutate Teacher B class', () => {

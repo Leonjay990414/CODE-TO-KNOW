@@ -6,13 +6,19 @@ import {
   Laptop,
   Smartphone,
   ShieldCheck,
+  Save,
+  Database,
+  CheckCheck,
+  Loader2,
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { OFFICIAL_PRACTICAL_TASKS, PracticalTaskDetail } from '../../data/practicalTasksData';
+import { practicalApi } from '../../services/api';
 import { PracticalSandboxPage } from '../student/practical';
+import { useStudyTimer } from '../../hooks/useStudyTimer';
 
 interface CodeEditorPageProps {
   onOpenTeacherApply?: () => void;
@@ -22,11 +28,15 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
   const { openAuth } = useAuth();
   const { route, goToHome, goToCertifications, goToPracticalLearning } = useNavigation();
 
+  // Track active study time for practical exercises
+  useStudyTimer({ moduleType: 'PRACTICAL' });
+
   // Selected task id from route or default to 1
   const initialTaskId = route.taskId || 1;
   const [selectedTaskId, setSelectedTaskId] = useState<number>(initialTaskId);
+  const [selectedVersion, setSelectedVersion] = useState<'VERSION_A' | 'VERSION_B'>('VERSION_A');
   const [editorMode, setEditorMode] = useState<'multipage' | 'single'>('multipage');
-  const [activeTab, setActiveTab] = useState<'html' | 'css'>('html');
+  const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [mobilePane, setMobilePane] = useState<'code' | 'preview'>('code');
 
@@ -35,19 +45,62 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
 
   const [htmlCode, setHtmlCode] = useState<string>(currentTask.defaultHtmlCode);
   const [cssCode, setCssCode] = useState<string>(currentTask.defaultCssCode);
+  const [jsCode, setJsCode] = useState<string>(
+    currentTask.defaultJsCode || '/* 官方檢定 JavaScript 互動腳本區 */\nconsole.log("CODE TO KNOW 沙盒已就緒");'
+  );
   const [previewKey, setPreviewKey] = useState<number>(0);
 
-  // When task changes, update codes
+  // Database synchronization state
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [isLoadedFromDb, setIsLoadedFromDb] = useState<boolean>(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
+  // When task or version changes, try loading from DB or fallback to default
   useEffect(() => {
+    let isMounted = true;
     const t = OFFICIAL_PRACTICAL_TASKS.find((item) => item.id === selectedTaskId) || OFFICIAL_PRACTICAL_TASKS[0];
+
+    // Set default baseline
     setHtmlCode(t.defaultHtmlCode);
     setCssCode(t.defaultCssCode);
-    setPreviewKey((k) => k + 1);
-  }, [selectedTaskId]);
+    setJsCode(t.defaultJsCode || '/* 官方檢定 JavaScript 互動腳本區 */\nconsole.log("CODE TO KNOW 沙盒已就緒");');
+    setIsLoadedFromDb(false);
+    setSaveStatus('idle');
+
+    // Attempt to load remote saved code from PostgreSQL 17
+    practicalApi
+      .getSavedCode(selectedTaskId, selectedVersion)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res && res.success && res.data && res.data.hasSavedCode) {
+          if (res.data.savedHtmlCode) setHtmlCode(res.data.savedHtmlCode);
+          if (res.data.savedCssCode) setCssCode(res.data.savedCssCode);
+          if (res.data.savedJsCode !== undefined && res.data.savedJsCode !== null) {
+            setJsCode(res.data.savedJsCode);
+          }
+          setIsLoadedFromDb(true);
+          if (res.data.lastPracticedAt) {
+            setLastSavedTime(new Date(res.data.lastPracticedAt).toLocaleTimeString('zh-TW'));
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback to default code quietly
+      })
+      .finally(() => {
+        if (isMounted) setPreviewKey((k) => k + 1);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTaskId, selectedVersion]);
 
   const handleReset = () => {
     setHtmlCode(currentTask.defaultHtmlCode);
     setCssCode(currentTask.defaultCssCode);
+    setJsCode(currentTask.defaultJsCode || '/* 官方檢定 JavaScript 互動腳本區 */\nconsole.log("CODE TO KNOW 沙盒已就緒");');
+    setIsLoadedFromDb(false);
     setPreviewKey((k) => k + 1);
   };
 
@@ -55,7 +108,31 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
     setPreviewKey((k) => k + 1);
   };
 
-  // Compile combined HTML document with safe isolated styles
+  const handleSaveToDb = async () => {
+    setSaveStatus('saving');
+    try {
+      const res = await practicalApi.saveProgress(selectedTaskId, {
+        version: selectedVersion,
+        savedHtmlCode: htmlCode,
+        savedCssCode: cssCode,
+        savedJsCode: jsCode,
+        status: 'IN_PROGRESS',
+      });
+      if (res && res.success) {
+        setSaveStatus('saved');
+        setIsLoadedFromDb(true);
+        setLastSavedTime(new Date().toLocaleTimeString('zh-TW'));
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (err) {
+      console.error('儲存至資料庫失敗:', err);
+      setSaveStatus('error');
+    }
+  };
+
+  // Compile combined HTML document with safe isolated styles and scripts
   // Inject CSP into iframe head to strictly isolate from parent environment
   const combinedSrcDoc = useMemo(() => {
     return `<!DOCTYPE html>
@@ -71,9 +148,16 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
 </head>
 <body>
   ${htmlCode.replace(/<!DOCTYPE html>[\s\S]*?<body[^>]*>/i, '').replace(/<\/body>[\s\S]*?<\/html>/i, '')}
+  <script>
+    try {
+      ${jsCode}
+    } catch (err) {
+      console.warn("沙盒腳本執行警告:", err);
+    }
+  </script>
 </body>
 </html>`;
-  }, [htmlCode, cssCode]);
+  }, [htmlCode, cssCode, jsCode]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-base)' }}>
@@ -207,51 +291,151 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
               gap: '12px',
             }}
           >
-            {/* Left: Code Tabs */}
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => setActiveTab('html')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-xs)',
-                  border: 'none',
-                  backgroundColor: activeTab === 'html' ? '#526B7B' : 'transparent',
-                  color: activeTab === 'html' ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>HTML 骨架標籤</span>
-              </button>
+            {/* Left: Code Tabs & Version Switcher */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {/* Code Language Tabs */}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('html')}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-xs)',
+                    border: 'none',
+                    backgroundColor: activeTab === 'html' ? '#526B7B' : 'transparent',
+                    color: activeTab === 'html' ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>HTML 骨架</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('css')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-xs)',
-                  border: 'none',
-                  backgroundColor: activeTab === 'css' ? '#526B7B' : 'transparent',
-                  color: activeTab === 'css' ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>CSS 樣式表</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('css')}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-xs)',
+                    border: 'none',
+                    backgroundColor: activeTab === 'css' ? '#526B7B' : 'transparent',
+                    color: activeTab === 'css' ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>CSS 樣式</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('js')}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-xs)',
+                    border: 'none',
+                    backgroundColor: activeTab === 'js' ? '#526B7B' : 'transparent',
+                    color: activeTab === 'js' ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>JS 腳本</span>
+                </button>
+              </div>
+
+              {/* Version Isolation Switcher */}
+              <div style={{ display: 'flex', background: 'var(--surface-base)', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)', padding: '2px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVersion('VERSION_A')}
+                  title="版本 A：官方素材與標準規範版"
+                  style={{
+                    padding: '3px 8px',
+                    border: 'none',
+                    borderRadius: '2px',
+                    backgroundColor: selectedVersion === 'VERSION_A' ? '#D9E2EA' : 'transparent',
+                    color: selectedVersion === 'VERSION_A' ? '#26343D' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: selectedVersion === 'VERSION_A' ? 700 : 500,
+                  }}
+                >
+                  版本 A (官方素材)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVersion('VERSION_B')}
+                  title="版本 B：影音串流教學版"
+                  style={{
+                    padding: '3px 8px',
+                    border: 'none',
+                    borderRadius: '2px',
+                    backgroundColor: selectedVersion === 'VERSION_B' ? '#D9E2EA' : 'transparent',
+                    color: selectedVersion === 'VERSION_B' ? '#26343D' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: selectedVersion === 'VERSION_B' ? 700 : 500,
+                  }}
+                >
+                  版本 B (影音教學)
+                </button>
+              </div>
             </div>
 
             {/* Right: Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Database Sync Status Badge */}
+              {isLoadedFromDb && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: '#E8F5E9',
+                    color: '#2E7D32',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Database size={12} />
+                  <span>已載入資料庫保存代碼 {lastSavedTime ? `(${lastSavedTime})` : ''}</span>
+                </span>
+              )}
+
+              {saveStatus === 'saved' && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: '#E8F5E9',
+                    color: '#2E7D32',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 600,
+                  }}
+                >
+                  <CheckCheck size={12} />
+                  <span>已成功保存至 PG17！</span>
+                </span>
+              )}
+
               {/* Viewport Width Switcher */}
               <div style={{ display: 'flex', background: 'var(--surface-base)', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)', padding: '2px' }}>
                 <button
@@ -304,6 +488,24 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
               >
                 <RotateCcw size={13} />
                 <span>重設骨架</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={handleSaveToDb}
+                disabled={saveStatus === 'saving'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  borderColor: '#526B7B',
+                  color: '#26343D',
+                  fontWeight: 600,
+                }}
+              >
+                {saveStatus === 'saving' ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                <span>{saveStatus === 'saving' ? '保存中...' : '保存至資料庫'}</span>
               </button>
 
               <button
@@ -375,10 +577,14 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
             {/* Left Column: Code Editor */}
             <div className="editor-pane-code" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border-default)', height: '100%', minHeight: '380px' }}>
               <div style={{ backgroundColor: '#26343D', color: '#D9E2EA', padding: '8px 16px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                {activeTab === 'html' ? 'HTML Editor (可即時編輯)' : 'CSS Editor (可即時編輯)'}
+                {activeTab === 'html'
+                  ? 'HTML Editor (可即時編輯)'
+                  : activeTab === 'css'
+                  ? 'CSS Editor (可即時編輯)'
+                  : 'JavaScript Editor (可即時編輯)'}
               </div>
 
-              {activeTab === 'html' ? (
+              {activeTab === 'html' && (
                 <textarea
                   value={htmlCode}
                   onChange={(e) => setHtmlCode(e.target.value)}
@@ -398,7 +604,9 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
                   spellCheck={false}
                   aria-label="HTML 編輯區"
                 />
-              ) : (
+              )}
+
+              {activeTab === 'css' && (
                 <textarea
                   value={cssCode}
                   onChange={(e) => setCssCode(e.target.value)}
@@ -417,6 +625,28 @@ export const CodeEditorPage: React.FC<CodeEditorPageProps> = ({ onOpenTeacherApp
                   }}
                   spellCheck={false}
                   aria-label="CSS 編輯區"
+                />
+              )}
+
+              {activeTab === 'js' && (
+                <textarea
+                  value={jsCode}
+                  onChange={(e) => setJsCode(e.target.value)}
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    padding: '16px',
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    fontSize: '13px',
+                    lineHeight: 1.6,
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'none',
+                    backgroundColor: '#FAF9F5',
+                    color: '#26343D',
+                  }}
+                  spellCheck={false}
+                  aria-label="JavaScript 編輯區"
                 />
               )}
             </div>

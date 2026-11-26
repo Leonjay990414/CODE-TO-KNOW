@@ -1,4 +1,4 @@
-﻿export interface EmailProvider {
+export interface EmailProvider {
   sendVerificationEmail(email: string, token: string): Promise<boolean>;
   sendPasswordResetEmail(email: string, token: string): Promise<boolean>;
 }
@@ -44,6 +44,53 @@ export class DisabledEmailProvider implements EmailProvider {
   ): Promise<boolean> {
     console.warn('[EMAIL DISABLED] Password reset email service is unavailable.');
     return false;
+  }
+}
+
+/**
+ * Test & isolated mock provider.
+ * Allows simulating success, failures, rejections and tracking dispatched mock emails.
+ * Never connects to external network.
+ */
+export class MockEmailProvider implements EmailProvider {
+  public sentMails: { email: string; token: string; type: 'verification' | 'password_reset' }[] = [];
+  public shouldSucceed: boolean = true;
+  public simulateDelayMs: number = 0;
+  public failureError?: Error;
+
+  async sendVerificationEmail(email: string, token: string): Promise<boolean> {
+    if (this.simulateDelayMs > 0) {
+      await new Promise((r) => setTimeout(r, this.simulateDelayMs));
+    }
+    if (this.failureError) {
+      throw this.failureError;
+    }
+    if (!this.shouldSucceed) {
+      return false;
+    }
+    this.sentMails.push({ email, token, type: 'verification' });
+    return true;
+  }
+
+  async sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+    if (this.simulateDelayMs > 0) {
+      await new Promise((r) => setTimeout(r, this.simulateDelayMs));
+    }
+    if (this.failureError) {
+      throw this.failureError;
+    }
+    if (!this.shouldSucceed) {
+      return false;
+    }
+    this.sentMails.push({ email, token, type: 'password_reset' });
+    return true;
+  }
+
+  clear(): void {
+    this.sentMails = [];
+    this.shouldSucceed = true;
+    this.simulateDelayMs = 0;
+    this.failureError = undefined;
   }
 }
 

@@ -98,6 +98,35 @@ export class EmailQueueService {
   }
 
   /**
+   * Checks if daily sent quota limit has been exceeded.
+   */
+  public isQuotaExceeded(): boolean {
+    return this.dailySentCount >= this.config.dailyQuotaLimit;
+  }
+
+  /**
+   * Manually record a sent email (e.g. from direct dispatch).
+   */
+  public recordSent(): void {
+    this.dailySentCount++;
+    const threshold = this.config.dailyQuotaLimit * this.config.alarmThresholdRate;
+    if (this.dailySentCount >= threshold && !this.quotaAlarmTriggered) {
+      this.quotaAlarmTriggered = true;
+      console.warn(
+        `[EMAIL QUOTA ALARM] Daily email volume reached ${this.dailySentCount}/${this.config.dailyQuotaLimit} (${(this.config.alarmThresholdRate * 100).toFixed(0)}% threshold).`
+      );
+    }
+  }
+
+  /**
+   * Resets the daily quota counter (for daily scheduled reset or test isolation).
+   */
+  public resetDailyQuota(): void {
+    this.dailySentCount = 0;
+    this.quotaAlarmTriggered = false;
+  }
+
+  /**
    * Enqueues a new email job into the queue.
    */
   public enqueue(payload: {
@@ -125,6 +154,24 @@ export class EmailQueueService {
       return {
         success: false,
         error: 'RECIPIENT_SUPPRESSED',
+      };
+    }
+
+    // Check daily quota limit
+    if (this.isQuotaExceeded()) {
+      this.auditLogs.push({
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        maskedRecipient: this.maskEmail(normalizedEmail),
+        category: payload.category,
+        subject: payload.subject,
+        status: 'FAILED',
+        attempts: 0,
+        timestamp: Date.now(),
+        error: 'Daily email quota limit reached.',
+      });
+      return {
+        success: false,
+        error: 'DAILY_QUOTA_EXCEEDED',
       };
     }
 
@@ -168,6 +215,14 @@ export class EmailQueueService {
       }
 
       if (job.nextRetryTime > now) {
+        remainingQueue.push(job);
+        continue;
+      }
+
+      if (this.isQuotaExceeded()) {
+        job.retryCount++;
+        job.error = 'Daily email quota limit reached.';
+        job.status = 'FAILED';
         remainingQueue.push(job);
         continue;
       }

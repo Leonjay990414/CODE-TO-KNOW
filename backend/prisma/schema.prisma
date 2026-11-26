@@ -365,21 +365,26 @@ model UnitProgress {
 }
 
 model WrongQuestionRecord {
-  id             String    @id @default(uuid())
-  userId         String
-  questionId     String
-  wrongCount     Int       @default(1)
-  lastUserAnswer String // e.g. 'A'
-  isResolved     Boolean   @default(false)
-  resolvedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                      String    @id @default(uuid())
+  userId                  String
+  questionId              String
+  wrongCount              Int       @default(1)
+  consecutiveCorrectCount Int       @default(0)
+  masteryStatus           String    @default("UNRESOLVED") // UNRESOLVED, REVIEWING, MASTERED
+  lastUserAnswer          String // e.g. 'A'
+  isResolved              Boolean   @default(false)
+  resolvedAt              DateTime?
+  firstWrongAt            DateTime  @default(now())
+  lastAttemptAt           DateTime  @default(now())
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId])
   @@index([userId, isResolved])
+  @@index([userId, masteryStatus])
   @@index([questionId])
 }
 
@@ -504,6 +509,7 @@ model PracticalTask {
   materialPath     String
   defaultHtmlCode  String   @db.Text
   defaultCssCode   String   @db.Text
+  defaultJsCode    String?  @db.Text
   status           String   @default("AVAILABLE") // AVAILABLE, MAINTENANCE
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -545,6 +551,7 @@ model PracticalProgress {
   practiceCount   Int       @default(1)
   savedHtmlCode   String?   @db.Text
   savedCssCode    String?   @db.Text
+  savedJsCode     String?   @db.Text
   lastPracticedAt DateTime  @default(now())
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
@@ -601,19 +608,20 @@ model ExamPaper {
 }
 
 model ExamAttempt {
-  id              String    @id @default(uuid())
-  userId          String
-  examPaperId     String
-  startedAt       DateTime  @default(now())
-  submittedAt     DateTime?
-  durationSeconds Int?
-  score           Float?
-  isPassed        Boolean?
-  correctCount    Int?
-  wrongCount      Int?
-  status          String    @default("IN_PROGRESS") // IN_PROGRESS, SUBMITTED, ABANDONED
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  userId              String
+  examPaperId         String
+  assignedQuestionIds String?   @db.Text
+  startedAt           DateTime  @default(now())
+  submittedAt         DateTime?
+  durationSeconds     Int?
+  score               Float?
+  isPassed            Boolean?
+  correctCount        Int?
+  wrongCount          Int?
+  status              String    @default("IN_PROGRESS") // IN_PROGRESS, SUBMITTED, ABANDONED
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   examPaper       ExamPaper            @relation(fields: [examPaperId], references: [id], onDelete: Restrict)

@@ -721,7 +721,84 @@ export const adminApi = {
       };
     }
   },
+
+  getOverview: async () => {
+    return request<PlatformOverviewResponse>('/admin/overview', {
+      method: 'GET',
+    });
+  },
+
+  listUsers: async (params?: { page?: number; limit?: number; search?: string; role?: string; status?: string }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.set('page', String(params.page));
+    if (params?.limit) queryParams.set('limit', String(params.limit));
+    if (params?.search) queryParams.set('search', params.search);
+    if (params?.role) queryParams.set('role', params.role);
+    if (params?.status) queryParams.set('status', params.status);
+
+    const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    return request<AdminUsersListResponse>(`/admin/users${queryStr}`, {
+      method: 'GET',
+    });
+  },
+
+  updateUserStatus: async (userId: string, status: 'ACTIVE' | 'SUSPENDED' | 'DISABLED') => {
+    return request<{ message: string; data: AdminUserItem }>(`/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  updateUserRole: async (userId: string, role: 'STUDENT' | 'TEACHER' | 'ADMIN', action: 'grant' | 'revoke') => {
+    return request<{ message: string; data: AdminUserItem }>(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role, action }),
+    });
+  },
 };
+
+export interface PlatformOverviewResponse {
+  users: {
+    total: number;
+    active: number;
+    students: number;
+    teachers: number;
+    admins: number;
+  };
+  classrooms: {
+    total: number;
+    active: number;
+  };
+  content: {
+    officialQuestionsCount: number;
+    examAttemptsTaken: number;
+    practicalPracticesCount: number;
+  };
+  governance: {
+    pendingTeacherApplications: number;
+    totalAuditLogs: number;
+  };
+}
+
+export interface AdminUserItem {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  status: string;
+  createdAt: string;
+  roles: string[];
+  activityCounts?: {
+    exams: number;
+    practicals: number;
+    enrolledClasses: number;
+  };
+}
+
+export interface AdminUsersListResponse {
+  users: AdminUserItem[];
+  pagination: PaginationMeta;
+}
 
 export interface ClassroomItem {
   id: string;
@@ -939,6 +1016,704 @@ export const classroomApi = {
     }
     return request<{ success: boolean; message: string }>(`/classrooms/${classId}/members/${studentId}`, {
       method: 'DELETE',
+    });
+  },
+
+  getClassroomAnalytics: async (classId: string) => {
+    return request<ClassroomAnalyticsResponse>(`/classrooms/${classId}/analytics`, {
+      method: 'GET',
+    });
+  },
+
+  getStudentClassroomProgress: async (classId: string, studentId: string) => {
+    return request<StudentClassroomProgressResponse>(`/classrooms/${classId}/students/${studentId}/progress`, {
+      method: 'GET',
+    });
+  },
+};
+
+export interface ClassroomAnalyticsResponse {
+  classId: string;
+  className: string;
+  certificationName: string;
+  totalStudents: number;
+  activeStudentsCount: number;
+  examStats: {
+    totalExamsTaken: number;
+    passedExamsCount: number;
+    passRate: number;
+    averageScore: number | null;
+    highestScore: number | null;
+    lowestScore: number | null;
+  };
+  practicalStats: {
+    averageCompletedStepsVA: number;
+    averageCompletedStepsVB: number;
+    studentsWithPracticalRecords: number;
+  };
+  wrongQuestionStats: {
+    totalUnresolved: number;
+    totalMastered: number;
+  };
+}
+
+export interface StudentClassroomProgressResponse {
+  student: {
+    id: string;
+    email: string;
+    displayName: string;
+    seatNumber?: string | null;
+    joinedAt: string;
+  };
+  class: {
+    id: string;
+    name: string;
+  };
+  exams: {
+    totalTaken: number;
+    history: Array<{
+      id: string;
+      paperTitle: string;
+      score: number | null;
+      isPassed: boolean;
+      correctCount: number;
+      wrongCount: number;
+      submittedAt: string | null;
+    }>;
+  };
+  practicals: Array<{
+    taskId: string;
+    taskNumber: number;
+    taskTitle: string;
+    version: string;
+    completedStepsCount: number;
+    hasSavedCode: boolean;
+    lastPracticedAt: string | null;
+  }>;
+  wrongQuestions: {
+    total: number;
+    unresolved: number;
+  };
+}
+
+// ============================================================================
+// Question & Certification API
+// ============================================================================
+
+export interface QueryQuestionsParams {
+  certificationCode?: string;
+  subjectCode?: string;
+  workItem?: '01' | '02' | '03' | '04';
+  questionType?: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
+  search?: string;
+  page?: number;
+  limit?: number;
+  random?: boolean;
+}
+
+export interface QuestionOptionItem {
+  key: string;
+  text: string;
+}
+
+export interface ApiQuestionItem {
+  id: string;
+  officialNumber: number;
+  officialSection: '01' | '02' | '03' | '04';
+  sectionName: string;
+  question: string;
+  codeSnippet?: string | null;
+  questionType: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  correctAnswer: string;
+  explanation: string;
+  sourceName: string;
+  sourceVersion: string;
+  options: QuestionOptionItem[];
+}
+
+export interface QuestionListResponse {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
+  questions: ApiQuestionItem[];
+}
+
+export const questionApi = {
+  getCertifications: async () => {
+    return request<Array<{
+      id: string;
+      code: string;
+      name: string;
+      level: string;
+      category: string;
+      officialVersion: string;
+      subjects: Array<{
+        id: string;
+        code: string;
+        title: string;
+        examType: string;
+        questionCount: number;
+      }>;
+    }>>('/certifications', { method: 'GET' });
+  },
+
+  getQuestions: async (params?: QueryQuestionsParams) => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      if (params.certificationCode) searchParams.append('certificationCode', params.certificationCode);
+      if (params.subjectCode) searchParams.append('subjectCode', params.subjectCode);
+      if (params.workItem) searchParams.append('workItem', params.workItem);
+      if (params.questionType) searchParams.append('questionType', params.questionType);
+      if (params.search) searchParams.append('search', params.search);
+      if (params.page) searchParams.append('page', String(params.page));
+      if (params.limit) searchParams.append('limit', String(params.limit));
+      if (params.random !== undefined) searchParams.append('random', String(params.random));
+    }
+    const queryStr = searchParams.toString();
+    const endpoint = `/questions${queryStr ? `?${queryStr}` : ''}`;
+    return request<QuestionListResponse>(endpoint, { method: 'GET' });
+  },
+
+  getQuestionById: async (id: string) => {
+    return request<ApiQuestionItem>(`/questions/${id}`, { method: 'GET' });
+  },
+};
+
+export interface ApiExamQuestionItem {
+  order: number;
+  id: string;
+  officialNumber: number;
+  questionText: string;
+  codeSnippet?: string | null;
+  questionType: string;
+  difficulty: string;
+  subject: {
+    code: string;
+    title: string;
+  };
+  options: Array<{
+    key: string;
+    text: string;
+  }>;
+}
+
+export interface GeneratedExamResponse {
+  attemptId: string;
+  examPaperId: string;
+  paperTitle: string;
+  timeLimitMinutes: number;
+  totalQuestions: number;
+  startedAt: string;
+  questions: ApiExamQuestionItem[];
+}
+
+export interface ExamSnapshotItem {
+  order: number;
+  questionId: string;
+  questionText: string;
+  options: Array<{ key: string; text: string }>;
+  correctAnswer: string;
+  userAnswer?: string | null;
+  isCorrect: boolean;
+  explanation?: string | null;
+  scoreObtained: number;
+}
+
+export interface ExamSectionBreakdown {
+  sectionCode: string;
+  sectionTitle: string;
+  total: number;
+  correct: number;
+  percentage: number;
+}
+
+export interface ExamSubmitResponse {
+  attemptId: string;
+  status: string;
+  score: number;
+  isPassed: boolean;
+  correctCount: number;
+  wrongCount: number;
+  unansweredCount: number;
+  durationSeconds: number;
+  submittedAt: string;
+  sectionBreakdown: ExamSectionBreakdown[];
+  snapshots: ExamSnapshotItem[];
+}
+
+export interface WrongQuestionRecordItem {
+  id: string;
+  questionId: string;
+  officialNumber?: number;
+  sectionCode: string;
+  sectionTitle: string;
+  questionText: string;
+  codeSnippet?: string | null;
+  options: Array<{ key: string; text: string }>;
+  correctAnswer: string;
+  explanation: string;
+  lastUserAnswer: string;
+  wrongCount: number;
+  consecutiveCorrectCount: number;
+  masteryStatus: 'UNRESOLVED' | 'REVIEWING' | 'MASTERED';
+  isResolved: boolean;
+  firstWrongAt: string;
+  lastAttemptAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface WrongQuestionsListResponse {
+  stats: {
+    totalRecorded: number;
+    unresolvedCount: number;
+    reviewingCount: number;
+    masteredCount: number;
+    bySection: Record<string, { total: number; unresolved: number; mastered: number }>;
+  };
+  items: WrongQuestionRecordItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface PracticeReviewResult {
+  recordId: string;
+  questionId: string;
+  isCorrect: boolean;
+  userAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+  consecutiveCorrectCount: number;
+  masteryStatus: 'UNRESOLVED' | 'REVIEWING' | 'MASTERED';
+  isResolved: boolean;
+  resolvedAt?: string | null;
+  wrongCount: number;
+  lastAttemptAt: string;
+}
+
+export const examApi = {
+  generateExam: async (data?: {
+    mode?: 'official_100' | 'practice_60';
+    strategy?: 'stratified' | 'random';
+    certificationCode?: string;
+  }) => {
+    return request<GeneratedExamResponse>('/exams/generate', {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  },
+
+  submitExam: async (
+    attemptId: string,
+    data: { answers: Record<string, string>; durationSeconds?: number }
+  ) => {
+    return request<ExamSubmitResponse>(`/exams/${attemptId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getScoreReport: async (attemptId: string) => {
+    return request<ExamSubmitResponse>(`/exams/${attemptId}/report`, {
+      method: 'GET',
+    });
+  },
+
+  getHistory: async () => {
+    return request<
+      Array<{
+        id: string;
+        paperTitle: string;
+        score: number;
+        isPassed: boolean;
+        correctCount: number;
+        wrongCount: number;
+        durationSeconds: number;
+        submittedAt: string;
+      }>
+    >('/exams/history', { method: 'GET' });
+  },
+};
+
+export const wrongQuestionApi = {
+  getWrongQuestions: async (params?: {
+    status?: string;
+    section?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.section) searchParams.append('section', params.section);
+    if (params?.page) searchParams.append('page', String(params.page));
+    if (params?.limit) searchParams.append('limit', String(params.limit));
+    const queryStr = searchParams.toString();
+    return request<WrongQuestionsListResponse>(
+      `/wrong-questions${queryStr ? `?${queryStr}` : ''}`,
+      { method: 'GET' }
+    );
+  },
+
+  practiceReview: async (recordId: string, answer: string) => {
+    return request<PracticeReviewResult>(`/wrong-questions/${recordId}/practice`, {
+      method: 'POST',
+      body: JSON.stringify({ answer }),
+    });
+  },
+
+  recordWrongQuestion: async (data: {
+    questionId: string;
+    selectedAnswer?: string;
+    source?: 'THEORY_PRACTICE' | 'MOCK_EXAM' | 'MANUAL';
+  }) => {
+    return request<WrongQuestionRecordItem>('/wrong-questions/record', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+export interface PracticalTaskSummaryItem {
+  id: string;
+  taskNumber: number;
+  taskCode: string;
+  title: string;
+  theme: string;
+  canvasWidth: string;
+  estimatedMinutes: number;
+  materialPath: string;
+  status: string;
+  progress: {
+    versionA: {
+      version: string;
+      status: string;
+      completedSteps: number;
+      totalSteps: number;
+      isCompleted: boolean;
+      lastPracticedAt?: string | null;
+    };
+    versionB: {
+      version: string;
+      status: string;
+      completedSteps: number;
+      totalSteps: number;
+      isCompleted: boolean;
+      lastPracticedAt?: string | null;
+    };
+  };
+}
+
+export interface PracticalTaskStepItem {
+  id: string;
+  stepNumber: number;
+  title: string;
+  description: string;
+  videoUrl?: string | null;
+  videoStartSeconds?: number | null;
+  pitfallWarning?: string | null;
+  isCompleted: boolean;
+}
+
+export interface PracticalTaskDetailResponse {
+  task: {
+    id: string;
+    taskNumber: number;
+    taskCode: string;
+    title: string;
+    theme: string;
+    canvasWidth: string;
+    estimatedMinutes: number;
+    materialPath: string;
+    defaultHtmlCode: string;
+    defaultCssCode: string;
+    defaultJsCode: string;
+  };
+  version: 'VERSION_A' | 'VERSION_B';
+  progress: {
+    status: string;
+    practiceCount: number;
+    completedStepsCount: number;
+    totalStepsCount: number;
+    isCompleted: boolean;
+    lastPracticedAt?: string | null;
+    savedHtmlCode: string;
+    savedCssCode: string;
+    savedJsCode: string;
+  };
+  steps: PracticalTaskStepItem[];
+}
+
+export interface PracticalSavedCodeResponse {
+  taskId: string;
+  taskCode: string;
+  version: string;
+  hasSavedCode: boolean;
+  savedHtmlCode: string;
+  savedCssCode: string;
+  savedJsCode: string;
+  defaultHtmlCode: string;
+  defaultCssCode: string;
+  defaultJsCode: string;
+  lastPracticedAt?: string | null;
+}
+
+export interface SavePracticalProgressBody {
+  version?: 'VERSION_A' | 'VERSION_B' | 'A' | 'B';
+  stepId?: string;
+  isStepCompleted?: boolean;
+  completedStepNumbers?: number[];
+  savedHtmlCode?: string;
+  savedCssCode?: string;
+  savedJsCode?: string;
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+}
+
+export interface SavePracticalProgressResponse {
+  progressId: string;
+  taskId: string;
+  version: string;
+  status: string;
+  completedStepsCount: number;
+  totalStepsCount: number;
+  isCompleted: boolean;
+  lastPracticedAt: string;
+}
+
+export const practicalApi = {
+  getTasks: async () => {
+    return request<PracticalTaskSummaryItem[]>('/practical-tasks', { method: 'GET' });
+  },
+
+  getTaskDetails: async (taskId: string | number, version?: string) => {
+    const query = version ? `?version=${version}` : '';
+    return request<PracticalTaskDetailResponse>(`/practical-tasks/${taskId}${query}`, {
+      method: 'GET',
+    });
+  },
+
+  saveProgress: async (taskId: string | number, data: SavePracticalProgressBody) => {
+    return request<SavePracticalProgressResponse>(`/practical-tasks/${taskId}/progress`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getSavedCode: async (taskId: string | number, version?: string) => {
+    const query = version ? `?version=${version}` : '';
+    return request<PracticalSavedCodeResponse>(`/practical-tasks/${taskId}/code${query}`, {
+      method: 'GET',
+    });
+  },
+};
+
+// ============================================================================
+// Student API
+// ============================================================================
+
+export interface StudentDashboardResponse {
+  student: {
+    id: string;
+    email: string;
+    displayName: string;
+    avatarUrl?: string | null;
+    status: string;
+    bio?: string | null;
+    educationLevel?: string | null;
+    roles: string[];
+    createdAt: string;
+  };
+  overview: {
+    totalExamsTaken: number;
+    passedExamsCount: number;
+    averageScore: number | null;
+    highestScore: number | null;
+    lowestScore: number | null;
+    recentScore: number | null;
+    recentExamTitle: string | null;
+    recentExamDate: string | null;
+    wrongQuestionsTotal: number;
+    wrongQuestionsUnresolved: number;
+    wrongQuestionsMastered: number;
+    startedPracticalTasksCount: number;
+    totalPracticalStepsCompletedVA: number;
+    totalPracticalStepsCompletedVB: number;
+    enrolledClassesCount: number;
+  };
+  examHistory: Array<{
+    id: string;
+    paperTitle: string;
+    score: number | null;
+    isPassed: boolean;
+    correctCount: number;
+    wrongCount: number;
+    durationSeconds: number;
+    submittedAt: string | null;
+  }>;
+  wrongStats: {
+    total: number;
+    unresolved: number;
+    reviewing: number;
+    mastered: number;
+  };
+  practicalTasks: Array<{
+    taskId: string;
+    taskNumber: number;
+    taskCode: string;
+    title: string;
+    versionA: {
+      status: string;
+      completedSteps: number;
+      totalSteps: number;
+      hasSavedCode: boolean;
+      lastPracticedAt: string | null;
+    };
+    versionB: {
+      status: string;
+      completedSteps: number;
+      totalSteps: number;
+      hasSavedCode: boolean;
+      lastPracticedAt: string | null;
+    };
+  }>;
+  enrolledClasses: Array<{
+    enrollmentId: string;
+    seatNumber?: string | null;
+    joinedAt: string;
+    class: {
+      id: string;
+      name: string;
+      joinCode: string;
+      description?: string | null;
+      status: string;
+      teacherName: string;
+      teacherEmail: string;
+      certificationName: string;
+    };
+  }>;
+  recentActivities: Array<{
+    type: 'EXAM_SUBMISSION' | 'PRACTICAL_PRACTICE' | 'CLASS_JOINED';
+    title: string;
+    timestamp: string;
+    details?: Record<string, unknown>;
+  }>;
+}
+
+export interface UpdateStudentProfileBody {
+  displayName?: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+}
+
+export interface StudyTimeSummaryResponse {
+  totalSeconds: number;
+  totalHours: number;
+  weeklySeconds: number;
+  weeklyHours: number;
+  byModule: Record<string, number>;
+  dailyLogs: Array<{
+    date: string;
+    seconds: number;
+    minutes: number;
+  }>;
+}
+
+export interface StudyTimeRecordResponse {
+  record: {
+    id: string;
+    studyDate: string;
+    moduleType: string;
+    durationSeconds: number;
+  };
+  summary: StudyTimeSummaryResponse;
+}
+
+export interface SubjectAnalyticsItem {
+  id: string;
+  code: string;
+  workNumber: string;
+  title: string;
+  totalQuestions: number;
+  completedQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  accuracyRate: number;
+  masteryRate: number;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'MASTERED' | string;
+  lastStudiedAt: string | null;
+}
+
+export interface StudentProgressAnalyticsResponse {
+  overview: {
+    totalOfficialQuestions: number;
+    totalAttempted: number;
+    completionRate: number;
+    overallAccuracy: number | null;
+    totalStudyHours: number;
+    weeklyStudyHours: number;
+    highestExamScore: number | null;
+    recentScore: number | null;
+    totalExamsTaken: number;
+    passedExamsCount: number;
+    practicalTasksCompletedVA: number;
+    practicalTasksCompletedVB: number;
+  };
+  subjects: SubjectAnalyticsItem[];
+  studyTime: StudyTimeSummaryResponse;
+  wrongStats: {
+    total: number;
+    unresolved: number;
+    reviewing: number;
+    mastered: number;
+  };
+  recommendedFocus: {
+    subjectId: string;
+    subjectCode: string;
+    subjectTitle: string;
+    workNumber: string;
+    reason: string;
+  } | null;
+}
+
+export const studentApi = {
+  getDashboard: async () => {
+    return request<StudentDashboardResponse>('/student/dashboard', {
+      method: 'GET',
+    });
+  },
+
+  updateProfile: async (data: UpdateStudentProfileBody) => {
+    return request<{ id: string; email: string; displayName: string; avatarUrl?: string | null }>('/student/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  recordStudyTime: async (data: {
+    durationSeconds: number;
+    moduleType?: 'THEORY' | 'PRACTICAL' | 'MOCK_EXAM' | 'AI_COACH';
+    date?: string;
+  }) => {
+    return request<StudyTimeRecordResponse>('/student/study-time', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getStudyTime: async () => {
+    return request<StudyTimeSummaryResponse>('/student/study-time', {
+      method: 'GET',
+    });
+  },
+
+  getProgressAnalytics: async () => {
+    return request<StudentProgressAnalyticsResponse>('/student/progress-analytics', {
+      method: 'GET',
     });
   },
 };

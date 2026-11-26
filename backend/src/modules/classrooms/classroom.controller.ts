@@ -99,6 +99,40 @@ export class ClassroomController {
       return next(error);
     }
   }
+
+  async getClassroomAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor = requireActor(req);
+      const classId = req.params.id as string;
+      const result = await classroomService.getClassroomAnalytics(actor.id, actor.roles, classId);
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async getStudentClassroomProgress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor = requireActor(req);
+      const classId = req.params.id as string;
+      const studentId = req.params.studentId as string;
+      const result = await classroomService.getStudentClassroomProgress(
+        actor.id,
+        actor.roles,
+        classId,
+        studentId
+      );
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export const classroomController = new ClassroomController();

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   escapeHtml,
+  sanitizeUrl,
+  sanitizeHeader,
   renderVerificationEmail,
   renderPasswordResetEmail,
   renderSecurityLoginAlertEmail,
@@ -10,7 +12,7 @@ import {
 } from '../src/services/email.templates.js';
 
 describe('Phase 10: Official Email Templates & Notification System (P10-EML-005, P10-EML-006)', () => {
-  describe('Security & XSS Prevention (escapeHtml)', () => {
+  describe('Security & XSS Prevention (escapeHtml, sanitizeUrl, sanitizeHeader)', () => {
     it('properly escapes dangerous HTML characters to prevent email-based injection', () => {
       const malicious = '<script>alert("xss")</script>&"\'';
       const escaped = escapeHtml(malicious);
@@ -21,10 +23,31 @@ describe('Phase 10: Official Email Templates & Notification System (P10-EML-005,
       expect(escaped).toContain('&amp;');
     });
 
-    it('handles empty or undefined values safely', () => {
+    it('handles empty or undefined values safely in escapeHtml', () => {
       expect(escapeHtml('')).toBe('');
       // @ts-expect-error test undefined
       expect(escapeHtml(undefined)).toBe('');
+    });
+
+    it('sanitizeUrl blocks dangerous URI schemes like javascript: and data:', () => {
+      expect(sanitizeUrl('javascript:alert(document.cookie)')).toBe('#');
+      expect(sanitizeUrl('data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==')).toBe('#');
+      expect(sanitizeUrl('vbscript:msgbox(1)')).toBe('#');
+      expect(sanitizeUrl('   ')).toBe('#');
+      expect(sanitizeUrl('')).toBe('#');
+    });
+
+    it('sanitizeUrl permits valid http:// and https:// URLs', () => {
+      expect(sanitizeUrl('https://codetoknow.edu.tw/verify?token=123')).toBe('https://codetoknow.edu.tw/verify?token=123');
+      expect(sanitizeUrl('http://localhost:3000/reset?token=abc')).toBe('http://localhost:3000/reset?token=abc');
+    });
+
+    it('sanitizeHeader strips CRLF to prevent email header injection', () => {
+      const dirty = 'Normal Subject\r\nBcc: victim@example.com\r\nContent-Type: text/html';
+      const clean = sanitizeHeader(dirty);
+      expect(clean).not.toContain('\r');
+      expect(clean).not.toContain('\n');
+      expect(clean).toBe('Normal Subject Bcc: victim@example.com Content-Type: text/html');
     });
   });
 

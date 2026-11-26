@@ -31,6 +31,7 @@ export interface PracticalTaskDetail {
   scoringChecklist: string[];      // 評分關鍵查核項目
   defaultHtmlCode: string;         // 沙盒預載骨架
   defaultCssCode: string;
+  defaultJsCode?: string;
   officialReferenceTips: string;
 }
 

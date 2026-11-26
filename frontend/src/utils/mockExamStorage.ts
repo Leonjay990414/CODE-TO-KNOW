@@ -18,6 +18,8 @@ export interface SectionBreakdownItem {
 export interface MockExamSession {
   schemaVersion: number;
   sessionId: string;
+  attemptId?: string;
+  isLiveDatabase?: boolean;
   userId: string;
   mode: 'official_100' | 'practice_60';
   strategy: 'stratified' | 'random';

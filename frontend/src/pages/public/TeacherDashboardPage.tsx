@@ -38,6 +38,8 @@ import {
   classroomApi,
   ClassroomItem,
   ClassroomMemberItem,
+  ClassroomAnalyticsResponse,
+  StudentClassroomProgressResponse,
 } from '../../services/api';
 import { ALL_OFFICIAL_THEORY_QUESTIONS } from '../../data/questionBankAdapter';
 import {
@@ -101,6 +103,16 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState<string>('');
+
+  // Classroom Analytics States (INT-004)
+  const [classroomAnalytics, setClassroomAnalytics] = useState<ClassroomAnalyticsResponse | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState<boolean>(false);
+
+  // Student Progress Modal States (INT-004)
+  const [studentProgressModalOpen, setStudentProgressModalOpen] = useState<boolean>(false);
+  const [selectedStudentProgress, setSelectedStudentProgress] = useState<StudentClassroomProgressResponse | null>(null);
+  const [loadingStudentProgress, setLoadingStudentProgress] = useState<boolean>(false);
+  const [studentProgressError, setStudentProgressError] = useState<string | null>(null);
 
   // Modals & Forms
   const [isCreateClassModalOpen, setIsCreateClassModalOpen] = useState(false);
@@ -227,10 +239,45 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
   useEffect(() => {
     if (selectedClassId) {
       fetchClassroomMembers(selectedClassId);
+      // Fetch real DB classroom analytics (INT-004)
+      setLoadingAnalytics(true);
+      classroomApi
+        .getClassroomAnalytics(selectedClassId)
+        .then((res) => {
+          if (res.success && res.data) {
+            setClassroomAnalytics(res.data);
+          } else {
+            setClassroomAnalytics(null);
+          }
+        })
+        .catch(() => setClassroomAnalytics(null))
+        .finally(() => setLoadingAnalytics(false));
     } else {
       setMembers([]);
+      setClassroomAnalytics(null);
     }
   }, [selectedClassId]);
+
+  // View Student Individual Progress Modal Handler (INT-004)
+  const handleViewStudentProgress = async (studentId: string) => {
+    if (!selectedClassId) return;
+    setLoadingStudentProgress(true);
+    setStudentProgressError(null);
+    setSelectedStudentProgress(null);
+    setStudentProgressModalOpen(true);
+    try {
+      const res = await classroomApi.getStudentClassroomProgress(selectedClassId, studentId);
+      if (res.success && res.data) {
+        setSelectedStudentProgress(res.data);
+      } else {
+        setStudentProgressError(res.error?.message || '無法取得學員學習進度');
+      }
+    } catch {
+      setStudentProgressError('網路連線逾時，無法取得學員學習進度');
+    } finally {
+      setLoadingStudentProgress(false);
+    }
+  };
 
   // 4. Create Classroom Handler
   const handleCreateClassroom = async () => {
@@ -492,12 +539,12 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                     fetchApplication();
                     fetchTeachingClassrooms();
                   }}
-                  disabled={loadingApp || loadingClassrooms}
+                  disabled={loadingApp || loadingClassrooms || loadingAnalytics}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   title="重新整理班級與狀態"
                   aria-label="重新整理教師審核狀態與班級列表"
                 >
-                  <RefreshCw size={14} className={loadingApp || loadingClassrooms ? 'animate-spin' : ''} />
+                  <RefreshCw size={14} className={loadingApp || loadingClassrooms || loadingAnalytics ? 'animate-spin' : ''} />
                   <span>整理狀態</span>
                 </button>
 
@@ -895,11 +942,44 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', flexWrap: 'wrap' }}>
                           <span>班級總人數：<strong>{members.length}</strong> 人</span>
                           <span>建立時間：{new Date(currentClass.createdAt).toLocaleDateString()}</span>
                           <span>狀態：<strong style={{ color: '#15803D' }}>進行中 (Active)</strong></span>
+                          {classroomAnalytics && (
+                            <span style={{ color: '#15803D', fontWeight: 600 }}>● PostgreSQL 17 班級分析已同步</span>
+                          )}
                         </div>
+
+                        {/* Real Database Classroom Analytics (INT-004) */}
+                        {classroomAnalytics && (
+                          <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                            <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>全真模考次數</div>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-brand-deep-slate)' }}>
+                                {classroomAnalytics.examStats.totalExamsTaken} 次 ({classroomAnalytics.totalStudents} 位學員)
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>模考班平均分</div>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: (classroomAnalytics.examStats.averageScore ?? 0) >= 60 ? '#15803D' : '#D97706' }}>
+                                {classroomAnalytics.examStats.averageScore ?? 0} 分
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>模考及格率</div>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: classroomAnalytics.examStats.passRate >= 60 ? '#15803D' : '#D97706' }}>
+                                {classroomAnalytics.examStats.passRate}%
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>術科實作啟動</div>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-brand-gold-text)' }}>
+                                {classroomAnalytics.practicalStats.studentsWithPracticalRecords} 人
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Student Roster Section */}
@@ -978,6 +1058,16 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                                       {new Date(m.joinedAt).toLocaleDateString()}
                                     </td>
                                     <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline btn-xs"
+                                        onClick={() => handleViewStudentProgress(m.studentId)}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '6px' }}
+                                        title="檢視學生學習數據與歷程"
+                                      >
+                                        <Award size={12} color="var(--color-brand-deep-slate)" />
+                                        <span>學習進度</span>
+                                      </button>
                                       <button
                                         type="button"
                                         className="btn btn-outline btn-xs"
@@ -1959,6 +2049,189 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({ onOp
                   style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
                 >
                   {removingMember ? '處理中...' : '確認移出'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Student Classroom Progress (INT-004) */}
+        {studentProgressModalOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '16px',
+            }}
+            onClick={() => setStudentProgressModalOpen(false)}
+          >
+            <div
+              className="card"
+              style={{
+                maxWidth: '620px',
+                width: '100%',
+                maxHeight: '85vh',
+                overflowY: 'auto',
+                padding: '28px',
+                backgroundColor: 'var(--surface-base)',
+                borderRadius: 'var(--radius-lg)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Award size={22} color="var(--color-brand-deep-slate)" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                    學員個人學習歷程報告
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStudentProgressModalOpen(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                  aria-label="關閉視窗"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {loadingStudentProgress ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 12px' }} />
+                  <div>正在自 PostgreSQL 17 安全檢索學員學習數據...</div>
+                </div>
+              ) : studentProgressError ? (
+                <div style={{ padding: '16px', backgroundColor: '#FEF2F2', color: '#991B1B', borderRadius: '6px', fontSize: '13px' }}>
+                  {studentProgressError}
+                </div>
+              ) : selectedStudentProgress ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* Basic Info */}
+                  <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '14px 16px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-brand-charcoal)' }}>
+                        {selectedStudentProgress.student.displayName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {selectedStudentProgress.student.email}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      <div>座號：{selectedStudentProgress.student.seatNumber || '未設定'}</div>
+                      <div>加入日期：{new Date(selectedStudentProgress.student.joinedAt).toLocaleDateString('zh-TW')}</div>
+                    </div>
+                  </div>
+
+                  {/* Mock Exam Stats */}
+                  <div>
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-brand-deep-slate)' }}>
+                      全真 80 題模擬考數據
+                    </h4>
+                    {selectedStudentProgress.exams.totalTaken === 0 ? (
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', backgroundColor: 'var(--surface-sunken)', padding: '12px', borderRadius: '4px' }}>
+                        該學員尚未完成任何全真模擬測驗。
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                        <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>測驗次數</div>
+                          <div style={{ fontSize: '16px', fontWeight: 700 }}>{selectedStudentProgress.exams.totalTaken} 次</div>
+                        </div>
+                        <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>最近測驗得分</div>
+                          <div style={{ fontSize: '16px', fontWeight: 700, color: ((selectedStudentProgress.exams.history[0]?.score ?? 0) >= 60) ? '#15803D' : '#D97706' }}>
+                            {selectedStudentProgress.exams.history[0]?.score ?? 0} 分
+                          </div>
+                        </div>
+                        <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>及格次數</div>
+                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#15803D' }}>
+                            {selectedStudentProgress.exams.history.filter((e) => e.isPassed).length} 次
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Wrong Questions Stats */}
+                  <div>
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-brand-deep-slate)' }}>
+                      錯題本掌握度
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                      <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>累計收錄錯題</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700 }}>{selectedStudentProgress.wrongQuestions.total} 題</div>
+                      </div>
+                      <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '11px', color: '#DC2626' }}>待攻克弱點</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#DC2626' }}>{selectedStudentProgress.wrongQuestions.unresolved} 題</div>
+                      </div>
+                      <div style={{ backgroundColor: 'var(--surface-sunken)', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '11px', color: '#15803D' }}>已完全掌握</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#15803D' }}>
+                          {Math.max(0, selectedStudentProgress.wrongQuestions.total - selectedStudentProgress.wrongQuestions.unresolved)} 題
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Practical Tasks Progress */}
+                  <div>
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-brand-deep-slate)' }}>
+                      五大官方術科題組實作狀況
+                    </h4>
+                    {selectedStudentProgress.practicals.length === 0 ? (
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', backgroundColor: 'var(--surface-sunken)', padding: '12px', borderRadius: '4px' }}>
+                        該學員尚未開始術科題組練習。
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {selectedStudentProgress.practicals.map((p) => (
+                          <div
+                            key={`${p.taskId}-${p.version}`}
+                            style={{
+                              padding: '10px 14px',
+                              backgroundColor: 'var(--surface-sunken)',
+                              borderRadius: '4px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '13px',
+                            }}
+                          >
+                            <div>
+                              <span style={{ fontWeight: 600, color: 'var(--color-brand-charcoal)' }}>
+                                題組 {p.taskNumber}：{p.taskTitle} ({p.version === 'VERSION_A' || p.version === 'A' ? '官方版本 A' : '影音教學版本 B'})
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+                              <span>完成步驟：{p.completedStepsCount} 步</span>
+                              <span>代碼儲存：{p.hasSavedCode ? '✓ 有' : '無'}</span>
+                              <span style={{ color: 'var(--text-muted)' }}>
+                                {p.lastPracticedAt ? new Date(p.lastPracticedAt).toLocaleDateString('zh-TW') : '-'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => setStudentProgressModalOpen(false)}
+                >
+                  關閉
                 </button>
               </div>
             </div>
