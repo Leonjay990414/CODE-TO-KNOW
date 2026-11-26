@@ -37,4 +37,17 @@ router.get('/study-time', (req, res, next) => studentController.getStudyTime(req
 // 5. Get dynamic learning progress & analytics across 4 work items
 router.get('/progress-analytics', (req, res, next) => studentController.getProgressAnalytics(req, res, next));
 
+// 6. Get comprehensive weakness diagnostic analytics across all official work items (INT-007-B)
+router.get('/weakness-analysis', (req, res, next) => studentController.getWeaknessAnalysis(req, res, next));
+
+// 7. Get single subject weakness diagnosis & snapshot details
+router.get('/weakness-analysis/:subjectId', (req, res, next) => studentController.getSubjectWeaknessAnalysis(req, res, next));
+
+// 8. Force recalculate weakness diagnosis & refresh snapshots (with 10s cooldown rate limit)
+router.post(
+  '/weakness-analysis/recalculate',
+  rejectForgedOwnerFields(['id', 'userId', 'user'], { resourceName: '弱點診斷' }),
+  (req, res, next) => studentController.recalculateWeaknessAnalysis(req, res, next)
+);
+
 export const studentRoutes = router;

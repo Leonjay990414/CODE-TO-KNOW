@@ -375,3 +375,77 @@ export interface EmailQueueStatusContract {
   processedAt?: string | null;
   createdAt: string;
 }
+
+// ==========================================
+// 8. Layer 8：學生弱點診斷與個人化學習推薦契約 (INT-007-C)
+// ==========================================
+
+export type WeaknessStatus =
+  | 'CRITICAL_WEAKNESS'
+  | 'MODERATE_WEAKNESS'
+  | 'STEADY_PROGRESS'
+  | 'EXCELLENT_MASTERY'
+  | 'INSUFFICIENT_DATA'
+  | 'NO_DATA';
+
+export type ActionType =
+  | 'TARGETED_PRACTICE'
+  | 'EXPLORE_CHAPTER'
+  | 'GENERAL_REVIEW'
+  | 'MOCK_EXAM_SPRINT';
+
+export interface SuggestedActionPayload {
+  version: '1.0';
+  actionType: ActionType;
+  targetSubjectCode: string;
+  targetQuestionCount: number;
+  rationaleZh: string;
+  objectiveZh: string;
+}
+
+export interface SubjectDiagnosisDto {
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  masteryLevel: number;
+  weaknessIndex: number;
+  status: WeaknessStatus;
+  sampleSize: number;
+  accuracyRate: number;
+  unresolvedCount: number;
+  reviewingCount: number;
+  masteredCount: number;
+  recentWrongCount: number;
+  dataWatermark: string;
+  calculatedAt: string;
+  isFresh: boolean;
+  isDegraded?: boolean;
+  suggestedAction: SuggestedActionPayload | null;
+}
+
+export interface StudentWeaknessSummaryDto {
+  totalSubjects: number;
+  evaluatedSubjects: number;
+  criticalCount: number;
+  moderateCount: number;
+  steadyCount: number;
+  masteryCount: number;
+  insufficientCount: number;
+  noDataCount: number;
+  primaryFocusSubject: {
+    id: string;
+    code: string;
+    name: string;
+    status: WeaknessStatus;
+    weaknessIndex: number;
+    suggestedAction: SuggestedActionPayload | null;
+  } | null;
+  overallDiagnosisZh: string;
+  lastAnalyzedAt: string;
+}
+
+export interface WeaknessAnalysisResponseDto {
+  summary: StudentWeaknessSummaryDto;
+  subjects: SubjectDiagnosisDto[];
+}
+

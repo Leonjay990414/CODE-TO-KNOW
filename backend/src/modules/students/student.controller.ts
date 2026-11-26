@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { studentService } from './student.service.js';
+import { weaknessDiagnosisService } from './weaknessDiagnosis.service.js';
 import { OwnershipActor } from '../../utils/ownership.js';
 
 export class StudentController {
@@ -90,6 +91,60 @@ export class StudentController {
       return res.status(200).json({
         success: true,
         data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getWeaknessAnalysis(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const result = await weaknessDiagnosisService.getStudentWeaknessAnalysis(actor);
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getSubjectWeaknessAnalysis(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const { subjectId } = req.params;
+      const result = await weaknessDiagnosisService.getSubjectWeaknessAnalysis(actor, subjectId);
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async recalculateWeaknessAnalysis(req: Request, res: Response, next: NextFunction) {
+    try {
+      const actor: OwnershipActor = {
+        id: req.user!.id,
+        roles: (req.user as any).roles || [],
+      };
+
+      const { subjectId } = req.body || {};
+      const result = await weaknessDiagnosisService.recalculateWeaknessAnalysis(actor, subjectId);
+      return res.status(200).json({
+        success: true,
+        data: result,
+        message: '弱點診斷已完成重新分析並更新快照',
       });
     } catch (err) {
       next(err);

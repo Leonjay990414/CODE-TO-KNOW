@@ -113,6 +113,11 @@
 | `CTK-CORE-01-INT-005` | **Batch 5: 比賽展示總體驗收、資安回歸與備份還原演練** | 全流程端對端驗收 + 跨平台/RWD 視覺巡檢 + 備份完整性查核 + 比賽展示腳本與測試證據報告封裝 | 2026-11-25 | **PASS** |
 | `CTK-CORE-01-INT-005-R` | **Batch 5-R: 獨立資料庫災難備份還原演練** | 建立獨立目標庫 `ctk_core01_int005_restore_verify` + 還原 20261125120830 備份 + 20 項跨庫深層比對 (37表/605題/5術科/0孤兒) + 原始 Scratch DB 100% 完好未覆蓋 | 2026-11-25 | **PASS** |
 | `INT-005-R 補充稽核` | **Batch 5-R-Audit: 還原權限溯源、RLS 範圍查核與回歸測試** | 清查所有 GRANT/RLS 操作 100% 僅限目標還原庫 + 原始 Scratch DB 唯讀查核 + 還原庫權限報告 + 修改後 DB-003 單元測試 (12/12) 與離線測試套件 (336/336) 全數通過 | 2026-11-25 | **PASS** |
+| `CTK-CORE-01-INT-006` | **Batch 6: 學生學習數據中心與錯題閉環** | 研讀時長真實追蹤 + 17300 四大工作項目進度動態核算 + 錯題本狀態機流轉 + 學習歷程頁面整合 | 2026-11-26 | **PASS** |
+| `CTK-CORE-01-INT-007-A` | **Batch 7-A: 弱點診斷核心架構設計** | V2.2 弱點指數 (WI) 加權演算法 + 複合水線快照儲存契約 + 兩階段排序演算法設計審查 | 2026-11-26 | **PASS** |
+| `CTK-CORE-01-INT-007-B` | **Batch 7-B: 弱點核心運算與快照服務** | Read-Through 快取 + Single-Flight 併發合併 + 10s 冷卻防刷 + 21 項單元與整合測試 | 2026-11-26 | **CLOSED / PASS** |
+| `CTK-CORE-01-INT-007-C` | **Batch 7-C: 弱點診斷前端整合** | Layer 8 合約型別 + 原生 SVG 四軸雷達圖 + 四考科卡片 + 閉環推薦卡 + 8 項整合測試 | 2026-11-26 | **CONDITIONAL PASS** |
+| `CTK-CORE-01-INT-007-C-REMEDIATION` | **Batch 7-C 修正: 瑕疵清理與拋光** | 清理檔案結尾空白行 (ISS-007C-01) + 修正文件路由筆誤 (ISS-007C-02) + 優化非429錯誤冷卻 (ISS-007C-03) + 圖例標籤拋光 (ISS-007C-04) | 2026-11-27 | **PENDING (明日第一項任務)** |
 
 ---
 
@@ -122,7 +127,9 @@
 
 | 進度項目 | 正式紀錄 | 說明備註 |
 |---|:---:|---|
-| **CTK-CORE-01 INT 批次** | **5／5 PASS** | 原定五大垂直整合衝刺批次全數通過 |
+| **CTK-CORE-01 INT 批次** | **6／6 PASS (INT-001~006)** | 前六大垂直整合衝刺批次全數通過 |
+| **INT-007-B** | **CLOSED / PASS** | 弱點診斷核心運算與快照服務獨立驗收通過 |
+| **INT-007-C** | **CONDITIONAL PASS** | 弱點診斷前端整合獨立驗收有條件通過（待明日修正） |
 | **INT-005-R** | **PASS** | 獨立資料庫災難備份還原演練驗收通過 |
 | **INT-005-R 補充稽核** | **PASS** | 權限操作溯源、原始庫唯讀保護與修改後回歸全數通過 |
 | **CTK-CORE-01 加權完成率** | **尚未正式核算** | 待全專案需求盤點後依權重公式精確核算 |
@@ -132,15 +139,14 @@
 | **Preview Batch** | **UNKNOWN，待核實** | 待預覽環境重新對齊後確認 |
 
 > [!NOTE]
-> **重要宣告：** INT 批次 5／5 僅代表本次比賽衝刺之「五大原定端到端垂直整合批次」完成，絕不代表整個 CTK-CORE-01 核心平台已全數開發完畢。
+> **重要宣告：** INT-001~INT-006 完工及 INT-007 推進僅代表已核准批次進度，絕不代表整個 CTK-CORE-01 核心平台已全數完工。INT-007-C 維持 CONDITIONAL PASS，明日排定首要執行 `CTK-CORE-01-INT-007-C-REMEDIATION`。
 
 ### 2. 任務狀態總結
-- **已完成任務 (PASS)：** 12 項 (`DISC-001`, `PLAN-001`, `DB-001`, `DB-002`, `DB-003`, `DB-004`, `BE-006`, `BE-007`, `FE-005`, `FE-006`, `SEC-001`, `INT-001`～`INT-005`, `INT-005-R`, `INT-005-R 補充稽核`)。
-- **衝刺中垂直整合任務 (IN_PROGRESS)：** 0 項。
-- **六大垂直整合批次：** **全數圓滿交付 (100% 達成，INT-001 ~ INT-006 全數通過)**。
+- **已完成任務 (PASS / CLOSED)：** 14 項 (`DISC-001`, `PLAN-001`, `DB-001`, `DB-002`, `DB-003`, `DB-004`, `BE-006`, `BE-007`, `FE-005`, `FE-006`, `SEC-001`, `INT-001`～`INT-006`, `INT-007-A`, `INT-007-B`, `INT-005-R`, `INT-005-R 補充稽核`)。
+- **有條件通過待修正任務 (CONDITIONAL PASS)：** 1 項 (`CTK-CORE-01-INT-007-C`)。
+- **明日排定修正任務 (PENDING)：** 1 項 (`CTK-CORE-01-INT-007-C-REMEDIATION`)。
 - **預先標記 PASS 數量：** **0 項（嚴格遵守治理守則）**。
 - **任務代號重複數量：** **0 項（各分類獨立編號且唯一）**。
-- **INT-006 狀態宣告：** `CTK-CORE-01-INT-006` 於 2026-11-26 圓滿完成垂直整合與端對端驗收，正式標記為 **PASS**。
 
 ### 3. 2026-11-26 垂直整合第六批次成果紀錄 (CTK-CORE-01-INT-006)
 
@@ -158,5 +164,26 @@
     - 後端離線全量測試：27 個檔案、343 個測試案例全數 PASS。
     - 前端 Vite Production Build 0 錯誤通過 (2.29s)。
   - **詳細報告：** [CTK_CORE_01_INT_006_FINAL_ACCEPTANCE_REPORT.md](file:///c:/Users/user/Documents/CODE-TO-KNOW/docs/quality/CTK_CORE_01_INT_006_FINAL_ACCEPTANCE_REPORT.md)。
+
+### 4. 2026-11-26 垂直整合第七批次成果紀錄 (CTK-CORE-01-INT-007 全系列)
+
+- **INT-007-A (設計審查 V2.2)：** **CLOSED / PASS**
+  - 交付文件：`CTK_CORE_01_INT_007A_DESIGN_REVIEW_V2_2.md`、`CTK_CORE_01_INT_007A_V2_2_INDEPENDENT_ACCEPTANCE_AUDIT.md`。
+  - 明確弱點指數 WI 權重算式、四維官方考科映射、三級閾值 (65/40/20) 與複合水線快照淘汰機制。
+- **INT-007-B (核心運算與快照服務)：** **CLOSED / PASS**
+  - 交付模組：`weaknessDiagnosis.service.ts`、`weaknessDiagnosis.schema.ts`、`student.controller.ts`、`student.routes.ts`。
+  - 核心機制：Read-Through 快取、Single-Flight 併發防雪崩、10s 冷卻防刷、兩階段排序。
+  - 驗收數據：21/21 單元與整合測試 100% 通過；交付報告與獨立驗收報告齊備。
+- **INT-007-C (弱點診斷前端整合)：** **CONDITIONAL PASS**
+  - 交付組件：`WeaknessRadarChart` (純原生 SVG 四軸雷達圖)、`WeaknessSubjectCard`、`AdaptiveActionCard`、`WeaknessSummaryBanner`、`LearningProgressPage` 整合。
+  - 前端合約：Layer 8 型別契約與 `api.ts` 串接完成，Demo Mode 離線降級支援。
+  - 驗收測試：8/8 前端整合測試通過、前端 Build (Vite + tsc) 成功通過 (Exit 0, 2.36s)、後端全離線測試 (29 套件 / 373 測試) 100% 通過。
+  - 待修正項目：
+    - ISS-007C-01: `components.css` 與 `database-contracts.ts` 尾端多餘空白行清理。
+    - ISS-007C-02: 實作報告表格路由筆誤更正為 `/api/student/weakness-analysis`。
+    - ISS-007C-03: `LearningProgressPage.tsx` 非 429 錯誤時 fallback 觸發 10s 冷卻優化。
+    - ISS-007C-04: 雷達圖圖例標示加註 `(弱點指數 WI)` UX 拋光。
+    - 待彩排項目: 跨 10 種解析度實體瀏覽器渲染截圖驗證。
+  - 明日接續：排定 2026-11-27 執行 `CTK-CORE-01-INT-007-C-REMEDIATION`。
 
 

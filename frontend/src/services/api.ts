@@ -1680,6 +1680,160 @@ export interface StudentProgressAnalyticsResponse {
   } | null;
 }
 
+// Re-export Layer 8 Weakness Diagnosis Types (INT-007-C)
+export type {
+  WeaknessStatus,
+  ActionType,
+  SuggestedActionPayload,
+  SubjectDiagnosisDto,
+  StudentWeaknessSummaryDto,
+  WeaknessAnalysisResponseDto,
+} from '../types/database-contracts';
+
+import type {
+  WeaknessAnalysisResponseDto,
+  SubjectDiagnosisDto,
+} from '../types/database-contracts';
+
+/**
+ * Standard Demo Mock generator for Weakness Diagnosis in Demo Mode
+ */
+export function getDemoWeaknessAnalysis(): WeaknessAnalysisResponseDto {
+  const nowIso = new Date().toISOString();
+  return {
+    summary: {
+      totalSubjects: 4,
+      evaluatedSubjects: 4,
+      criticalCount: 1,
+      moderateCount: 1,
+      steadyCount: 1,
+      masteryCount: 1,
+      insufficientCount: 0,
+      noDataCount: 0,
+      primaryFocusSubject: {
+        id: 'demo-sub-2',
+        code: '17300-02',
+        name: '應用軟體安裝及使用',
+        status: 'CRITICAL_WEAKNESS',
+        weaknessIndex: 68.0,
+        suggestedAction: {
+          version: '1.0',
+          actionType: 'TARGETED_PRACTICE',
+          targetSubjectCode: '17300-02',
+          targetQuestionCount: 15,
+          rationaleZh: '弱點指數達 68.0 分，存在未攻克錯題與近期錯誤，建議優先進行專項突破。',
+          objectiveZh: '優先複習未掌握錯題 4 題，消除失分盲點。',
+        },
+      },
+      overallDiagnosisZh: '檢測到 1 個重大弱點工作項目（首要關注：應用軟體安裝及使用），建議立即啟動專案錯題攻克。',
+      lastAnalyzedAt: nowIso,
+    },
+    subjects: [
+      {
+        subjectId: 'demo-sub-2',
+        subjectCode: '17300-02',
+        subjectName: '應用軟體安裝及使用',
+        masteryLevel: 0.32,
+        weaknessIndex: 68.0,
+        status: 'CRITICAL_WEAKNESS',
+        sampleSize: 35,
+        accuracyRate: 0.514,
+        unresolvedCount: 6,
+        reviewingCount: 3,
+        masteredCount: 2,
+        recentWrongCount: 4.5,
+        dataWatermark: nowIso,
+        calculatedAt: nowIso,
+        isFresh: true,
+        suggestedAction: {
+          version: '1.0',
+          actionType: 'TARGETED_PRACTICE',
+          targetSubjectCode: '17300-02',
+          targetQuestionCount: 15,
+          rationaleZh: '弱點指數達 68.0 分，存在未攻克錯題與近期錯誤，建議優先進行專項突破。',
+          objectiveZh: '優先複習未掌握錯題 4 題，消除失分盲點。',
+        },
+      },
+      {
+        subjectId: 'demo-sub-3',
+        subjectCode: '17300-03',
+        subjectName: '系統軟體安裝及使用',
+        masteryLevel: 0.55,
+        weaknessIndex: 45.0,
+        status: 'MODERATE_WEAKNESS',
+        sampleSize: 25,
+        accuracyRate: 0.68,
+        unresolvedCount: 3,
+        reviewingCount: 2,
+        masteredCount: 5,
+        recentWrongCount: 2.0,
+        dataWatermark: nowIso,
+        calculatedAt: nowIso,
+        isFresh: true,
+        suggestedAction: {
+          version: '1.0',
+          actionType: 'TARGETED_PRACTICE',
+          targetSubjectCode: '17300-03',
+          targetQuestionCount: 10,
+          rationaleZh: '弱點指數為 45.0 分，複習中題組需強化二連對記憶鞏固。',
+          objectiveZh: '針對 5 題錯題進行二連對攻克演練。',
+        },
+      },
+      {
+        subjectId: 'demo-sub-1',
+        subjectCode: '17300-01',
+        subjectName: '作業準備',
+        masteryLevel: 0.72,
+        weaknessIndex: 28.0,
+        status: 'STEADY_PROGRESS',
+        sampleSize: 40,
+        accuracyRate: 0.825,
+        unresolvedCount: 1,
+        reviewingCount: 1,
+        masteredCount: 8,
+        recentWrongCount: 0.5,
+        dataWatermark: nowIso,
+        calculatedAt: nowIso,
+        isFresh: true,
+        suggestedAction: {
+          version: '1.0',
+          actionType: 'GENERAL_REVIEW',
+          targetSubjectCode: '17300-01',
+          targetQuestionCount: 10,
+          rationaleZh: '掌握度表現穩定，定期進行隨機抽樣複習以防止遺忘。',
+          objectiveZh: '進行 10 題隨機抽題防止遺忘。',
+        },
+      },
+      {
+        subjectId: 'demo-sub-4',
+        subjectCode: '17300-04',
+        subjectName: '資訊及安全',
+        masteryLevel: 0.88,
+        weaknessIndex: 12.0,
+        status: 'EXCELLENT_MASTERY',
+        sampleSize: 30,
+        accuracyRate: 0.933,
+        unresolvedCount: 0,
+        reviewingCount: 0,
+        masteredCount: 10,
+        recentWrongCount: 0.0,
+        dataWatermark: nowIso,
+        calculatedAt: nowIso,
+        isFresh: true,
+        suggestedAction: {
+          version: '1.0',
+          actionType: 'MOCK_EXAM_SPRINT',
+          targetSubjectCode: '17300-04',
+          targetQuestionCount: 20,
+          rationaleZh: '本科掌握度極高，建議直接進入全真模擬考衝刺。',
+          objectiveZh: '參與計時模擬考試檢驗實力。',
+        },
+      },
+    ],
+  };
+}
+
+
 export const studentApi = {
   getDashboard: async () => {
     return request<StudentDashboardResponse>('/student/dashboard', {
@@ -1714,6 +1868,48 @@ export const studentApi = {
   getProgressAnalytics: async () => {
     return request<StudentProgressAnalyticsResponse>('/student/progress-analytics', {
       method: 'GET',
+    });
+  },
+
+  getWeaknessAnalysis: async (): Promise<ApiResponse<WeaknessAnalysisResponseDto>> => {
+    if (isDemoMode) {
+      return {
+        success: true,
+        data: getDemoWeaknessAnalysis(),
+      };
+    }
+    return request<WeaknessAnalysisResponseDto>('/student/weakness-analysis', {
+      method: 'GET',
+    });
+  },
+
+  getSubjectWeaknessAnalysis: async (subjectId: string): Promise<ApiResponse<SubjectDiagnosisDto>> => {
+    if (isDemoMode) {
+      const demo = getDemoWeaknessAnalysis();
+      const found = demo.subjects.find((s) => s.subjectId === subjectId) || demo.subjects[0];
+      return {
+        success: true,
+        data: found,
+      };
+    }
+    return request<SubjectDiagnosisDto>(`/student/weakness-analysis/${subjectId}`, {
+      method: 'GET',
+    });
+  },
+
+  recalculateWeaknessAnalysis: async (data?: {
+    subjectId?: string;
+  }): Promise<ApiResponse<WeaknessAnalysisResponseDto | SubjectDiagnosisDto>> => {
+    if (isDemoMode) {
+      return {
+        success: true,
+        data: getDemoWeaknessAnalysis(),
+        message: '弱點診斷已完成重新分析（示範模式）',
+      };
+    }
+    return request<WeaknessAnalysisResponseDto | SubjectDiagnosisDto>('/student/weakness-analysis/recalculate', {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
     });
   },
 };

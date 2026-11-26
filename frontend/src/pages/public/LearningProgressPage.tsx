@@ -25,7 +25,14 @@ import {
   StudentProgressAnalyticsResponse,
   WrongQuestionRecordItem,
   isDemoMode,
+  WeaknessAnalysisResponseDto,
 } from '../../services/api';
+import {
+  WeaknessRadarChart,
+  WeaknessSubjectCard,
+  AdaptiveActionCard,
+  WeaknessSummaryBanner,
+} from '../../components/weakness';
 import {
   getWrongQuestionsStats,
   getWrongQuestionsList,
@@ -46,6 +53,10 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<StudentProgressAnalyticsResponse | null>(null);
+  const [weaknessData, setWeaknessData] = useState<WeaknessAnalysisResponseDto | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [recalculating, setRecalculating] = useState<boolean>(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
 
   // Wrong questions state
   const [backendWrongItems, setBackendWrongItems] = useState<WrongQuestionRecordItem[]>([]);
@@ -53,6 +64,15 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
   const [localUnresolved, setLocalUnresolved] = useState<LocalWrongQuestionItem[]>(() =>
     getWrongQuestionsList(userId, true)
   );
+
+  // Cooldown countdown timer effect
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownSeconds]);
 
   // Review modal state for in-place quick practice
   const [activeReviewItem, setActiveReviewItem] = useState<WrongQuestionRecordItem | null>(null);
@@ -73,14 +93,24 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
     if (isGuestOrDemo) {
       setLocalWrongStats(getWrongQuestionsStats(userId));
       setLocalUnresolved(getWrongQuestionsList(userId, true));
+      // Load Demo Weakness Data
+      try {
+        const demoWeakness = await studentApi.getWeaknessAnalysis();
+        if (demoWeakness.success && demoWeakness.data) {
+          setWeaknessData(demoWeakness.data);
+        }
+      } catch {
+        // ignore demo weakness failure
+      }
       setLoading(false);
       return;
     }
 
     try {
-      const [analyticsRes, wrongRes] = await Promise.all([
+      const [analyticsRes, wrongRes, weaknessRes] = await Promise.all([
         studentApi.getProgressAnalytics(),
         wrongQuestionApi.getWrongQuestions({ status: 'UNRESOLVED', limit: 5 }),
+        studentApi.getWeaknessAnalysis(),
       ]);
 
       if (analyticsRes.success && analyticsRes.data) {
@@ -92,6 +122,10 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
       if (wrongRes.success && wrongRes.data) {
         setBackendWrongItems(wrongRes.data.items);
       }
+
+      if (weaknessRes.success && weaknessRes.data) {
+        setWeaknessData(weaknessRes.data);
+      }
     } catch (err: any) {
       console.error('載入學習歷程數據失敗：', err);
       setError(err?.message || '伺服器連線異常，請稍後再試');
@@ -99,6 +133,33 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
       setLoading(false);
     }
   }, [isGuestOrDemo, userId]);
+
+  // Handler for manual weakness diagnosis recalculation with 10s cooldown guard
+  const handleRecalculateWeakness = async () => {
+    if (recalculating || cooldownSeconds > 0) return;
+    setRecalculating(true);
+
+    try {
+      const res = await studentApi.recalculateWeaknessAnalysis();
+      if (res.success && res.data) {
+        if ('summary' in res.data) {
+          setWeaknessData(res.data as WeaknessAnalysisResponseDto);
+        }
+        setCooldownSeconds(10);
+      } else {
+        const errMsg = res.error?.message || '';
+        const match = errMsg.match(/剩餘\s*(\d+)\s*秒/);
+        setCooldownSeconds(match ? parseInt(match[1], 10) : 10);
+      }
+    } catch (err: any) {
+      console.error('重新診斷失敗：', err);
+      const errMsg = err?.message || '';
+      const match = errMsg.match(/剩餘\s*(\d+)\s*秒/);
+      setCooldownSeconds(match ? parseInt(match[1], 10) : 10);
+    } finally {
+      setRecalculating(false);
+    }
+  };
 
   useEffect(() => {
     void fetchProgressData();
@@ -336,6 +397,117 @@ export const LearningProgressPage: React.FC<LearningProgressPageProps> = ({ onOp
                   subText="涵蓋官方題組一至五實作驗證"
                 />
               </div>
+
+              {/* INT-007 Weakness Diagnostic Analytics & Adaptive Recommendation Closed-Loop */}
+              {weaknessData && (
+                <section style={{ marginTop: '28px', marginBottom: '32px' }} aria-label="學生弱點診斷與智慧推薦專區">
+                  {/* Summary Banner with Recalculate Cooldown */}
+                  <WeaknessSummaryBanner
+                    summary={weaknessData.summary}
+                    isFresh={weaknessData.subjects[0]?.isFresh ?? true}
+                    isDegraded={weaknessData.subjects[0]?.isDegraded ?? false}
+                    recalculating={recalculating}
+                    cooldownSeconds={cooldownSeconds}
+                    onRecalculate={handleRecalculateWeakness}
+                  />
+
+                  {/* Dual Column: Native SVG 4-Axis Radar Chart + Primary Focus Adaptive Card */}
+                  <div className="weakness-dual-grid" style={{ marginBottom: '24px' }}>
+                    {/* Left: Native SVG Radar Chart Card */}
+                    <div
+                      className="card"
+                      style={{
+                        padding: '24px',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-default)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          marginBottom: '12px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                        }}
+                      >
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                          官方考科掌握度四軸雷達圖
+                        </h4>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          點選各軸點切換焦點
+                        </span>
+                      </div>
+                      <WeaknessRadarChart
+                        subjects={weaknessData.subjects}
+                        selectedSubjectId={selectedSubjectId}
+                        onSelectSubject={(id) => setSelectedSubjectId((prev) => (prev === id ? null : id))}
+                      />
+                    </div>
+
+                    {/* Right: Adaptive Personalized Recommendation Closed-Loop Card */}
+                    <AdaptiveActionCard
+                      primaryFocus={
+                        selectedSubjectId
+                          ? (() => {
+                              const s = weaknessData.subjects.find((sub) => sub.subjectId === selectedSubjectId);
+                              if (!s) return weaknessData.summary.primaryFocusSubject;
+                              return {
+                                id: s.subjectId,
+                                code: s.subjectCode,
+                                name: s.subjectName,
+                                status: s.status,
+                                weaknessIndex: s.weaknessIndex,
+                                suggestedAction: s.suggestedAction,
+                              };
+                            })()
+                          : weaknessData.summary.primaryFocusSubject
+                      }
+                      onActionClick={() => goToTheoryPractice('web-design-c')}
+                    />
+                  </div>
+
+                  {/* Quad Grid: 4 Official Work Item Subject Diagnosis Cards (Two-Stage Sorted) */}
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '14px',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                      }}
+                    >
+                      <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                        四大考科弱點指標明細 (兩階段排序)
+                      </h4>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        依重大弱點與弱點指數優先排列 · 點擊卡片與雷達圖聯動
+                      </span>
+                    </div>
+
+                    <div className="weakness-subjects-grid">
+                      {weaknessData.subjects.map((sub) => (
+                        <WeaknessSubjectCard
+                          key={sub.subjectId}
+                          subject={sub}
+                          isSelected={selectedSubjectId === sub.subjectId}
+                          onSelect={() => setSelectedSubjectId((prev) => (prev === sub.subjectId ? null : sub.subjectId))}
+                          onPractice={() => goToTheoryPractice('web-design-c')}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Chapter Mastery Breakdown & Review Recommendations */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px', alignItems: 'start' }} className="progress-dual-grid">

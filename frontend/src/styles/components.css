@@ -1122,3 +1122,38 @@ input:focus, select:focus, textarea:focus {
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   Weakness Diagnosis & Radar RWD Layout (INT-007-C)
+   ========================================================================== */
+.weakness-dual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: stretch;
+}
+
+@media (max-width: 884px) {
+  .weakness-dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.weakness-subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 1024px) {
+  .weakness-subjects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .weakness-subjects-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
